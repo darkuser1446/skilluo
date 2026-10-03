@@ -7,6 +7,14 @@ import { ArrowRight, ChevronDown, Sparkles, Terminal, Flame, ShieldCheck } from 
 import confetti from "canvas-confetti";
 import HeroFloatingCards from "./HeroFloatingCards";
 import StatsStrip from "./StatsStrip";
+import {
+  fadeInUp,
+  staggerContainer,
+  staggerItem,
+  hoverScale,
+  tapScale,
+  smoothTransition,
+} from "@/lib/animations";
 
 const Hero3DCanvas = dynamic(() => import("./Hero3DCanvas"), {
   ssr: false,
@@ -38,12 +46,15 @@ export default function Hero() {
       {/* Top Hero Content Container */}
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-10 items-center my-auto">
         {/* Left Column: Headlines & Call to Actions */}
-        <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left"
+        >
           {/* Eyebrow Label */}
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            variants={staggerItem}
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111A33] border border-brand-orange/30 shadow-sm mb-5"
           >
             <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse" />
@@ -56,9 +67,7 @@ export default function Hero() {
 
           {/* Main H1 Headline with Shimmer Gradient */}
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            variants={staggerItem}
             className="font-display font-extrabold text-4xl sm:text-6xl lg:text-7xl tracking-tight leading-[1.05] text-white"
           >
             <span className="text-gradient-orange inline-block">Skill Up</span>
@@ -70,9 +79,7 @@ export default function Hero() {
 
           {/* Sub-copy */}
           <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            variants={staggerItem}
             className="mt-5 text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed font-normal"
           >
             A yearly hands-on C++ workshop powered by{" "}
@@ -82,9 +89,7 @@ export default function Hero() {
 
           {/* Dual CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            variants={staggerItem}
             className="mt-8 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
           >
             <Link
@@ -104,6 +109,7 @@ export default function Hero() {
               <span>Explore Curriculum ↓</span>
             </Link>
           </motion.div>
+
 
           {/* Mini Alumni Proof */}
           <motion.div
@@ -131,7 +137,7 @@ export default function Hero() {
               Joined by <span className="font-bold text-white">300+</span> Super 60 alumni engineers
             </p>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Right Column: Floating Student Showcase */}
         <div className="lg:col-span-5 flex items-center justify-center w-full">
