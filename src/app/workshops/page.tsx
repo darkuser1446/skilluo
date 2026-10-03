@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import InteractiveTileGrid from "@/components/InteractiveTileGrid";
+import Super60Logo from "@/components/Super60Logo";
 import {
   Calendar,
   Users,
@@ -75,24 +76,8 @@ function PublicNavbar() {
   return (
     <header className="sticky top-0 z-40 bg-[#070B14]/90 backdrop-blur-xl border-b border-white/8 shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between py-3.5">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative h-10 w-9 flex-shrink-0 transition-transform group-hover:scale-105">
-            <Image
-              src="/emblem.png"
-              alt="Super 60"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-display font-extrabold text-xl leading-none text-transparent bg-clip-text bg-gradient-to-r from-[#F07C27] via-[#FFA048] to-[#F07C27]">
-              Super 60
-            </span>
-            <span className="text-[10px] font-mono text-slate-400 tracking-wider">
-              SKILL UP WORKSHOP
-            </span>
-          </div>
+        <Link href="/">
+          <Super60Logo size="sm" subtitleText="SKILL UP" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm">

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, ArrowRight, ShieldCheck, UserCheck, GraduationCap, AlertCircle } from "lucide-react";
 import InteractiveTileGrid from "@/components/InteractiveTileGrid";
+import Super60Logo from "@/components/Super60Logo";
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -63,18 +65,8 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-3 mb-3 group">
-            <div className="relative h-14 w-12 flex-shrink-0 transition-transform group-hover:scale-105">
-              <Image src="/emblem.png" alt="Super 60" fill className="object-contain" priority />
-            </div>
-            <div className="text-left">
-              <span className="font-display font-extrabold text-3xl tracking-tight text-brand-orange block">
-                Super 60
-              </span>
-              <span className="text-[11px] font-mono text-slate-400 font-semibold tracking-wider">
-                SKILL UP WORKSHOP PLATFORM
-              </span>
-            </div>
+          <Link href="/" className="inline-block mb-3">
+            <Super60Logo size="lg" subtitleText="PORTAL" />
           </Link>
           <h2 className="font-display font-bold text-xl text-white mt-4">
             Sign in to your portal

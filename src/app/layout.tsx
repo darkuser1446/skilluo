@@ -43,8 +43,9 @@ export const metadata: Metadata = {
     images: ["/logo.png"],
   },
   icons: {
-    icon: "/logo.png",
+    icon: "/logo.svg",
   },
+
 };
 
 export default function RootLayout({

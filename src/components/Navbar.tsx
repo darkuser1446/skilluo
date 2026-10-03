@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ArrowRight, Sparkles } from "lucide-react";
+import Super60Logo from "./Super60Logo";
 
 const NAV_LINKS = [
   { name: "Home", href: "#hero" },
@@ -55,35 +56,11 @@ export default function Navbar() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
-          {/* Logo & Brand Identity: BIG Super 60 logo and Super 60 name beside it */}
-          <Link href="#hero" className="flex items-center gap-3.5 group">
-            {/* Big Super 60 Emblem */}
-            <div className="relative h-12 w-10 sm:h-14 sm:w-12 flex-shrink-0 transition-transform group-hover:scale-105">
-              <Image
-                src="/emblem.png"
-                alt="Super 60"
-                fill
-                className="object-contain filter drop-shadow-[0_2px_10px_rgba(240,124,39,0.3)]"
-                priority
-              />
-            </div>
-
-            {/* Super 60 Wordmark in matching logo color theme */}
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-display font-extrabold text-2xl sm:text-3xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#F07C27] via-[#FFA048] to-[#F07C27] drop-shadow-[0_0_15px_rgba(240,124,39,0.35)]">
-                  Super 60
-                </span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F07C27]/15 text-[#F07C27] border border-[#F07C27]/30">
-                  <Sparkles className="w-2.5 h-2.5 mr-1" />
-                  Skill Up 2026
-                </span>
-              </div>
-              <span className="text-[10px] sm:text-[11px] font-medium tracking-wider text-slate-400 font-mono">
-                FLAGSHIP C++ SYSTEMS WORKSHOP
-              </span>
-            </div>
+          {/* Logo & Brand Identity: Precision Vector SVG Super 60 Emblem & Wordmark */}
+          <Link href="#hero">
+            <Super60Logo size="md" subtitleText="Skill Up 2026" />
           </Link>
+
 
           {/* Desktop Nav Items */}
           <nav className="hidden lg:flex items-center gap-7">
@@ -157,17 +134,10 @@ export default function Navbar() {
             className="fixed inset-0 z-30 bg-[#0B1120]/98 backdrop-blur-2xl pt-24 px-6 pb-8 flex flex-col justify-between sm:hidden"
           >
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 pb-4 border-b border-white/10">
-                <div className="relative w-8 h-10">
-                  <Image src="/emblem.png" alt="Super 60" fill className="object-contain" />
-                </div>
-                <div>
-                  <span className="font-display font-extrabold text-[#F07C27] text-xl block">
-                    Super 60
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">Skill Up 2026</span>
-                </div>
+              <div className="pb-4 border-b border-white/10">
+                <Super60Logo size="sm" subtitleText="Skill Up 2026" />
               </div>
+
 
               <div className="flex flex-col gap-2 mt-2">
                 {NAV_LINKS.map((link, idx) => (

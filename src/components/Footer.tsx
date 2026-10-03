@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Mail, Phone, MapPin, ArrowUp } from "lucide-react";
+import Super60Logo from "./Super60Logo";
 
 // Clean SVG social brand icons
 function GithubIcon({ className }: { className?: string }) {
@@ -55,24 +56,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 pb-14 border-b border-white/10">
           {/* Column 1: Brand & Identity */}
           <div className="flex flex-col">
-            <Link href="#hero" className="flex items-center gap-3.5 mb-4 group">
-              <div className="relative h-12 w-10 flex-shrink-0 transition-transform group-hover:scale-105">
-                <Image
-                  src="/emblem.png"
-                  alt="Super 60"
-                  fill
-                  className="object-contain filter drop-shadow-[0_2px_10px_rgba(240,124,39,0.3)]"
-                />
-              </div>
-              <div>
-                <span className="font-display font-extrabold text-2xl tracking-tight text-brand-orange block">
-                  Super 60
-                </span>
-                <span className="text-xs font-semibold text-slate-400">
-                  Skill Up Workshop 2026
-                </span>
-              </div>
+            <Link href="#hero" className="mb-4">
+              <Super60Logo size="sm" subtitleText="Skill Up 2026" />
             </Link>
+
 
             <p className="text-sm text-slate-300 leading-relaxed mt-2">
               Transforming undergraduate minds into elite systems engineers through yearly, hands-on

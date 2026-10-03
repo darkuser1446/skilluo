@@ -1,0 +1,26 @@
+<svg viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="s60-flame-h" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F07C27" />
+      <stop offset="50%" stop-color="#FFA048" />
+      <stop offset="100%" stop-color="#F07C27" />
+    </linearGradient>
+    <linearGradient id="s60-navy-h" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D325E" />
+      <stop offset="100%" stop-color="#151A38" />
+    </linearGradient>
+  </defs>
+
+  <!-- Left Emblem Icon -->
+  <g transform="translate(10, 5) scale(0.7)">
+    <polygon points="50,6 90,28 90,72 50,94 10,72 10,28" fill="url(#s60-navy-h)" stroke="url(#s60-flame-h)" stroke-width="4" stroke-linejoin="round" />
+    <path d="M66 32 C66 26 58 24 50 24 C40 24 33 28 33 36 C33 46 64 43 64 54 C64 64 56 68 47 68 C36 68 31 62 31 56" stroke="url(#s60-flame-h)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="50" cy="50" r="4" fill="#FFB800" />
+  </g>
+
+  <!-- Wordmark Text -->
+  <text x="90" y="46" font-family="'Sora', system-ui, sans-serif" font-size="32" font-weight="900" fill="url(#s60-flame-h)" letter-spacing="-0.5">Super 60</text>
+  <rect x="235" y="27" width="70" height="20" rx="10" fill="rgba(240, 124, 39, 0.15)" stroke="rgba(240, 124, 39, 0.4)" stroke-width="1" />
+  <text x="270" y="41" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" fill="#F07C27" text-anchor="middle" letter-spacing="1">SKILL UP</text>
+  <text x="92" y="64" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#94A3B8" letter-spacing="1.5">SYSTEMS ENGINEERING</text>
+</svg>

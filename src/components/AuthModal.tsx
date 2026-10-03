@@ -5,6 +5,8 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lock, Mail, ArrowRight, CheckCircle } from "lucide-react";
 import confetti from "canvas-confetti";
+import Super60Logo from "./Super60Logo";
+
 
 export default function AuthModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -72,20 +74,10 @@ export default function AuthModal() {
           </button>
 
           {/* Header */}
-          <div className="flex items-center gap-3.5 mb-6">
-            <div className="relative h-12 w-10 flex-shrink-0">
-              <Image src="/emblem.png" alt="Super 60" fill className="object-contain" />
-            </div>
-            <div>
-              <h3 className="font-display font-extrabold text-xl text-white">
-                {modalMode === "register" ? "Skill Up 2026 Registration" : "Student Portal Login"}
-              </h3>
-              <p className="text-xs text-slate-300">
-                An initiative of{" "}
-                <span className="text-brand-orange font-bold">Super 60</span>
-              </p>
-            </div>
+          <div className="mb-6">
+            <Super60Logo size="sm" subtitleText={modalMode === "register" ? "REGISTER" : "LOGIN"} />
           </div>
+
 
           {submitted ? (
             <motion.div

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import Super60Logo from "@/components/Super60Logo";
 import {
   LogOut,
   Calendar,
@@ -140,24 +141,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Left: Brand Identity */}
           <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative h-9 w-8 flex-shrink-0 transition-transform group-hover:scale-105 drop-shadow-[0_0_12px_rgba(240,124,39,0.35)]">
-                <Image src="/emblem.png" alt="Super 60" fill className="object-contain" priority />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-display font-black text-xl tracking-tight text-brand-orange">
-                    Super 60
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-brand-orange/15 text-brand-orange border border-brand-orange/30 tracking-wide uppercase">
-                    SKILL UP
-                  </span>
-                </div>
-                <span className="text-[10px] font-mono text-slate-400 font-medium tracking-wide">
-                  Workshop Engineering Platform
-                </span>
-              </div>
+            <Link href="/" className="flex items-center">
+              <Super60Logo size="sm" subtitleText="SKILL UP" />
             </Link>
+
 
             {/* Workshop Switcher Dropdown */}
             {workshops.length > 0 && (
