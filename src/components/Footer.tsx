@@ -47,7 +47,7 @@ export default function Footer() {
   };
 
   return (
-    <footer id="contact" className="relative bg-[#080D1A] border-t border-white/10 pt-16 pb-12 overflow-hidden">
+    <footer id="contact" className="relative bg-[#080D1A]/90 backdrop-blur-md border-t border-white/10 pt-16 pb-12 overflow-hidden">
       {/* Top subtle glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-brand-orange/50 to-transparent" />
 

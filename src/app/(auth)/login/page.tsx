@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, ArrowRight, ShieldCheck, UserCheck, GraduationCap, AlertCircle } from "lucide-react";
+import InteractiveTileGrid from "@/components/InteractiveTileGrid";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -55,8 +56,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-foreground flex flex-col justify-center items-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen bg-[#0B1120] text-foreground flex flex-col justify-center items-center px-4 py-12 overflow-hidden">
+      {/* Interactive Square Tiles Canvas Background */}
+      <InteractiveTileGrid tileSize={44} />
+
+      <div className="relative z-10 w-full max-w-md">
         {/* Brand Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-3 mb-3 group">

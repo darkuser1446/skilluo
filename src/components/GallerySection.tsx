@@ -113,7 +113,7 @@ export default function GallerySection() {
   }, [lightboxIndex, filteredItems.length]);
 
   return (
-    <section id="gallery" className="relative py-28 sm:py-36 bg-[#0B1120] overflow-hidden">
+    <section id="gallery" className="relative py-28 sm:py-36 bg-[#0B1120]/80 backdrop-blur-sm overflow-hidden">
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">

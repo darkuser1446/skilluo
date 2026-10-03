@@ -43,7 +43,7 @@ export default function CtaBand() {
   };
 
   return (
-    <section id="register" className="relative py-24 sm:py-32 bg-[#0B1120] overflow-hidden">
+    <section id="register" className="relative py-24 sm:py-32 bg-[#0B1120]/80 backdrop-blur-sm overflow-hidden">
       <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

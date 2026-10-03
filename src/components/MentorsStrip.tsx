@@ -58,7 +58,7 @@ export default function MentorsStrip() {
   const marqueeItems = [...MENTORS, ...MENTORS];
 
   return (
-    <section id="mentors" className="relative py-24 sm:py-32 bg-[#0E1528] overflow-hidden">
+    <section id="mentors" className="relative py-24 sm:py-32 bg-[#0E1528]/80 backdrop-blur-sm overflow-hidden">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 mb-12 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#111A33] border border-brand-orange/30 text-brand-orange text-xs font-mono font-bold tracking-widest uppercase mb-3">
           <Terminal className="w-3.5 h-3.5" />

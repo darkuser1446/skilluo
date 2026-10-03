@@ -12,10 +12,14 @@ import Footer from "@/components/Footer";
 import CustomCursor from "@/components/CustomCursor";
 import CursorSpotlight from "@/components/CursorSpotlight";
 import AuthModal from "@/components/AuthModal";
+import InteractiveTileGrid from "@/components/InteractiveTileGrid";
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen bg-[#070A18] text-foreground selection:bg-brand-orange selection:text-white overflow-x-hidden">
+    <main className="relative min-h-screen bg-[#0B1120] text-foreground selection:bg-brand-orange selection:text-white overflow-x-hidden">
+      {/* Interactive Square Tiles Canvas Background (Responds to mouse hover & clicks across entire page) */}
+      <InteractiveTileGrid showControls={true} tileSize={44} />
+
       {/* Interactive Cursor Layer */}
       <CustomCursor />
       <CursorSpotlight />

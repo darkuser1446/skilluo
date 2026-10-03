@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import InteractiveTileGrid from "@/components/InteractiveTileGrid";
 import {
   Calendar,
   Users,
@@ -293,7 +294,10 @@ export default function WorkshopsPage() {
   const rest = workshops.filter((w) => w.status !== "ACTIVE");
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-foreground">
+    <div className="relative min-h-screen bg-[#0B1120] text-foreground overflow-x-hidden">
+      {/* Interactive Square Tiles Canvas Background */}
+      <InteractiveTileGrid tileSize={48} />
+
       <PublicNavbar />
 
       {/* ── Hero ── */}

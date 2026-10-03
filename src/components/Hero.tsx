@@ -26,7 +26,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen pt-28 pb-14 flex flex-col justify-between items-center overflow-hidden bg-[#0B1120]"
+      className="relative min-h-screen pt-28 pb-14 flex flex-col justify-between items-center overflow-hidden bg-transparent"
     >
       {/* Lightweight 3D Canvas Background Layer */}
       <Hero3DCanvas />

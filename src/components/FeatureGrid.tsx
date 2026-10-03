@@ -136,7 +136,7 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
 
 export default function FeatureGrid() {
   return (
-    <section id="program" className="relative py-28 sm:py-36 bg-[#0B1120] overflow-hidden">
+    <section id="program" className="relative py-28 sm:py-36 bg-[#0B1120]/80 backdrop-blur-sm overflow-hidden">
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">

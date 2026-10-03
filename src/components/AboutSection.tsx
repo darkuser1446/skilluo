@@ -25,7 +25,7 @@ const HIGHLIGHTS = [
 
 export default function AboutSection() {
   return (
-    <section id="about" className="relative py-28 sm:py-36 bg-[#0E1528] overflow-hidden">
+    <section id="about" className="relative py-28 sm:py-36 bg-[#0E1528]/80 backdrop-blur-sm overflow-hidden">
       {/* Faint giant watermark text "SUPER 60" scrolling behind section */}
       <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 overflow-hidden pointer-events-none select-none opacity-[0.045] whitespace-nowrap z-0">
         <motion.div

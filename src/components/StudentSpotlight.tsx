@@ -118,7 +118,7 @@ export default function StudentSpotlight() {
   };
 
   return (
-    <section id="students" className="relative py-28 sm:py-36 bg-[#0E1528] overflow-hidden">
+    <section id="students" className="relative py-28 sm:py-36 bg-[#0E1528]/80 backdrop-blur-sm overflow-hidden">
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
