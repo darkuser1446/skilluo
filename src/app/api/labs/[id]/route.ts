@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth";
+import { requireRole, requireAuth } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
@@ -10,6 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await requireAuth();
     const { id } = await params;
     const lab = await prisma.lab.findUnique({
       where: { id },
@@ -36,7 +37,22 @@ export async function GET(
     });
 
     if (!lab) return errorResponse("Lab not found", "NOT_FOUND", 404);
-    return successResponse({ lab });
+
+    const isPrivileged = user.role === "ADMIN" || user.role === "MENTOR";
+    const sanitizedLab = isPrivileged
+      ? lab
+      : {
+          ...lab,
+          students: lab.students.map((ls) => ({
+            ...ls,
+            student: {
+              id: ls.student.id,
+              name: ls.student.name,
+            },
+          })),
+        };
+
+    return successResponse({ lab: sanitizedLab });
   } catch (err) {
     return handleApiError(err);
   }

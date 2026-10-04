@@ -15,14 +15,8 @@ const sha256 = (v: string) => crypto.createHash("sha256").update(v).digest("hex"
  * logged server-side. Plug in a real provider (Resend/SES/SendGrid) here:
  *   await resend.email.send({ to: email, subject, html })
  */
-async function deliverResetEmail(email: string, link: string) {
-  console.info(
-    `\n──────────────────────────────────────────────\n` +
-      `PASSWORD RESET REQUEST for ${email}\n` +
-      `Reset link: ${link}\n` +
-      `(deliver via email provider — see lib/emails.ts)\n` +
-      `──────────────────────────────────────────────\n`
-  );
+async function deliverResetEmail(email: string, _link: string) {
+  console.info(`[Auth] Password reset email triggered for: ${email}`);
 }
 
 export async function POST(req: NextRequest) {

@@ -47,3 +47,7 @@ prisma/migrations/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Agent Workspace
+.agents/
+.freebuff/

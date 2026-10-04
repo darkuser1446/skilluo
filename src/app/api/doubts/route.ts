@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, getSessionUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSessionUser();
+    const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
 
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const doubts = await prisma.doubt.findMany({
       where: {
         workshopId,
-        ...(session?.role === "STUDENT" ? { studentId: session.sub } : {}),
+        ...(user.role === "STUDENT" ? { studentId: user.sub } : {}),
       },
       include: {
         student: {

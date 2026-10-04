@@ -36,8 +36,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireRole(["MENTOR", "ADMIN"]);
+    const user = await requireRole(["MENTOR", "ADMIN"]);
     const { id } = await params;
+
+    const existing = await prisma.note.findUnique({ where: { id } });
+    if (!existing) return errorResponse("Note not found", "NOT_FOUND", 404);
+
+    if (user.role !== "ADMIN" && existing.uploadedBy !== user.sub) {
+      return errorResponse("Forbidden: You can only edit your own notes", "FORBIDDEN", 403);
+    }
+
     const body = await req.json();
     const data = NoteUpdateSchema.parse(body);
     const note = await prisma.note.update({ where: { id }, data });
@@ -52,8 +60,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireRole(["MENTOR", "ADMIN"]);
+    const user = await requireRole(["MENTOR", "ADMIN"]);
     const { id } = await params;
+
+    const existing = await prisma.note.findUnique({ where: { id } });
+    if (!existing) return errorResponse("Note not found", "NOT_FOUND", 404);
+
+    if (user.role !== "ADMIN" && existing.uploadedBy !== user.sub) {
+      return errorResponse("Forbidden: You can only delete your own notes", "FORBIDDEN", 403);
+    }
+
     await prisma.note.delete({ where: { id } });
     return successResponse({ message: "Note deleted" });
   } catch (err) {

@@ -101,7 +101,7 @@ export default function StudentProgressTrend({
               y1={graphHeight - (85 / maxVal) * (graphHeight - 30) - 15}
               x2={graphWidth - 20}
               y2={graphHeight - (85 / maxVal) * (graphHeight - 30) - 15}
-              stroke="#FFB800"
+              stroke="#FFB703"
               strokeWidth="1.2"
               strokeDasharray="6 4"
               opacity="0.6"
@@ -109,7 +109,7 @@ export default function StudentProgressTrend({
             <text
               x={graphWidth - 110}
               y={graphHeight - (85 / maxVal) * (graphHeight - 30) - 20}
-              fill="#FFB800"
+              fill="#FFB703"
               fontSize="9"
               fontFamily="monospace"
               fontWeight="bold"

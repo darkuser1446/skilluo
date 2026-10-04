@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole, getSessionUser } from "@/lib/auth";
+import { requireRole, requireAuth } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSessionUser();
+    const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
 
@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
       where: { workshopId },
       include: {
         lab: true,
-        attendanceRecords: session?.role === "STUDENT"
-          ? { where: { studentId: session.sub } }
+        attendanceRecords: user.role === "STUDENT"
+          ? { where: { studentId: user.sub } }
           : {
               include: {
                 student: {

@@ -1,5 +1,13 @@
 import { prisma } from "./prisma";
 
+export interface EvaluationWeights {
+  assignments: number; // default: 30
+  assessments: number; // default: 35
+  attendance: number;  // default: 15
+  exercises: number;   // default: 10
+  doubts: number;      // default: 10 (updated to ensure sum = 100)
+}
+
 export interface PerformanceBreakdown {
   studentId: string;
   studentName: string;
@@ -39,7 +47,7 @@ export async function calculateOverallPerformance(
     assessments: 35,
     attendance: 15,
     exercises: 10,
-    doubts: 5,
+    doubts: 10,
   };
 
   // 2. Assignments score
@@ -111,7 +119,7 @@ export async function calculateOverallPerformance(
     workshopId,
     ...(myLabIds.length > 0
       ? { OR: [{ labId: null }, { labId: { in: myLabIds } }] }
-      : {}),
+      : { labId: null }),
   };
 
   const totalSessions = await prisma.session.count({ where: sessionWhere });
@@ -142,7 +150,7 @@ export async function calculateOverallPerformance(
   const wAssessments = config.assessments ?? 35;
   const wAttendance = config.attendance ?? 15;
   const wExercises = config.exercises ?? 10;
-  const wDoubts = config.doubts ?? 5;
+  const wDoubts = config.doubts ?? 10;
   const totalWeight = wAssignments + wAssessments + wAttendance + wExercises + wDoubts;
 
   const overallScore = Number(

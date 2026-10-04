@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole, getSessionUser } from "@/lib/auth";
+import { requireRole, requireAuth } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSessionUser();
+    const user = await requireAuth();
     const { id } = await params;
 
     const assessment = await prisma.assessment.findUnique({
@@ -19,8 +19,8 @@ export async function GET(
         questions: true,
         lab: true,
         results:
-          session?.role === "STUDENT"
-            ? { where: { studentId: session?.sub } }
+          user.role === "STUDENT"
+            ? { where: { studentId: user.sub, status: "COMPLETED" } }
             : {
                 include: {
                   student: { select: { id: true, name: true, email: true } },
@@ -31,17 +31,17 @@ export async function GET(
 
     if (!assessment) return errorResponse("Assessment not found", "NOT_FOUND", 404);
 
-    // SECURITY: never expose the answer key to students
-    const sanitized =
-      session?.role === "STUDENT"
-        ? {
-            ...assessment,
-            questions: assessment.questions.map((q) => {
-              const { correctAnswer: _hidden, ...rest } = q;
-              return rest;
-            }),
-          }
-        : assessment;
+    // SECURITY: only ADMIN and MENTOR may see correctAnswer
+    const isPrivileged = user.role === "ADMIN" || user.role === "MENTOR";
+    const sanitized = !isPrivileged
+      ? {
+          ...assessment,
+          questions: assessment.questions.map((q) => {
+            const { correctAnswer: _hidden, ...rest } = q;
+            return rest;
+          }),
+        }
+      : assessment;
 
     return successResponse({ assessment: sanitized });
   } catch (err) {

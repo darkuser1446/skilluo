@@ -50,10 +50,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Apply to the current active workshop — status PENDING until admin review
+    // Apply to the current active/open workshop — status PENDING until admin review
     // (spec: Registration → Application → Admin Review → Approved → Enrolled)
     const activeWorkshop = await prisma.workshop.findFirst({
-      where: { status: "ACTIVE" },
+      where: { status: { in: ["ACTIVE", "REGISTRATION_OPEN"] } },
       orderBy: { year: "desc" },
     });
 

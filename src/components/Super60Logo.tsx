@@ -48,7 +48,7 @@ export default function Super60Logo({
             {/* Gold Highlight Gradient */}
             <linearGradient id="s60-gold" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#FFE082" />
-              <stop offset="100%" stopColor="#FFB800" />
+              <stop offset="100%" stopColor="#FFB703" />
             </linearGradient>
 
             {/* Deep Navy Slate Gradient for Inner Facets */}

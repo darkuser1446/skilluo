@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth";
+import { requireRole, requireAuth } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
@@ -10,6 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await requireAuth();
     const { id } = await params;
     const workshop = await prisma.workshop.findUnique({
       where: { id },
@@ -35,7 +36,32 @@ export async function GET(
     });
 
     if (!workshop) return errorResponse("Workshop not found", "NOT_FOUND", 404);
-    return successResponse({ workshop });
+
+    const isPrivileged = user.role === "ADMIN" || user.role === "MENTOR";
+    const sanitizedWorkshop = isPrivileged
+      ? workshop
+      : {
+          ...workshop,
+          labs: workshop.labs.map((lab) => ({
+            ...lab,
+            students: lab.students.map((ls) => ({
+              ...ls,
+              student: {
+                id: ls.student.id,
+                name: ls.student.name,
+              },
+            })),
+          })),
+          enrollments: workshop.enrollments.map((e) => ({
+            ...e,
+            student: {
+              id: e.student.id,
+              name: e.student.name,
+            },
+          })),
+        };
+
+    return successResponse({ workshop: sanitizedWorkshop });
   } catch (err) {
     return handleApiError(err);
   }
@@ -43,7 +69,16 @@ export async function GET(
 
 const WorkshopUpdateSchema = z.object({
   name: z.string().min(2).optional(),
-  status: z.enum(["UPCOMING", "ACTIVE", "COMPLETED"]).optional(),
+  status: z
+    .enum([
+      "UPCOMING",
+      "REGISTRATION_OPEN",
+      "REGISTRATION_CLOSED",
+      "ACTIVE",
+      "COMPLETED",
+      "ARCHIVED",
+    ])
+    .optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   evaluationConfig: z

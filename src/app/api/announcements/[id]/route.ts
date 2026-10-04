@@ -24,8 +24,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireRole(["ADMIN", "MENTOR"]);
+    const user = await requireRole(["ADMIN", "MENTOR"]);
     const { id } = await params;
+
+    const existing = await prisma.announcement.findUnique({ where: { id } });
+    if (!existing) return errorResponse("Announcement not found", "NOT_FOUND", 404);
+
+    if (user.role !== "ADMIN" && existing.createdBy !== user.sub) {
+      return errorResponse("Forbidden: You can only edit your own announcements", "FORBIDDEN", 403);
+    }
+
     const body = await req.json();
     const { title, body: bodyText, workshopId, labId, isPublic, pinned } = body;
 

@@ -32,6 +32,9 @@ import {
   Download,
 } from "lucide-react";
 import TestManager from "@/components/TestManager";
+import CohortQuotaMatrix from "@/components/CohortQuotaMatrix";
+import { SkeletonMetric, SkeletonTableRow } from "@/components/Skeleton";
+import EmptyState from "@/components/EmptyState";
 
 interface Workshop {
   id: string;
@@ -140,6 +143,7 @@ export default function AdminDashboardPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [minScoreFilter, setMinScoreFilter] = useState(0);
   const [selectedLabFilter, setSelectedLabFilter] = useState("ALL");
+  const [selectionActionLoading, setSelectionActionLoading] = useState<string | null>(null);
 
   // Workshop creation
   const [wsName, setWsName] = useState("");
@@ -171,7 +175,7 @@ export default function AdminDashboardPage() {
     assessments: 35,
     attendance: 15,
     exercises: 10,
-    doubts: 5,
+    doubts: 10,
   });
   const [savingWeights, setSavingWeights] = useState(false);
   const [weightsSaved, setWeightsSaved] = useState(false);
@@ -207,7 +211,7 @@ export default function AdminDashboardPage() {
               assessments: cfg.assessments ?? 35,
               attendance: cfg.attendance ?? 15,
               exercises: cfg.exercises ?? 10,
-              doubts: cfg.doubts ?? 5,
+              doubts: cfg.doubts ?? 10,
             });
           }
           await Promise.all([
@@ -339,7 +343,7 @@ export default function AdminDashboardPage() {
         assessments: cfg.assessments ?? 35,
         attendance: cfg.attendance ?? 15,
         exercises: cfg.exercises ?? 10,
-        doubts: cfg.doubts ?? 5,
+        doubts: cfg.doubts ?? 10,
       });
     }
     await Promise.all([loadReports(id), loadLabs(id), loadMentors(id), loadAnnouncements(id)]);
@@ -349,16 +353,21 @@ export default function AdminDashboardPage() {
     studentId: string,
     status: "SELECTED" | "REJECTED" | "ENROLLED"
   ) => {
-    const res = await fetch(`/api/admin/selection/${studentId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ workshopId: selectedWorkshopId, status }),
-    });
-    if (res.ok) {
-      setCandidates((prev) =>
-        prev.map((c) => (c.studentId === studentId ? { ...c, status } : c))
-      );
-      await loadReports(selectedWorkshopId);
+    setSelectionActionLoading(`${studentId}-${status}`);
+    try {
+      const res = await fetch(`/api/admin/selection/${studentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workshopId: selectedWorkshopId, status }),
+      });
+      if (res.ok) {
+        setCandidates((prev) =>
+          prev.map((c) => (c.studentId === studentId ? { ...c, status } : c))
+        );
+        await loadReports(selectedWorkshopId);
+      }
+    } finally {
+      setSelectionActionLoading(null);
     }
   };
 
@@ -532,12 +541,11 @@ export default function AdminDashboardPage() {
       c.overallScore,
       c.status,
     ]);
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", blobUrl);
     link.setAttribute(
       "download",
       `skillup_performance_report_${selectedWorkshopId || "workshop"}.csv`
@@ -545,6 +553,7 @@ export default function AdminDashboardPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
   };
 
   const weightTotal = Object.values(weights).reduce((s, v) => s + v, 0);
@@ -563,8 +572,36 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="w-8 h-8 border-2 border-brand-orange border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-6 animate-pulse">
+        {/* Hero banner skeleton */}
+        <div className="rounded-2xl p-6 sm:p-7 bg-[#0F172A]/80 border border-slate-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-md w-full">
+            <div className="h-4 w-36 bg-slate-800/80 rounded" />
+            <div className="h-8 w-64 bg-slate-800/80 rounded" />
+            <div className="h-4 w-full bg-slate-800/80 rounded" />
+          </div>
+          <div className="h-24 w-60 bg-slate-800/80 rounded-2xl" />
+        </div>
+
+        {/* Metrics strip skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <SkeletonMetric />
+          <SkeletonMetric />
+          <SkeletonMetric />
+          <SkeletonMetric />
+        </div>
+
+        {/* Tab content skeleton */}
+        <div className="space-y-4">
+          <div className="h-12 bg-[#0F172A]/70 border border-slate-800/80 rounded-xl" />
+          <div className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 p-4 space-y-3">
+            <SkeletonTableRow />
+            <SkeletonTableRow />
+            <SkeletonTableRow />
+            <SkeletonTableRow />
+            <SkeletonTableRow />
+          </div>
+        </div>
       </div>
     );
   }
@@ -804,9 +841,11 @@ export default function AdminDashboardPage() {
 
           <div className="space-y-2">
             {announcements.length === 0 && (
-              <p className="text-xs font-mono text-slate-500 py-6 text-center">
-                No announcements yet
-              </p>
+              <EmptyState
+                icon={Megaphone}
+                title="No announcements posted"
+                description="Keep students informed by broadcasting schedule updates, assignment releases, or milestone deadlines."
+              />
             )}
             {announcements.map((a) => (
               <div
@@ -850,7 +889,7 @@ export default function AdminDashboardPage() {
             </p>
           </div>
           <div className="rounded-2xl border border-slate-800/80 overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto scrollbar-none">
               <table className="w-full text-xs font-mono">
                 <thead>
                   <tr className="bg-slate-900/70 text-slate-500 text-[10px] uppercase">
@@ -863,8 +902,12 @@ export default function AdminDashboardPage() {
                 <tbody>
                   {auditLogs.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-slate-500">
-                        No activity recorded yet
+                      <td colSpan={4} className="py-8">
+                        <EmptyState
+                          icon={History}
+                          title="No activity recorded"
+                          description="Administrative audit logs and decisions will appear here as actions are executed."
+                        />
                       </td>
                     </tr>
                   )}
@@ -897,7 +940,21 @@ export default function AdminDashboardPage() {
       )}
 
       {activeTab === "selection" && (
-        <div className="space-y-4">
+        <div className="space-y-5">
+          {/* Interactive 60-Cell Cohort Quota Matrix */}
+          <CohortQuotaMatrix
+            candidates={candidates.map((c) => ({
+              ...c,
+              selectionStatus: c.status,
+            }))}
+            totalSeats={60}
+            onSelectCandidate={(cand) => {
+              if (cand?.studentName) {
+                setCandidateSearch(cand.studentName);
+              }
+            }}
+          />
+
           {/* Search & Filter Toolbar */}
           <div className="rounded-2xl p-4 bg-[#0F172A]/70 border border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
@@ -971,12 +1028,12 @@ export default function AdminDashboardPage() {
 
           {/* Candidate Table */}
           <div className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 overflow-hidden shadow-md">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto scrollbar-none">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider text-[10px]">
-                    <th className="py-3 px-3">Rank</th>
-                    <th className="py-3 px-3">Candidate</th>
+                    <th className="py-3 px-3 sticky left-0 z-10 bg-[#0F172A] shadow-[2px_0_4px_rgba(0,0,0,0.5)]">Rank</th>
+                    <th className="py-3 px-3 sticky left-14 z-10 bg-[#0F172A] shadow-[2px_0_4px_rgba(0,0,0,0.5)]">Candidate</th>
                     <th className="py-3 px-3">College / Dept</th>
                     <th className="py-3 px-3">Lab</th>
                     <th className="py-3 px-3">Assign. (30%)</th>
@@ -990,14 +1047,33 @@ export default function AdminDashboardPage() {
                 <tbody className="divide-y divide-slate-800/60 font-mono">
                   {filteredCandidates.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="py-8 text-center text-slate-500 text-xs">
-                        No candidates match the specified filter criteria.
+                      <td colSpan={10} className="py-8">
+                        <EmptyState
+                          icon={Users}
+                          title="No candidates match filters"
+                          description={
+                            candidateSearch || selectedLabFilter !== "ALL" || statusFilter !== "ALL" || minScoreFilter > 0
+                              ? "No candidates match the specified filter criteria. Try clearing your search query or adjusting cutoff score."
+                              : "No candidates enrolled in this workshop edition yet."
+                          }
+                          actionLabel={
+                            candidateSearch || selectedLabFilter !== "ALL" || statusFilter !== "ALL" || minScoreFilter > 0
+                              ? "Reset Filters"
+                              : undefined
+                          }
+                          onAction={() => {
+                            setCandidateSearch("");
+                            setSelectedLabFilter("ALL");
+                            setStatusFilter("ALL");
+                            setMinScoreFilter(0);
+                          }}
+                        />
                       </td>
                     </tr>
                   )}
                   {filteredCandidates.map((c) => (
                     <tr key={c.studentId} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 sticky left-0 z-10 bg-[#0F172A] shadow-[2px_0_4px_rgba(0,0,0,0.5)]">
                         <span
                           className={`font-bold ${
                             c.rank === 1
@@ -1012,15 +1088,15 @@ export default function AdminDashboardPage() {
                           #{c.rank}
                         </span>
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 sticky left-14 z-10 bg-[#0F172A] shadow-[2px_0_4px_rgba(0,0,0,0.5)] whitespace-nowrap">
                         <div className="font-sans font-bold text-white text-sm">
                           {c.studentName}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-slate-300 font-sans text-[11px]">
+                      <td className="py-3 px-3 text-slate-300 font-sans text-[11px] whitespace-nowrap">
                         {c.college || "Engineering"}
                       </td>
-                      <td className="py-3 px-3 text-slate-400 font-mono text-[11px]">
+                      <td className="py-3 px-3 text-slate-400 font-mono text-[11px] whitespace-nowrap">
                         <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
                           {c.labName || "Unassigned"}
                         </span>
@@ -1046,18 +1122,26 @@ export default function AdminDashboardPage() {
                           {c.status}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-right space-x-1.5">
+                      <td className="py-3 px-3 text-right space-x-1.5 whitespace-nowrap">
                         <button
                           onClick={() => handleSelectionAction(c.studentId, "SELECTED")}
-                          className="px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-white font-bold text-[11px] transition-all"
+                          disabled={selectionActionLoading === `${c.studentId}-SELECTED` || c.status === "SELECTED"}
+                          className="px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-white font-bold text-[11px] transition-all disabled:opacity-50 inline-flex items-center gap-1"
                         >
-                          Select
+                          {selectionActionLoading === `${c.studentId}-SELECTED` && (
+                            <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin" />
+                          )}
+                          <span>Select</span>
                         </button>
                         <button
                           onClick={() => handleSelectionAction(c.studentId, "REJECTED")}
-                          className="px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-bold text-[11px] transition-all"
+                          disabled={selectionActionLoading === `${c.studentId}-REJECTED` || c.status === "REJECTED"}
+                          className="px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-bold text-[11px] transition-all disabled:opacity-50 inline-flex items-center gap-1"
                         >
-                          Reject
+                          {selectionActionLoading === `${c.studentId}-REJECTED` && (
+                            <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin" />
+                          )}
+                          <span>Reject</span>
                         </button>
                       </td>
                     </tr>
@@ -1078,6 +1162,13 @@ export default function AdminDashboardPage() {
             <h3 className="font-display font-bold text-white text-base">
               Deployed Workshop Editions ({workshops.length})
             </h3>
+            {workshops.length === 0 && (
+              <EmptyState
+                icon={Calendar}
+                title="No workshop editions deployed"
+                description="Deploy a new workshop edition using the form to organize cohort candidates, tests, and labs."
+              />
+            )}
             {workshops.map((w) => (
               <div
                 key={w.id}
@@ -1189,6 +1280,13 @@ export default function AdminDashboardPage() {
             <h3 className="font-display font-bold text-white text-base">
               Laboratory Tracks ({labs.length})
             </h3>
+            {labs.length === 0 && (
+              <EmptyState
+                icon={Layers}
+                title="No laboratory tracks configured"
+                description="Configure lab tracks to organize students and assign dedicated lead mentors."
+              />
+            )}
             {labs.map((lab) => (
               <div
                 key={lab.id}
@@ -1403,7 +1501,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 overflow-hidden shadow-md">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto scrollbar-none">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider text-[10px]">
@@ -1415,6 +1513,17 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 font-mono">
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-8">
+                          <EmptyState
+                            icon={Users}
+                            title="No accounts found"
+                            description="No platform accounts registered matching the selected role filter."
+                          />
+                        </td>
+                      </tr>
+                    )}
                     {users.map((u) => (
                       <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
                         <td className="py-3 px-3 font-sans font-bold text-white text-sm">
@@ -1614,9 +1723,15 @@ export default function AdminDashboardPage() {
           </div>
 
           {feedbacks.length === 0 ? (
-            <div className="rounded-2xl p-12 bg-[#0F172A]/70 border border-slate-800 text-center text-slate-500 font-mono text-xs">
-              Select a laboratory track above to inspect candidate feedback.
-            </div>
+            <EmptyState
+              icon={MessageSquare}
+              title={feedbackLabId ? "No feedback submitted yet" : "Select a Laboratory Track"}
+              description={
+                feedbackLabId
+                  ? "Candidates enrolled in this lab track haven't submitted any feedback evaluations yet."
+                  : "Select a laboratory track above to inspect mentor ratings and candidate evaluations."
+              }
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {feedbacks.map((f) => (

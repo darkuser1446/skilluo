@@ -38,8 +38,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import TestManager from "@/components/TestManager";
+import { SkeletonCard, SkeletonMetric, SkeletonProfile } from "@/components/Skeleton";
+import EmptyState from "@/components/EmptyState";
 
 export default function MentorDashboardPage() {
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [labs, setLabs] = useState<any[]>([]);
   const [selectedLabId, setSelectedLabId] = useState<string>("");
@@ -116,6 +119,7 @@ export default function MentorDashboardPage() {
 
   useEffect(() => {
     async function loadData() {
+      setLoading(true);
       try {
         const [meRes, wsRes] = await Promise.all([
           fetch("/api/auth/me"),
@@ -138,6 +142,8 @@ export default function MentorDashboardPage() {
         }
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     }
     loadData();
@@ -401,6 +407,23 @@ export default function MentorDashboardPage() {
     { id: "tests", label: "Tests & Quizzes", icon: ClipboardList, count: null },
   ];
 
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-200">
+        <SkeletonProfile />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <SkeletonMetric />
+          <SkeletonMetric />
+          <SkeletonMetric />
+          <SkeletonMetric />
+        </div>
+        <div className="rounded-2xl p-6 bg-[#0F172A]/70 border border-slate-800/80">
+          <SkeletonCard />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* ── HERO BANNER ── */}
@@ -474,21 +497,52 @@ export default function MentorDashboardPage() {
             <span className="text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">Total: {activeLab?.students?.length || 0} Engineers</span>
           </div>
           <div className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 overflow-hidden shadow-md">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto scrollbar-none">
               <table className="w-full text-left text-xs">
-                <thead><tr className="border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider text-[10px]"><th className="py-3 px-4">Candidate</th><th className="py-3 px-4">Email</th><th className="py-3 px-4">Institution</th><th className="py-3 px-4">Enrolled At</th><th className="py-3 px-4 text-right">Actions</th></tr></thead>
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider text-[10px]">
+                    <th className="sticky left-0 bg-[#0F172A] z-10 py-3 px-4 shadow-[1px_0_0_0_rgba(51,65,85,0.6)]">Candidate</th>
+                    <th className="py-3 px-4">Email</th>
+                    <th className="py-3 px-4">Institution</th>
+                    <th className="py-3 px-4">Enrolled At</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
                 <tbody className="divide-y divide-slate-800/60 font-mono">
-                  {(!activeLab?.students || activeLab.students.length === 0) && <tr><td colSpan={5} className="py-8 text-center text-slate-500 text-xs">No students enrolled in this lab yet.</td></tr>}
+                  {(!activeLab?.students || activeLab.students.length === 0) && (
+                    <tr>
+                      <td colSpan={5} className="py-8">
+                        <EmptyState
+                          icon={Users}
+                          title="No Students Enrolled"
+                          description="No students have been assigned to this lab yet. Allocated engineers will appear in this roster."
+                        />
+                      </td>
+                    </tr>
+                  )}
                   {activeLab?.students?.map((ls: any) => {
                     const st = ls.student;
                     const initials = st?.name ? st.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("") : "S";
                     return (
                       <tr key={ls.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3 px-4"><div className="flex items-center gap-2.5"><div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-white">{initials}</div><span className="font-sans font-bold text-white text-sm">{st?.name}</span></div></td>
+                        <td className="sticky left-0 bg-[#0F172A] z-10 py-3 px-4 shadow-[1px_0_0_0_rgba(51,65,85,0.6)]">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-white">
+                              {initials}
+                            </div>
+                            <span className="font-sans font-bold text-white text-sm whitespace-nowrap">
+                              {st?.name}
+                            </span>
+                          </div>
+                        </td>
                         <td className="py-3 px-4 text-slate-300">{st?.email}</td>
                         <td className="py-3 px-4 text-slate-400 font-sans">{st?.college || "—"}</td>
                         <td className="py-3 px-4 text-slate-500">{new Date(ls.enrolledAt).toLocaleDateString()}</td>
-                        <td className="py-3 px-4 text-right"><button onClick={() => setActiveTab("review")} className="px-2.5 py-1 rounded bg-slate-800 hover:bg-sky-500 hover:text-white text-slate-300 font-mono text-[11px] transition-all">View Submissions →</button></td>
+                        <td className="py-3 px-4 text-right">
+                          <button onClick={() => setActiveTab("review")} className="px-2.5 py-1 rounded bg-slate-800 hover:bg-sky-500 hover:text-white text-slate-300 font-mono text-[11px] transition-all whitespace-nowrap">
+                            View Submissions →
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -505,7 +559,13 @@ export default function MentorDashboardPage() {
           <div className="lg:col-span-5 space-y-3">
             <h3 className="font-display font-bold text-white text-base">Submissions to Grade ({allSubmissions.length})</h3>
             <div className="space-y-2.5">
-              {allSubmissions.length === 0 && <p className="text-slate-500 text-xs py-6 text-center font-mono">No submissions recorded yet.</p>}
+              {allSubmissions.length === 0 && (
+                <EmptyState
+                  icon={FileCode}
+                  title="Grading Queue Empty"
+                  description="No student submissions are waiting for code review. Submissions from your lab will appear here."
+                />
+              )}
               {allSubmissions.map((s) => {
                 const isSelected = selectedSubmission?.id === s.id;
                 const isGraded = s.score !== null && s.score !== undefined;
@@ -538,7 +598,20 @@ export default function MentorDashboardPage() {
                   </div>
                   <div><label className="block text-xs font-mono text-slate-300 uppercase mb-1">Mentor Critique</label><textarea required rows={3} value={reviewFeedback} onChange={(e) => setReviewFeedback(e.target.value)} placeholder="Comment on cache alignment, concurrency, correctness..." className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono resize-none" /></div>
                   {reviewSuccess && <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /><span>Review recorded! Candidate performance updated.</span></div>}
-                  <button type="submit" disabled={reviewing} className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md">{reviewing ? "Saving..." : "Submit Grade & Critique →"}</button>
+                  <button
+                    type="submit"
+                    disabled={reviewing}
+                    className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
+                  >
+                    {reviewing ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      "Submit Grade & Critique →"
+                    )}
+                  </button>
                 </form>
               </div>
             ) : <div className="rounded-2xl p-12 bg-[#0F172A]/70 border border-slate-800 text-center text-slate-500 font-mono text-xs">Select a submission from the queue to inspect code and grade.</div>}
@@ -551,6 +624,13 @@ export default function MentorDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-3">
             <h3 className="font-display font-bold text-white text-base">Laboratory Assignments ({assignments.length})</h3>
+            {assignments.length === 0 && (
+              <EmptyState
+                icon={FileText}
+                title="No Lab Assignments"
+                description="No assignments published yet for this workshop. Use the deployment panel to assign problems to your lab."
+              />
+            )}
             {assignments.map((a) => (
               <div key={a.id} className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-2">
                 <div className="flex items-center justify-between"><h4 className="font-bold text-white text-sm">{a.title}</h4><span className="text-xs font-mono text-brand-orange font-bold">Max: {a.maxScore} pts</span></div>
@@ -568,7 +648,20 @@ export default function MentorDashboardPage() {
                 <input type="date" required value={assignDueDate} onChange={(e) => setAssignDueDate(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
                 <input type="number" required value={assignMaxScore} onChange={(e) => setAssignMaxScore(Number(e.target.value))} className="w-full bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" placeholder="Max Score" />
               </div>
-              <button type="submit" disabled={creatingAssignment} className="w-full py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 disabled:opacity-50">{creatingAssignment ? "Deploying..." : "Deploy Assignment"}</button>
+              <button
+                type="submit"
+                disabled={creatingAssignment}
+                className="w-full py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {creatingAssignment ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Deploying...</span>
+                  </>
+                ) : (
+                  "Deploy Assignment"
+                )}
+              </button>
             </form>
           </div>
         </div>
@@ -579,7 +672,13 @@ export default function MentorDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-3">
             <h3 className="font-display font-bold text-white text-base">Programming Exercises ({exercises.length})</h3>
-            {exercises.length === 0 && <p className="text-slate-500 text-xs py-6 text-center font-mono">No exercises published yet for this lab.</p>}
+            {exercises.length === 0 && (
+              <EmptyState
+                icon={Dumbbell}
+                title="No Practice Exercises"
+                description="No coding problems published yet for this laboratory. Use the builder on the right to publish challenges."
+              />
+            )}
             {exercises.map((ex) => (
               <div key={ex.id} className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-2">
                 <div className="flex items-center justify-between">
@@ -620,7 +719,20 @@ export default function MentorDashboardPage() {
                 <input type="date" value={exDueDate} onChange={(e) => setExDueDate(e.target.value)} className="bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
                 <input type="number" value={exMaxScore} onChange={(e) => setExMaxScore(Number(e.target.value))} className="bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" placeholder="Max Score" />
               </div>
-              <button type="submit" disabled={creatingExercise} className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50">{creatingExercise ? "Creating..." : "Publish Exercise"}</button>
+              <button
+                type="submit"
+                disabled={creatingExercise}
+                className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {creatingExercise ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  "Publish Exercise"
+                )}
+              </button>
             </form>
           </div>
         </div>
@@ -648,7 +760,20 @@ export default function MentorDashboardPage() {
               </select>
               <textarea rows={4} placeholder="// Code snippet or notes..." value={noteContent} onChange={(e) => setNoteContent(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono resize-none" />
               <input type="text" value={noteTags} onChange={(e) => setNoteTags(e.target.value)} placeholder="Tags: systems, cpp" className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono" />
-              <button type="submit" disabled={publishingNote} className="w-full py-2.5 rounded-xl bg-sky-500 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50">{publishingNote ? "Publishing..." : "Publish to Lab Roster"}</button>
+              <button
+                type="submit"
+                disabled={publishingNote}
+                className="w-full py-2.5 rounded-xl bg-sky-500 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {publishingNote ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Publishing...</span>
+                  </>
+                ) : (
+                  "Publish to Lab Roster"
+                )}
+              </button>
             </form>
           </div>
         </div>
@@ -666,7 +791,20 @@ export default function MentorDashboardPage() {
                     {sessions.map((s) => <option key={s.id} value={s.id}>{s.title}{s.startTime ? ` · ${s.startTime}${s.endTime ? `–${s.endTime}` : ""}` : ""}</option>)}
                   </select>
                   <button onClick={() => handleMarkAll("PRESENT")} className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white font-mono text-[11px] font-bold transition-all">Mark All Present</button>
-                  <button onClick={handleSaveAttendance} disabled={savingAttendance} className="px-3.5 py-1 rounded bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 transition-all shadow-sm">{savingAttendance ? "Saving..." : "Save Records"}</button>
+                  <button
+                    onClick={handleSaveAttendance}
+                    disabled={savingAttendance}
+                    className="px-3.5 py-1 rounded bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5"
+                  >
+                    {savingAttendance ? (
+                      <>
+                        <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      "Save Records"
+                    )}
+                  </button>
                 </div>
               </div>
               <div className="space-y-2">
@@ -700,7 +838,20 @@ export default function MentorDashboardPage() {
                     <input type="time" value={newSessionEnd} onChange={(e) => setNewSessionEnd(e.target.value)} className="mt-1 w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono" />
                   </label>
                 </div>
-                <button type="submit" disabled={creatingSession} className="w-full py-2 rounded-xl bg-emerald-600 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50">{creatingSession ? "Creating..." : "Create Session"}</button>
+                <button
+                  type="submit"
+                  disabled={creatingSession}
+                  className="w-full py-2 rounded-xl bg-emerald-600 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {creatingSession ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    "Create Session"
+                  )}
+                </button>
               </form>
             </div>
           </div>
@@ -713,6 +864,13 @@ export default function MentorDashboardPage() {
           <div className="lg:col-span-5 space-y-3">
             <div className="flex items-center justify-between"><h3 className="font-display font-bold text-white text-base">Student Queries</h3><div className="flex gap-1 text-[10px] font-mono">{(["ALL", "OPEN", "RESOLVED"] as const).map((f) => <button key={f} onClick={() => setDoubtFilter(f)} className={`px-2 py-0.5 rounded transition-all ${doubtFilter === f ? "bg-sky-500 text-white font-bold" : "bg-slate-800 text-slate-400 hover:text-white"}`}>{f}</button>)}</div></div>
             <div className="space-y-2">
+              {doubts.filter((d) => doubtFilter === "ALL" || d.status === doubtFilter).length === 0 && (
+                <EmptyState
+                  icon={HelpCircle}
+                  title="No Queries in Queue"
+                  description="No student doubts match the current status filter."
+                />
+              )}
               {doubts.filter((d) => doubtFilter === "ALL" || d.status === doubtFilter).map((d) => (
                 <div key={d.id} onClick={() => setSelectedDoubt(d)} className={`p-3.5 rounded-xl border cursor-pointer transition-all ${selectedDoubt?.id === d.id ? "bg-sky-500/10 border-sky-500/40" : "bg-[#0F172A]/70 border-slate-800/80 hover:border-slate-700"}`}>
                   <div className="flex items-center justify-between mb-1"><span className="font-bold text-xs text-white truncate max-w-[180px]">{d.title}</span><span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold ${d.status === "RESOLVED" ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>{d.status}</span></div>
@@ -741,7 +899,23 @@ export default function MentorDashboardPage() {
                 </div>
                 <form onSubmit={handleSendReply} className="pt-3 border-t border-slate-800 flex gap-2">
                   <input type="text" required placeholder="Provide technical solution..." value={replyText} onChange={(e) => setReplyText(e.target.value)} className="flex-1 bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 font-mono" />
-                  <button type="submit" disabled={sendingReply} className="px-4 py-2 rounded-xl bg-sky-500 text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 flex items-center gap-1.5"><Send className="w-3.5 h-3.5" /><span>Send</span></button>
+                  <button
+                    type="submit"
+                    disabled={sendingReply}
+                    className="px-4 py-2 rounded-xl bg-sky-500 text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {sendingReply ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Send</span>
+                      </>
+                    )}
+                  </button>
                 </form>
               </div>
             ) : <div className="rounded-2xl p-12 bg-[#0F172A]/70 border border-slate-800 text-center text-slate-500 font-mono text-xs">Select a doubt from the inbox to reply.</div>}
@@ -754,7 +928,15 @@ export default function MentorDashboardPage() {
         <div className="space-y-4">
           <h3 className="font-display font-bold text-white text-base">Student Appraisals ({feedbacks.length})</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {feedbacks.length === 0 && <div className="col-span-full py-12 text-center text-slate-500 font-mono text-xs">No feedback received yet.</div>}
+            {feedbacks.length === 0 && (
+              <div className="col-span-full">
+                <EmptyState
+                  icon={MessageSquareHeart}
+                  title="No Student Appraisals"
+                  description="Feedback submitted by workshop participants will appear here."
+                />
+              </div>
+            )}
             {feedbacks.map((f) => (
               <div key={f.id} className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-2.5">
                 <div className="flex items-center justify-between">
@@ -774,7 +956,13 @@ export default function MentorDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-3">
             <h3 className="font-display font-bold text-white text-base">Published Announcements ({announcements.length})</h3>
-            {announcements.length === 0 && <p className="text-slate-500 text-xs py-6 text-center font-mono">No announcements yet. Post one to notify your students.</p>}
+            {announcements.length === 0 && (
+              <EmptyState
+                icon={Megaphone}
+                title="No Announcements Posted"
+                description="Broadcast lab announcements, milestone updates, and notices to your cohort."
+              />
+            )}
             {announcements.map((a) => (
               <div key={a.id} className={`p-5 rounded-2xl bg-[#0F172A]/70 border space-y-2 ${a.pinned ? "border-brand-orange/40 shadow-[0_0_15px_rgba(240,124,39,0.1)]" : "border-slate-800/80"}`}>
                 <div className="flex items-start justify-between gap-2">
@@ -795,7 +983,20 @@ export default function MentorDashboardPage() {
                 <div><span className="text-xs font-bold text-white block">Pin to top of dashboard</span><span className="text-[10px] text-slate-500 font-mono">Students will see this first</span></div>
               </label>
               {annSuccess && <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" />Announcement published to all students!</div>}
-              <button type="submit" disabled={postingAnn} className="w-full py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50">{postingAnn ? "Publishing..." : "Publish Announcement"}</button>
+              <button
+                type="submit"
+                disabled={postingAnn}
+                className="w-full py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {postingAnn ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Publishing...</span>
+                  </>
+                ) : (
+                  "Publish Announcement"
+                )}
+              </button>
             </form>
           </div>
         </div>

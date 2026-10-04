@@ -27,6 +27,19 @@ export async function POST(
       return errorResponse("Assignment not found", "NOT_FOUND", 404);
     }
 
+    const existingSubmission = await prisma.submission.findUnique({
+      where: {
+        assignmentId_studentId: {
+          assignmentId,
+          studentId: user.sub,
+        },
+      },
+    });
+
+    if (existingSubmission && existingSubmission.status === "REVIEWED") {
+      return errorResponse("Cannot resubmit an assignment that has already been reviewed", "BAD_REQUEST", 400);
+    }
+
     const isLate = new Date() > new Date(assignment.dueDate);
 
     const submission = await prisma.submission.upsert({

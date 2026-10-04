@@ -11,6 +11,8 @@ module.exports = {
         background: "#0B1120",
         foreground: "#F8FAFC",
         brand: {
+          slateDeep: "#070B14",
+          slateCard: "#0F172A",
           orange: "#F07C27",
           orangeLight: "#FFA048",
           orangeDark: "#D86312",
@@ -20,7 +22,7 @@ module.exports = {
           surface: "#111A33",
           surfaceCard: "#152244",
           surfaceHover: "#1B2A54",
-          gold: "#FFB800",
+          gold: "#FFB703",
         },
       },
       fontFamily: {

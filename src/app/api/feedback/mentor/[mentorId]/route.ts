@@ -44,8 +44,19 @@ export async function GET(
       ? Number((feedbacks.reduce((s, f) => s + f.rating, 0) / feedbacks.length).toFixed(2))
       : null;
 
+    const sanitized = feedbacks.map((f) => {
+      if (f.isAnonymous && user.role !== "ADMIN") {
+        return {
+          ...f,
+          studentId: "ANONYMOUS",
+          student: { id: "ANONYMOUS", name: "Anonymous Student" },
+        };
+      }
+      return f;
+    });
+
     return successResponse({
-      feedbacks,
+      feedbacks: sanitized,
       averageRating: avgRating,
       count: feedbacks.length,
     });

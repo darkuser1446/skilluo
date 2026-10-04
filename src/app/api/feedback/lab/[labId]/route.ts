@@ -13,7 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ labId: string }> }
 ) {
   try {
-    await requireRole(["MENTOR", "ADMIN"]);
+    const user = await requireRole(["MENTOR", "ADMIN"]);
     const { labId } = await params;
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
@@ -34,8 +34,19 @@ export async function GET(
       ? Number((feedbacks.reduce((s, f) => s + f.rating, 0) / feedbacks.length).toFixed(2))
       : null;
 
+    const sanitized = feedbacks.map((f) => {
+      if (f.isAnonymous && user.role !== "ADMIN") {
+        return {
+          ...f,
+          studentId: "ANONYMOUS",
+          student: { id: "ANONYMOUS", name: "Anonymous Student" },
+        };
+      }
+      return f;
+    });
+
     return successResponse({
-      feedbacks,
+      feedbacks: sanitized,
       averageRating: avgRating,
       count: feedbacks.length,
     });

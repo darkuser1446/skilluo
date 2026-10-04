@@ -7,6 +7,9 @@
   --foreground: #F8FAFC;
   --brand-orange: #F07C27;
   --brand-navy: #2D325E;
+  --brand-slate-deep: #070B14;
+  --brand-slate-card: #0F172A;
+  --brand-gold: #FFB703;
 }
 
 * {
@@ -29,12 +32,21 @@ body {
   color: #ffffff;
 }
 
+/* Scrollbar none utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B1120;
+  background: #070B14;
 }
 ::-webkit-scrollbar-thumb {
   background: #2D325E;

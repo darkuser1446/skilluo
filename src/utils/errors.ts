@@ -45,7 +45,12 @@ export function handleApiError(err: unknown) {
     );
   }
 
-  const message = err instanceof Error ? err.message : "Internal Server Error";
+  const message =
+    process.env.NODE_ENV === "production"
+      ? "An unexpected error occurred. Please try again later."
+      : err instanceof Error
+        ? err.message
+        : "Internal Server Error";
   return NextResponse.json(
     {
       success: false,

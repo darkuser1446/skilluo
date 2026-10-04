@@ -27,7 +27,7 @@ export default function Hero() {
       particleCount: 75,
       spread: 65,
       origin: { y: 0.6 },
-      colors: ["#F07C27", "#FFA048", "#FFB800", "#2D325E", "#ffffff"],
+      colors: ["#F07C27", "#FFA048", "#FFB703", "#2D325E", "#ffffff"],
     });
   };
 

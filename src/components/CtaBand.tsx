@@ -38,7 +38,7 @@ export default function CtaBand() {
       particleCount: 90,
       spread: 75,
       origin: { y: 0.7 },
-      colors: ["#F07C27", "#FFA048", "#FFB800", "#2D325E", "#ffffff"],
+      colors: ["#F07C27", "#FFA048", "#FFB703", "#2D325E", "#ffffff"],
     });
   };
 
@@ -96,14 +96,15 @@ export default function CtaBand() {
 
             {/* Action Buttons */}
             <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-              <button
+              <Link
+                href="/register"
                 onClick={triggerConfetti}
                 className="w-full sm:w-auto px-9 py-3.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-display font-bold text-sm tracking-wide shadow-[0_0_25px_rgba(240,124,39,0.5)] hover:shadow-[0_0_40px_rgba(240,124,39,0.8)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Submit Application Now</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
-              </button>
+              </Link>
 
               <Link
                 href="/login"

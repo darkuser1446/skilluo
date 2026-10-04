@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, getSessionUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSessionUser();
+    const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
 
@@ -18,8 +18,8 @@ export async function GET(req: NextRequest) {
     const feedbacks = await prisma.feedback.findMany({
       where: {
         workshopId,
-        ...(session?.role === "MENTOR" ? { mentorId: session.sub } : {}),
-        ...(session?.role === "STUDENT" ? { studentId: session.sub } : {}),
+        ...(user.role === "MENTOR" ? { mentorId: user.sub } : {}),
+        ...(user.role === "STUDENT" ? { studentId: user.sub } : {}),
       },
       include: {
         mentor: { select: { id: true, name: true } },
@@ -29,7 +29,18 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return successResponse({ feedbacks });
+    const sanitized = feedbacks.map((f) => {
+      if (f.isAnonymous && user.role !== "ADMIN") {
+        return {
+          ...f,
+          studentId: "ANONYMOUS",
+          student: { id: "ANONYMOUS", name: "Anonymous Student" },
+        };
+      }
+      return f;
+    });
+
+    return successResponse({ feedbacks: sanitized });
   } catch (err) {
     return handleApiError(err);
   }

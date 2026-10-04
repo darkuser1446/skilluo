@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireRole, getSessionUser } from "@/lib/auth";
+import { requireAuth, requireRole } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSessionUser();
+    const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
 
@@ -15,10 +15,10 @@ export async function GET(req: NextRequest) {
     if (workshopId) where.workshopId = workshopId;
 
     // ROLE SCOPING: mentors only see their assigned labs, students only theirs
-    if (session?.role === "MENTOR") {
-      where.mentors = { some: { mentorId: session.sub } };
-    } else if (session?.role === "STUDENT") {
-      where.students = { some: { studentId: session.sub } };
+    if (user.role === "MENTOR") {
+      where.mentors = { some: { mentorId: user.sub } };
+    } else if (user.role === "STUDENT") {
+      where.students = { some: { studentId: user.sub } };
     }
 
     const labs = await prisma.lab.findMany({
@@ -50,7 +50,21 @@ export async function GET(req: NextRequest) {
       orderBy: { name: "asc" },
     });
 
-    return successResponse({ labs });
+    const sanitizedLabs =
+      user.role === "STUDENT"
+        ? labs.map((lab) => ({
+            ...lab,
+            students: lab.students.map((ls) => ({
+              ...ls,
+              student: {
+                id: ls.student.id,
+                name: ls.student.name,
+              },
+            })),
+          }))
+        : labs;
+
+    return successResponse({ labs: sanitizedLabs });
   } catch (err) {
     return handleApiError(err);
   }

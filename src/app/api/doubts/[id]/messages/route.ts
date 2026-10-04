@@ -26,6 +26,19 @@ export async function POST(
     });
     if (!doubt) return errorResponse("Doubt not found", "NOT_FOUND", 404);
 
+    if (user.role === "STUDENT") {
+      if (doubt.studentId !== user.sub) {
+        return errorResponse("Forbidden: You cannot post in another student's doubt thread", "FORBIDDEN", 403);
+      }
+    } else if (user.role === "MENTOR") {
+      const assignedMentorIds = await labMentorIds(doubt.workshopId, doubt.labId);
+      if (!assignedMentorIds.includes(user.sub)) {
+        return errorResponse("Forbidden: You are not assigned to this lab", "FORBIDDEN", 403);
+      }
+    } else if (user.role !== "ADMIN") {
+      return errorResponse("Forbidden", "FORBIDDEN", 403);
+    }
+
     const message = await prisma.doubtMessage.create({
       data: {
         doubtId,

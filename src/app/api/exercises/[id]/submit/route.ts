@@ -21,6 +21,25 @@ export async function POST(
     const exercise = await prisma.exercise.findUnique({ where: { id: exerciseId } });
     if (!exercise) return errorResponse("Exercise not found", "NOT_FOUND", 404);
 
+    const existingSubmission = await prisma.exerciseSubmission.findUnique({
+      where: {
+        exerciseId_studentId: { exerciseId, studentId: user.sub },
+      },
+    });
+
+    if (
+      existingSubmission &&
+      (existingSubmission.status === "COMPLETED" ||
+        (existingSubmission.status as string) === "REVIEWED" ||
+        existingSubmission.score !== null)
+    ) {
+      return errorResponse(
+        "Cannot resubmit an exercise that has already been completed or evaluated",
+        "BAD_REQUEST",
+        400
+      );
+    }
+
     // Upsert — one submission per student per exercise
     const submission = await prisma.exerciseSubmission.upsert({
       where: {

@@ -58,6 +58,44 @@ export default function InteractiveTileGrid({
     mouseRef.current.active = false;
   }, []);
 
+  // Touch support for mobile and tablet displays
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!canvasRef.current || e.touches.length === 0) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    mouseRef.current = {
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
+      active: true,
+    };
+  }, []);
+
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (!canvasRef.current || e.touches.length === 0) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const clickX = touch.clientX - rect.left;
+    const clickY = touch.clientY - rect.top;
+    mouseRef.current = {
+      x: clickX,
+      y: clickY,
+      active: true,
+    };
+
+    ripplesRef.current.push({
+      x: clickX,
+      y: clickY,
+      radius: 0,
+      maxRadius: Math.max(window.innerWidth, window.innerHeight) * 0.45,
+      speed: 12,
+      intensity: 1.0,
+    });
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    mouseRef.current.active = false;
+  }, []);
+
   // Trigger a ripple on click anywhere
   const handleClick = useCallback((e: MouseEvent) => {
     if (!canvasRef.current) return;
@@ -84,6 +122,7 @@ export default function InteractiveTileGrid({
     let width = 0;
     let height = 0;
     let dpr = 1;
+    const step = tileSize + gap;
 
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -96,15 +135,24 @@ export default function InteractiveTileGrid({
       canvas.style.height = `${height}px`;
 
       ctx.scale(dpr, dpr);
+
+      // Clean up tile pruning on resize to free off-screen memory
+      for (const [key, tile] of tilesRef.current.entries()) {
+        if (tile.x > width + step || tile.y > height + step) {
+          tilesRef.current.delete(key);
+        }
+      }
     };
 
     resize();
     window.addEventListener("resize", resize);
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("click", handleClick);
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
 
-    const step = tileSize + gap;
     let lastTime = performance.now();
     let ambientTimer = 0;
 
@@ -225,8 +273,8 @@ export default function InteractiveTileGrid({
               strokeColor = `rgba(56, 189, 248, ${0.15 + active * 0.75})`;
               fillColor = `rgba(56, 189, 248, ${active * 0.22})`;
             } else if (accentMode === "gold") {
-              strokeColor = `rgba(255, 184, 0, ${0.15 + active * 0.75})`;
-              fillColor = `rgba(255, 184, 0, ${active * 0.22})`;
+              strokeColor = `rgba(255, 183, 3, ${0.15 + active * 0.75})`;
+              fillColor = `rgba(255, 183, 3, ${active * 0.22})`;
             }
 
             ctx.fillStyle = fillColor;
@@ -259,45 +307,58 @@ export default function InteractiveTileGrid({
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("click", handleClick);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
       document.removeEventListener("mouseleave", handleMouseLeave);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [tileSize, gap, accentMode, handleClick, handleMouseMove, handleMouseLeave]);
+  }, [tileSize, gap, accentMode, handleClick, handleMouseMove, handleMouseLeave, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
     <div
       ref={containerRef}
-      className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}
-      aria-hidden="true"
+      className={`fixed inset-0 z-0 pointer-events-none overflow-hidden ${className}`}
     >
-      <canvas ref={canvasRef} className="block w-full h-full" />
-
-      {/* Subtle radial corner fades to blend tiles softly into page edges */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(11,17,32,0.85)_100%)] pointer-events-none" />
+      {/* Decorative Canvas & radial corner fades wrapped with aria-hidden="true" */}
+      <div aria-hidden="true" className="absolute inset-0">
+        <canvas ref={canvasRef} className="block w-full h-full" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(7,11,20,0.85)_100%)] pointer-events-none" />
+      </div>
 
       {showControls && (
-        <div className="pointer-events-auto absolute bottom-4 right-4 z-20 flex items-center gap-2 rounded-full bg-[#0F172A]/85 backdrop-blur-md px-3 py-1.5 border border-slate-800 text-[11px] font-mono shadow-xl">
+        <div
+          role="toolbar"
+          aria-label="Interactive tile accent controls"
+          className="pointer-events-auto absolute bottom-4 right-4 z-20 flex items-center gap-2 rounded-full bg-[#0F172A]/85 backdrop-blur-md px-3 py-1.5 border border-slate-800 text-[11px] font-mono shadow-xl"
+        >
           <span className="text-slate-400">Interactive Tiles:</span>
           <button
+            type="button"
             onClick={() => setAccentMode("orange")}
             className={`w-3.5 h-3.5 rounded-full bg-brand-orange transition-transform ${
               accentMode === "orange" ? "ring-2 ring-white scale-110" : "opacity-60"
             }`}
             title="Orange Flame Accent"
+            aria-label="Orange Flame Accent"
           />
           <button
+            type="button"
             onClick={() => setAccentMode("cyan")}
             className={`w-3.5 h-3.5 rounded-full bg-sky-400 transition-transform ${
               accentMode === "cyan" ? "ring-2 ring-white scale-110" : "opacity-60"
             }`}
             title="Electric Cyan Accent"
+            aria-label="Electric Cyan Accent"
           />
           <button
+            type="button"
             onClick={() => setAccentMode("gold")}
             className={`w-3.5 h-3.5 rounded-full bg-amber-400 transition-transform ${
               accentMode === "gold" ? "ring-2 ring-white scale-110" : "opacity-60"
             }`}
-            title="Super 60 Gold Accent"
+            title="Super 60 Gold Accent (#FFB703)"
+            aria-label="Super 60 Gold Accent"
           />
         </div>
       )}

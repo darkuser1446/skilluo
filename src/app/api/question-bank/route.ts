@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole, getSessionUser } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   try {
-    await getSessionUser();
+    await requireRole(["MENTOR", "ADMIN"]);
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
     const topic = searchParams.get("topic") || undefined;

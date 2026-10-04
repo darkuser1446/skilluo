@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole, getSessionUser } from "@/lib/auth";
+import { requireRole, requireAuth } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
@@ -8,7 +8,7 @@ import { notifyMany, workshopStudentIds } from "@/lib/notify";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSessionUser();
+    const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
 
@@ -21,8 +21,8 @@ export async function GET(req: NextRequest) {
       include: {
         lab: true,
         questions: true,
-        results: session?.role === "STUDENT"
-          ? { where: { studentId: session.sub } }
+        results: user.role === "STUDENT"
+          ? { where: { studentId: user.sub, status: "COMPLETED" } }
           : {
               include: {
                 student: { select: { id: true, name: true, email: true } },
@@ -32,17 +32,17 @@ export async function GET(req: NextRequest) {
       orderBy: { startsAt: "desc" },
     });
 
-    // SECURITY: never expose the answer key to students
-    const sanitized =
-      session?.role === "STUDENT"
-        ? assessments.map((a) => ({
-            ...a,
-            questions: a.questions.map((q) => {
-              const { correctAnswer: _hidden, ...rest } = q;
-              return rest;
-            }),
-          }))
-        : assessments;
+    // SECURITY: only ADMIN and MENTOR may see correctAnswer
+    const isPrivileged = user.role === "ADMIN" || user.role === "MENTOR";
+    const sanitized = !isPrivileged
+      ? assessments.map((a) => ({
+          ...a,
+          questions: a.questions.map((q) => {
+            const { correctAnswer: _hidden, ...rest } = q;
+            return rest;
+          }),
+        }))
+      : assessments;
 
     return successResponse({ assessments: sanitized });
   } catch (err) {

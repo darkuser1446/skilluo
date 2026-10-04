@@ -37,9 +37,12 @@ import {
 } from "lucide-react";
 import TestEngine from "@/components/TestEngine";
 import StudentProgressTrend from "@/components/StudentProgressTrend";
-
+import CohortQuotaMatrix from "@/components/CohortQuotaMatrix";
+import { SkeletonCard, SkeletonMetric, SkeletonProfile } from "@/components/Skeleton";
+import EmptyState from "@/components/EmptyState";
 
 export default function StudentDashboardPage() {
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [performance, setPerformance] = useState<any>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -110,6 +113,7 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     async function init() {
+      setLoading(true);
       try {
         const meRes = await fetch("/api/auth/me");
         if (meRes.ok) {
@@ -173,6 +177,8 @@ export default function StudentDashboardPage() {
         }
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -448,6 +454,28 @@ export default function StudentDashboardPage() {
   const isSelected = user?.enrollments?.[0]?.status === "SELECTED";
   const isOnTrack = overall >= 75 || isSelected;
 
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-200">
+        <SkeletonProfile />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <SkeletonMetric />
+          <SkeletonMetric />
+          <SkeletonMetric />
+          <SkeletonMetric />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7">
+            <SkeletonCard />
+          </div>
+          <div className="lg:col-span-5">
+            <SkeletonCard />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* ── HERO BANNER: Candidate Overview & Qualification Status ── */}
@@ -647,7 +675,21 @@ export default function StudentDashboardPage() {
               );
             items.sort((a, b) => a.ts - b.ts);
             const upcoming = items.slice(0, 5);
-            if (upcoming.length === 0) return null;
+            if (upcoming.length === 0) {
+              return (
+                <div className="rounded-2xl p-4 bg-[#0F172A]/70 border border-slate-800/80 shadow-md flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-display font-bold text-white text-xs">All Deadlines Met</h4>
+                    <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                      No pending assignment deadlines or assessment schedules for this week.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
             return (
               <div className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-3">
                 <h3 className="font-display font-bold text-white text-sm flex items-center gap-2 border-b border-slate-800 pb-2.5">
@@ -756,6 +798,16 @@ export default function StudentDashboardPage() {
             </div>
           </div>
 
+          {/* Super 60 Cohort Intake Matrix (60 Seats) */}
+          <CohortQuotaMatrix
+            currentStudentRank={performance?.rank ?? 1}
+            currentStudentScore={overall}
+            currentStudentName={user?.name}
+            currentStudentStatus={user?.enrollments?.[0]?.status}
+            isStudentView={true}
+            totalSeats={60}
+          />
+
           {/* Performance Trend Graph & Milestone Velocity (Feature §27) */}
           <StudentProgressTrend
             performance={performance}
@@ -785,7 +837,11 @@ export default function StudentDashboardPage() {
 
               <div className="space-y-3">
                 {assignments.length === 0 && (
-                  <p className="text-slate-500 text-xs py-4 text-center">No assignments posted yet.</p>
+                  <EmptyState
+                    icon={FileCode}
+                    title="No Active Assignments"
+                    description="No assignments posted yet for your workshop. When published, they will appear here."
+                  />
                 )}
                 {assignments.slice(0, 3).map((a) => {
                   const sub = a.submissions?.[0];
@@ -920,6 +976,13 @@ export default function StudentDashboardPage() {
               Workshop Assignments
             </h3>
             <div className="space-y-2.5">
+              {assignments.length === 0 && (
+                <EmptyState
+                  icon={FileCode}
+                  title="No Assignments Available"
+                  description="Your mentor has not assigned any homework or lab tasks yet. Check back soon."
+                />
+              )}
               {assignments.map((a) => {
                 const sub = a.submissions?.[0];
                 const isSelected = selectedAssignment?.id === a.id;
@@ -1047,7 +1110,14 @@ export default function StudentDashboardPage() {
                       disabled={submitting}
                       className="px-5 py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orangeLight text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md hover:shadow-orange-glow flex items-center gap-2"
                     >
-                      {submitting ? "Uploading..." : "Submit Solution →"}
+                      {submitting ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Uploading...</span>
+                        </>
+                      ) : (
+                        "Submit Solution →"
+                      )}
                     </button>
                   </div>
                 </form>
@@ -1068,11 +1138,12 @@ export default function StudentDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Exercise List */}
           <div className="lg:col-span-5 space-y-3">
-            <h3 className="font-display font-bold text-white text-base mb-1">Programming Exercises</h3>
             {exercises.length === 0 && (
-              <div className="py-12 text-center text-slate-500 font-mono text-xs bg-[#0F172A]/50 rounded-2xl border border-slate-800">
-                No exercises published yet. Check back soon!
-              </div>
+              <EmptyState
+                icon={Code2}
+                title="No Practice Exercises Available"
+                description="Interactive C++ coding problems will appear here once published by your mentors."
+              />
             )}
             <div className="space-y-2.5">
               {exercises.map((ex) => {
@@ -1251,8 +1322,17 @@ export default function StudentDashboardPage() {
                       disabled={runningTestbench || !exerciseCode.trim()}
                       className="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 border border-slate-700 flex items-center justify-center gap-2 shadow-sm"
                     >
-                      <Play className="w-3.5 h-3.5 text-brand-orange" />
-                      {runningTestbench ? "Running Testbench..." : "Run Testbench (Sample)"}
+                      {runningTestbench ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-brand-orange/30 border-t-brand-orange rounded-full animate-spin" />
+                          <span>Running Testbench...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3.5 h-3.5 text-brand-orange" />
+                          <span>Run Testbench (Sample)</span>
+                        </>
+                      )}
                     </button>
 
                     <button
@@ -1260,8 +1340,17 @@ export default function StudentDashboardPage() {
                       disabled={submittingExercise}
                       className="py-2.5 rounded-xl bg-emerald-600 hover:brightness-110 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
                     >
-                      <Code2 className="w-4 h-4" />
-                      {submittingExercise ? "Submitting..." : "Submit Solution →"}
+                      {submittingExercise ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Submitting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Code2 className="w-4 h-4" />
+                          <span>Submit Solution →</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
@@ -1325,8 +1414,12 @@ export default function StudentDashboardPage() {
           {/* Notes Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredNotes.length === 0 && (
-              <div className="col-span-full py-12 text-center text-slate-500 font-mono text-xs">
-                No matching learning resources found.
+              <div className="col-span-full">
+                <EmptyState
+                  icon={BookOpen}
+                  title="No Learning Resources Found"
+                  description="No materials match your current category or search filter. Try clearing filters or check back later."
+                />
               </div>
             )}
             {filteredNotes.map((n) => (
@@ -1735,9 +1828,16 @@ export default function StudentDashboardPage() {
                 <button
                   type="submit"
                   disabled={creatingDoubt}
-                  className="w-full py-2 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 transition-all"
+                  className="w-full py-2 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                 >
-                  {creatingDoubt ? "Posting..." : "Post to Mentor"}
+                  {creatingDoubt ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Posting...</span>
+                    </>
+                  ) : (
+                    "Post to Mentor"
+                  )}
                 </button>
               </form>
             </div>
@@ -1747,6 +1847,13 @@ export default function StudentDashboardPage() {
               <h4 className="font-mono text-xs text-slate-400 font-bold uppercase tracking-wider">
                 My Doubt Threads ({doubts.length})
               </h4>
+              {doubts.length === 0 && (
+                <EmptyState
+                  icon={HelpCircle}
+                  title="No Active Doubts"
+                  description="Have questions regarding assignments or C++ architecture? Post a question above to get mentor guidance."
+                />
+              )}
               {doubts.map((d) => (
                 <div
                   key={d.id}
@@ -1847,8 +1954,17 @@ export default function StudentDashboardPage() {
                     disabled={sendingReply}
                     className="px-4 py-2 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 flex items-center gap-1.5"
                   >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Send</span>
+                    {sendingReply ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Send</span>
+                      </>
+                    )}
                   </button>
                 </form>
               </div>
@@ -1971,9 +2087,16 @@ export default function StudentDashboardPage() {
             <button
               type="submit"
               disabled={submittingFeedback}
-              className="w-full py-3 rounded-xl bg-brand-orange hover:bg-brand-orangeLight text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md hover:shadow-orange-glow"
+              className="w-full py-3 rounded-xl bg-brand-orange hover:bg-brand-orangeLight text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md hover:shadow-orange-glow flex items-center justify-center gap-2"
             >
-              {submittingFeedback ? "Submitting Review..." : "Submit Confidential Feedback →"}
+              {submittingFeedback ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Submitting Review...</span>
+                </>
+              ) : (
+                "Submit Confidential Feedback →"
+              )}
             </button>
           </form>
         </div>

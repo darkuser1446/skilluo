@@ -1,5 +1,9 @@
 import jwt from "jsonwebtoken";
 
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("FATAL: JWT_SECRET environment variable is missing.");
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || "super60_skillup_secret_key_jwt_2026_systems_platform_token";
 
 export interface JWTPayload {
