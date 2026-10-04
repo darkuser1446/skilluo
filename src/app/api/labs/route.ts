@@ -1,17 +1,28 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireRole } from "@/lib/auth";
+import { requireAuth, requireRole, getSessionUser } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSessionUser();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
 
+    const where: Record<string, unknown> = {};
+    if (workshopId) where.workshopId = workshopId;
+
+    // ROLE SCOPING: mentors only see their assigned labs, students only theirs
+    if (session?.role === "MENTOR") {
+      where.mentors = { some: { mentorId: session.sub } };
+    } else if (session?.role === "STUDENT") {
+      where.students = { some: { studentId: session.sub } };
+    }
+
     const labs = await prisma.lab.findMany({
-      where: workshopId ? { workshopId } : undefined,
+      where,
       include: {
         mentors: {
           include: {

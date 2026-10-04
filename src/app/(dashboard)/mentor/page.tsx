@@ -34,8 +34,10 @@ import {
   Dumbbell,
   ZapOff,
   Zap,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
+import TestManager from "@/components/TestManager";
 
 export default function MentorDashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -49,7 +51,7 @@ export default function MentorDashboardPage() {
   const [exercises, setExercises] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<
-    "roster" | "review" | "assignments" | "exercises" | "notes" | "attendance" | "doubts" | "feedback" | "announcements"
+    "roster" | "review" | "assignments" | "exercises" | "notes" | "attendance" | "doubts" | "feedback" | "announcements" | "tests"
   >("roster");
 
   // Review & Grading state
@@ -90,6 +92,8 @@ export default function MentorDashboardPage() {
   const [newSessionTitle, setNewSessionTitle] = useState("");
   const [newSessionTopic, setNewSessionTopic] = useState("");
   const [newSessionDate, setNewSessionDate] = useState(new Date().toISOString().split("T")[0]);
+  const [newSessionStart, setNewSessionStart] = useState("");
+  const [newSessionEnd, setNewSessionEnd] = useState("");
   const [creatingSession, setCreatingSession] = useState(false);
   const [activeSession, setActiveSession] = useState<any>(null);
   const [attendanceMap, setAttendanceMap] = useState<Record<string, "PRESENT" | "ABSENT" | "LATE">>({});
@@ -272,10 +276,18 @@ export default function MentorDashboardPage() {
       const res = await fetch("/api/attendance/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workshopId: activeWsId, labId: selectedLabId || undefined, title: newSessionTitle, topic: newSessionTopic, date: new Date(newSessionDate).toISOString() }),
+        body: JSON.stringify({
+          workshopId: activeWsId,
+          labId: selectedLabId || undefined,
+          title: newSessionTitle,
+          topic: newSessionTopic,
+          date: new Date(newSessionDate).toISOString(),
+          startTime: newSessionStart || undefined,
+          endTime: newSessionEnd || undefined,
+        }),
       });
       if (res.ok) {
-        setNewSessionTitle(""); setNewSessionTopic("");
+        setNewSessionTitle(""); setNewSessionTopic(""); setNewSessionStart(""); setNewSessionEnd("");
         const sRes = await fetch(`/api/attendance/sessions?workshopId=${activeWsId}`);
         if (sRes.ok) { const sData = await sRes.json(); setSessions(sData.data.sessions || []); }
       }
@@ -386,6 +398,7 @@ export default function MentorDashboardPage() {
     { id: "doubts", label: "Doubts Inbox", icon: HelpCircle, count: doubts.filter((d) => d.status === "OPEN").length },
     { id: "feedback", label: "Feedback", icon: MessageSquareHeart, count: feedbacks.length },
     { id: "announcements", label: "Announcements", icon: Megaphone, count: announcements.length },
+    { id: "tests", label: "Tests & Quizzes", icon: ClipboardList, count: null },
   ];
 
   return (
@@ -449,6 +462,11 @@ export default function MentorDashboardPage() {
       </div>
 
       {/* ══ TAB: ROSTER ══ */}
+      {/* ══ TESTS & QUIZZES (create, manage, grade online tests) ══ */}
+      {activeTab === "tests" && activeWsId && (
+        <TestManager workshopId={activeWsId} labs={labs} />
+      )}
+
       {activeTab === "roster" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -645,7 +663,7 @@ export default function MentorDashboardPage() {
                 <div><h3 className="font-display font-bold text-white text-base">Mark Session Attendance</h3><p className="text-xs text-slate-400">Active: <strong className="text-white">{activeSession?.title || "Select a session"}</strong></p></div>
                 <div className="flex items-center gap-2">
                   <select value={activeSession?.id || ""} onChange={(e) => { const s = sessions.find((x) => x.id === e.target.value); setActiveSession(s); if (s) { const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {}; s.attendanceRecords?.forEach((r: any) => { map[r.studentId] = r.status; }); setAttendanceMap(map); }}} className="bg-[#070B14] border border-slate-800 rounded-lg px-2 py-1 text-xs font-mono text-white">
-                    {sessions.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+                    {sessions.map((s) => <option key={s.id} value={s.id}>{s.title}{s.startTime ? ` · ${s.startTime}${s.endTime ? `–${s.endTime}` : ""}` : ""}</option>)}
                   </select>
                   <button onClick={() => handleMarkAll("PRESENT")} className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white font-mono text-[11px] font-bold transition-all">Mark All Present</button>
                   <button onClick={handleSaveAttendance} disabled={savingAttendance} className="px-3.5 py-1 rounded bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 transition-all shadow-sm">{savingAttendance ? "Saving..." : "Save Records"}</button>
@@ -674,6 +692,14 @@ export default function MentorDashboardPage() {
                 <input required placeholder="Session title (e.g. Lab Day 4)" value={newSessionTitle} onChange={(e) => setNewSessionTitle(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 font-mono" />
                 <input placeholder="Topic (e.g. SIMD Vectorization)" value={newSessionTopic} onChange={(e) => setNewSessionTopic(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 font-mono" />
                 <input type="date" required value={newSessionDate} onChange={(e) => setNewSessionDate(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono" />
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-[10px] font-mono text-slate-500 uppercase">Start time
+                    <input type="time" value={newSessionStart} onChange={(e) => setNewSessionStart(e.target.value)} className="mt-1 w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono" />
+                  </label>
+                  <label className="text-[10px] font-mono text-slate-500 uppercase">End time
+                    <input type="time" value={newSessionEnd} onChange={(e) => setNewSessionEnd(e.target.value)} className="mt-1 w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono" />
+                  </label>
+                </div>
                 <button type="submit" disabled={creatingSession} className="w-full py-2 rounded-xl bg-emerald-600 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50">{creatingSession ? "Creating..." : "Create Session"}</button>
               </form>
             </div>

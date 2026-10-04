@@ -77,6 +77,41 @@ export default function StudentProfilePage() {
     }
   };
 
+  // ── Avatar upload (stored as a data-URL, max 512 KB) ──
+  const handleAvatarChange = async (file: File | undefined) => {
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      setSaveMsg({ text: "Please choose an image file.", ok: false });
+      return;
+    }
+    if (file.size > 512 * 1024) {
+      setSaveMsg({ text: "Image too large — max 512 KB.", ok: false });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = String(reader.result || "");
+      try {
+        const res = await fetch(`/api/users/${user.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ avatarUrl: dataUrl }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setUser((prev: any) => ({ ...prev, avatarUrl: data.data.user.avatarUrl }));
+          setSaveMsg({ text: "Profile photo updated!", ok: true });
+          setTimeout(() => setSaveMsg(null), 3000);
+        } else {
+          setSaveMsg({ text: data?.error?.message || "Upload failed", ok: false });
+        }
+      } catch {
+        setSaveMsg({ text: "Upload failed — try a smaller image.", ok: false });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPw !== confirmPw) {
@@ -151,9 +186,18 @@ export default function StudentProfilePage() {
                 {initials}
               </div>
             )}
-            <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#070B14] border border-slate-800 flex items-center justify-center">
+            <label
+              className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#070B14] border border-slate-800 flex items-center justify-center cursor-pointer hover:border-brand-orange/60 transition-colors"
+              title="Upload profile photo (max 512 KB)"
+            >
               <Camera className="w-3.5 h-3.5 text-slate-400" />
-            </div>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) => handleAvatarChange(e.target.files?.[0])}
+              />
+            </label>
           </div>
 
           {/* Identity */}
@@ -184,6 +228,19 @@ export default function StudentProfilePage() {
                 <span className="flex items-center gap-1">
                   <Building2 className="w-3.5 h-3.5 text-brand-orange" />
                   {user.college}
+                </span>
+              )}
+              {user?.branch && (
+                <span className="flex items-center gap-1">
+                  <GraduationCap className="w-3.5 h-3.5 text-sky-400" />
+                  {user.branch}
+                  {user.semester ? ` · Sem ${user.semester}` : ""}
+                </span>
+              )}
+              {user?.rollNumber && (
+                <span className="flex items-center gap-1">
+                  <span className="text-brand-orange">ID:</span>
+                  {user.rollNumber}
                 </span>
               )}
               {myLab && (

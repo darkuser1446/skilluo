@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { name: "Home", href: "#hero" },
   { name: "About", href: "/about" },
   { name: "Workshops", href: "/workshops" },
-  { name: "Curriculum", href: "#program" },
+  { name: "Curriculum", href: "/curriculum" },
   { name: "Students", href: "#students" },
   { name: "Mentors", href: "#mentors" },
   { name: "Contact", href: "#contact" },
@@ -107,7 +107,7 @@ export default function Navbar() {
           {/* Mobile Hamburger Button */}
           <div className="flex sm:hidden items-center gap-2">
             <Link
-              href="#register"
+              href="/register"
               className="text-[11px] font-semibold text-white px-3 py-1.5 rounded-full bg-brand-orange shadow-md"
             >
               Register
@@ -161,14 +161,14 @@ export default function Navbar() {
 
             <div className="flex flex-col gap-3 pt-6 border-t border-white/10">
               <Link
-                href="#register"
+                href="/register"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-semibold text-center text-sm shadow-[0_0_20px_rgba(240,124,39,0.4)]"
               >
                 Register for Workshop 2026
               </Link>
               <Link
-                href="#login"
+                href="/login"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-3 rounded-xl border border-white/20 text-slate-200 font-semibold text-center text-sm hover:bg-white/5"
               >

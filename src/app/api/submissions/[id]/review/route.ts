@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth";
 import { successResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
+import { notify } from "@/lib/notify";
 
 const ReviewSchema = z.object({
   score: z.number().min(0).max(100),
@@ -35,6 +36,15 @@ export async function PUT(
         assignment: true,
       },
     });
+
+    // Tell the student their work was reviewed
+    await notify(
+      submission.student.id,
+      "Assignment evaluated",
+      `"${submission.assignment.title}" was graded: ${data.score}/${submission.assignment.maxScore}.`,
+      "REVIEW",
+      "/student"
+    );
 
     return successResponse({ submission });
   } catch (err) {

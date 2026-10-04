@@ -7,10 +7,12 @@ export interface PerformanceBreakdown {
   workshopId: string;
   assignmentsScore: number; // 0-100 normalized
   assessmentsScore: number; // 0-100 normalized
+  exercisesScore: number; // 0-100 normalized
   attendancePercentage: number; // 0-100
   doubtsResolved: number;
   overallScore: number; // 0-100 weighted
   rank?: number;
+  totalCandidates?: number;
 }
 
 export async function calculateOverallPerformance(
@@ -78,21 +80,52 @@ export async function calculateOverallPerformance(
   const assessmentsScore =
     totalAssessMax > 0 ? (totalAssessEarned / totalAssessMax) * 100 : 0;
 
-  // 4. Attendance percentage
-  const totalSessions = await prisma.session.count({
-    where: { workshopId },
-  });
-
-  const presentRecords = await prisma.attendanceRecord.count({
+  // 3b. Exercises score (real submissions — was previously a proxy of assignments)
+  const exerciseSubs = await prisma.exerciseSubmission.findMany({
     where: {
       studentId,
-      session: { workshopId },
-      status: "PRESENT",
+      exercise: { workshopId },
+    },
+    include: { exercise: true },
+  });
+
+  let totalExEarned = 0;
+  let totalExMax = 0;
+  for (const s of exerciseSubs) {
+    if (s.score !== null) {
+      totalExEarned += s.score;
+      totalExMax += s.exercise.maxScore;
+    }
+  }
+  const exercisesScore = totalExMax > 0 ? (totalExEarned / totalExMax) * 100 : 0;
+
+  // 4. Attendance percentage — scoped to THIS student's labs (workshop-wide
+  //    sessions belonging to other labs must not dilute their percentage).
+  const myLabRows = await prisma.labStudent.findMany({
+    where: { studentId },
+    select: { labId: true },
+  });
+  const myLabIds = myLabRows.map((r) => r.labId);
+
+  const sessionWhere = {
+    workshopId,
+    ...(myLabIds.length > 0
+      ? { OR: [{ labId: null }, { labId: { in: myLabIds } }] }
+      : {}),
+  };
+
+  const totalSessions = await prisma.session.count({ where: sessionWhere });
+
+  const attendedRecords = await prisma.attendanceRecord.count({
+    where: {
+      studentId,
+      session: sessionWhere,
+      status: { in: ["PRESENT", "LATE"] }, // LATE still means attended
     },
   });
 
   const attendancePercentage =
-    totalSessions > 0 ? (presentRecords / totalSessions) * 100 : 100;
+    totalSessions > 0 ? (attendedRecords / totalSessions) * 100 : 100;
 
   // 5. Doubts / Participation
   const doubtsResolved = await prisma.doubt.count({
@@ -104,7 +137,7 @@ export async function calculateOverallPerformance(
   });
   const doubtsScore = Math.min(doubtsResolved * 20, 100);
 
-  // 6. Overall weighted score
+  // 6. Overall weighted score — each weight applies to ITS OWN metric
   const wAssignments = config.assignments ?? 30;
   const wAssessments = config.assessments ?? 35;
   const wAttendance = config.attendance ?? 15;
@@ -117,7 +150,7 @@ export async function calculateOverallPerformance(
       (assignmentsScore * wAssignments +
         assessmentsScore * wAssessments +
         attendancePercentage * wAttendance +
-        assignmentsScore * wExercises + // exercises proxy
+        exercisesScore * wExercises +
         doubtsScore * wDoubts) /
       (totalWeight || 100)
     ).toFixed(1)
@@ -130,6 +163,7 @@ export async function calculateOverallPerformance(
     workshopId,
     assignmentsScore: Number(assignmentsScore.toFixed(1)),
     assessmentsScore: Number(assessmentsScore.toFixed(1)),
+    exercisesScore: Number(exercisesScore.toFixed(1)),
     attendancePercentage: Number(attendancePercentage.toFixed(1)),
     doubtsResolved,
     overallScore,
@@ -150,5 +184,16 @@ export async function getWorkshopLeaderboard(workshopId: string) {
 
   // Sort descending by overallScore
   list.sort((a, b) => b.overallScore - a.overallScore);
-  return list.map((item, idx) => ({ ...item, rank: idx + 1 }));
+  return list.map((item, idx) => ({ ...item, rank: idx + 1, totalCandidates: list.length }));
+}
+
+/** Rank of one student inside the workshop leaderboard (1-based). */
+export async function getStudentRank(
+  studentId: string,
+  workshopId: string
+): Promise<{ rank: number; totalCandidates: number }> {
+  const leaderboard = await getWorkshopLeaderboard(workshopId);
+  const idx = leaderboard.findIndex((p) => p.studentId === studentId);
+  if (idx === -1) return { rank: leaderboard.length || 1, totalCandidates: leaderboard.length };
+  return { rank: idx + 1, totalCandidates: leaderboard.length };
 }

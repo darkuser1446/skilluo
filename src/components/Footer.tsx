@@ -136,22 +136,22 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-sm text-slate-300">
               <li>
-                <Link href="#register" className="text-brand-orange font-semibold hover:underline">
+                <Link href="/register" className="text-brand-orange font-semibold hover:underline">
                   Workshop 2026 Registration
                 </Link>
               </li>
               <li>
-                <Link href="#login" className="hover:text-white transition-colors">
+                <Link href="/login" className="hover:text-white transition-colors">
                   Student Assessment Portal
                 </Link>
               </li>
               <li>
-                <Link href="#login" className="hover:text-white transition-colors">
+                <Link href="/login" className="hover:text-white transition-colors">
                   Assignment Submissions
                 </Link>
               </li>
               <li>
-                <Link href="#login" className="hover:text-white transition-colors">
+                <Link href="/login" className="hover:text-white transition-colors">
                   Attendance & Marks Tracker
                 </Link>
               </li>

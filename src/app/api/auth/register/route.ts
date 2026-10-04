@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { signToken } from "@/lib/jwt";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
+import { notifyMany } from "@/lib/notify";
 
 const RegisterSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -12,8 +13,7 @@ const RegisterSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   college: z.string().optional(),
   phone: z.string().optional(),
-  // Extended profile fields — stored in college composite or logged.
-  // TODO: Add dedicated schema columns (branch, rollNumber, semester, programmingExperience) for a clean implementation.
+  // Extended profile fields — stored in dedicated columns
   branch: z.string().optional(),
   rollNumber: z.string().optional(),
   semester: z.string().optional(),
@@ -35,33 +35,23 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-    // Encode extra profile fields into the college string until schema gains dedicated columns.
-    // Format: "College Name - Branch (Sem N) | Roll: ROLLNO"
-    let collegeComposite = data.college?.trim() ?? "";
-    if (data.branch) collegeComposite += ` - ${data.branch.trim()}`;
-    if (data.semester) collegeComposite += ` (Sem ${data.semester.trim()})`;
-    if (data.rollNumber) collegeComposite += ` | Roll: ${data.rollNumber.trim()}`;
-
-    // Log extended fields that don't yet have schema columns
-    if (data.programmingExperience) {
-      console.info(
-        `[register] programmingExperience for ${data.email}: ${data.programmingExperience}. ` +
-          "Add a dedicated column to User model for proper storage."
-      );
-    }
-
     const user = await prisma.user.create({
       data: {
         name: data.name.trim(),
         email: data.email.toLowerCase().trim(),
         passwordHash,
         role: "STUDENT",
-        college: collegeComposite || undefined,
+        college: data.college?.trim() || undefined,
         phone: data.phone?.trim(),
+        branch: data.branch?.trim() || undefined,
+        rollNumber: data.rollNumber?.trim() || undefined,
+        semester: data.semester?.trim() || undefined,
+        programmingExperience: data.programmingExperience?.trim() || undefined,
       },
     });
 
-    // Auto-enroll in the current active workshop (e.g. 2026)
+    // Apply to the current active workshop — status PENDING until admin review
+    // (spec: Registration → Application → Admin Review → Approved → Enrolled)
     const activeWorkshop = await prisma.workshop.findFirst({
       where: { status: "ACTIVE" },
       orderBy: { year: "desc" },
@@ -72,10 +62,23 @@ export async function POST(req: NextRequest) {
         data: {
           workshopId: activeWorkshop.id,
           studentId: user.id,
-          status: "ENROLLED",
+          status: "PENDING",
         },
       });
     }
+
+    // Let admins know there is a new application to review
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN", isActive: true },
+      select: { id: true },
+    });
+    await notifyMany(
+      admins.map((a) => a.id),
+      "New registration to review",
+      `${user.name} (${user.email}) registered and is awaiting approval.`,
+      "INFO",
+      "/admin"
+    );
 
     const token = signToken({
       sub: user.id,

@@ -15,8 +15,11 @@ enum UserRole {
 
 enum WorkshopStatus {
   UPCOMING
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
   ACTIVE
   COMPLETED
+  ARCHIVED
 }
 
 enum EnrollmentStatus {
@@ -67,10 +70,15 @@ model User {
   avatarUrl    String?
   phone        String?
   college      String?
+  branch       String?
+  rollNumber   String?
+  semester     String?
+  programmingExperience String?
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  resetTokens        PasswordResetToken[]
   mentorProfile      MentorProfile?
   labMentors         LabMentor[]
   labStudents        LabStudent[]
@@ -108,6 +116,33 @@ model Workshop {
   feedbacks   Feedback[]
   exercises   Exercise[]
   announcements Announcement[]
+  questionBank  QuestionBankItem[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model QuestionBankItem {
+  id            String   @id @default(cuid())
+  workshopId    String
+  workshop      Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  topic         String?
+  difficulty    String   @default("MEDIUM")
+  prompt        String
+  options       Json?    // string[]
+  correctAnswer String?
+  marks         Float    @default(10)
+  createdBy     String
+  createdAt     DateTime @default(now())
+
+  @@index([workshopId, topic])
 }
 
 model Lab {
@@ -185,6 +220,8 @@ model Session {
   lab        Lab?     @relation(fields: [labId], references: [id], onDelete: SetNull)
   title      String
   date       DateTime
+  startTime  String?  // "18:00"
+  endTime    String?  // "20:30"
   topic      String?
   createdAt  DateTime @default(now())
 
@@ -255,17 +292,20 @@ model Note {
 }
 
 model Assessment {
-  id          String         @id @default(cuid())
-  workshopId  String
-  workshop    Workshop       @relation(fields: [workshopId], references: [id], onDelete: Cascade)
-  labId       String?
-  lab         Lab?           @relation(fields: [labId], references: [id], onDelete: SetNull)
-  title       String
-  type        AssessmentType @default(TEST)
-  totalMarks  Float          @default(100)
-  startsAt    DateTime
-  endsAt      DateTime
-  createdAt   DateTime       @default(now())
+  id              String         @id @default(cuid())
+  workshopId      String
+  workshop        Workshop       @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  labId           String?
+  lab             Lab?           @relation(fields: [labId], references: [id], onDelete: SetNull)
+  title           String
+  type            AssessmentType @default(TEST)
+  totalMarks      Float          @default(100)
+  passingMarks    Float?
+  durationMinutes Int?
+  instructions    String?
+  startsAt        DateTime
+  endsAt          DateTime
+  createdAt       DateTime       @default(now())
 
   questions AssessmentQuestion[]
   results   AssessmentResult[]
@@ -282,14 +322,20 @@ model AssessmentQuestion {
 }
 
 model AssessmentResult {
-  id           String     @id @default(cuid())
-  assessmentId String
-  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  studentId    String
-  student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  score        Float
-  status       String     @default("COMPLETED")
-  submittedAt  DateTime   @default(now())
+  id              String     @id @default(cuid())
+  assessmentId    String
+  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  score           Float
+  status          String     @default("COMPLETED") // COMPLETED | PENDING_REVIEW
+  answers         Json?      // questionId -> answer (incl. code/text answers)
+  correctCount    Int?
+  incorrectCount  Int?
+  unansweredCount Int?
+  durationSec     Int?
+  feedback        String?
+  submittedAt     DateTime   @default(now())
 
   @@unique([assessmentId, studentId])
 }

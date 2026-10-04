@@ -4,6 +4,7 @@ import { requireAuth, requireRole, getSessionUser } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
+import { notifyMany, workshopStudentIds } from "@/lib/notify";
 
 export async function GET(req: NextRequest) {
   try {
@@ -69,6 +70,16 @@ export async function POST(req: NextRequest) {
         createdBy: user.sub,
       },
     });
+
+    // Notify the target students about the new assignment
+    const studentIds = await workshopStudentIds(data.workshopId, data.labId);
+    await notifyMany(
+      studentIds,
+      "New assignment",
+      `"${data.title}" — due ${new Date(data.dueDate).toLocaleDateString()}.`,
+      "ASSIGNMENT",
+      "/student"
+    );
 
     return successResponse({ assignment }, undefined, 201);
   } catch (err) {

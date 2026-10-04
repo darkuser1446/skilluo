@@ -20,6 +20,10 @@ export async function GET(req: NextRequest) {
         role: true,
         college: true,
         phone: true,
+        branch: true,
+        rollNumber: true,
+        semester: true,
+        programmingExperience: true,
         avatarUrl: true,
         mentorProfile: true,
         labMentors: {

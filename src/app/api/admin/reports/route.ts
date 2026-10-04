@@ -18,20 +18,33 @@ export async function GET(req: NextRequest) {
     // 1. Leaderboard & performance
     const leaderboard = await getWorkshopLeaderboard(workshopId);
 
-    // 2. Workshop enrollment statuses
+    // 2. Workshop enrollment statuses & lab assignments
     const enrollments = await prisma.workshopEnrollment.findMany({
       where: { workshopId },
       include: {
         student: {
-          select: { id: true, name: true, email: true, college: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            college: true,
+            labStudents: {
+              where: { lab: { workshopId } },
+              include: { lab: { select: { id: true, name: true } } },
+            },
+          },
         },
       },
     });
 
     const candidateSelectionList = leaderboard.map((item) => {
       const enrollment = enrollments.find((e) => e.studentId === item.studentId);
+      const labAssignment = enrollment?.student?.labStudents?.[0];
       return {
         ...item,
+        email: enrollment?.student?.email || "",
+        labId: labAssignment?.labId || null,
+        labName: labAssignment?.lab?.name || "Unassigned",
         status: enrollment?.status || "ENROLLED",
       };
     });

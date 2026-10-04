@@ -106,7 +106,7 @@ export default function CtaBand() {
               </button>
 
               <Link
-                href="#login"
+                href="/login"
                 className="w-full sm:w-auto px-8 py-3.5 rounded-full border border-white/20 hover:border-white/40 hover:bg-white/10 text-white font-display font-semibold text-sm tracking-wide transition-all flex items-center justify-center gap-2"
               >
                 <UserCheck className="w-4 h-4 text-brand-orange" />

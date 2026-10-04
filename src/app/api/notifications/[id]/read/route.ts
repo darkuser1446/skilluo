@@ -30,3 +30,6 @@ export async function PATCH(
     return handleApiError(err);
   }
 }
+
+export const POST = PATCH;
+

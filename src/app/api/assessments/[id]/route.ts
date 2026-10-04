@@ -30,7 +30,20 @@ export async function GET(
     });
 
     if (!assessment) return errorResponse("Assessment not found", "NOT_FOUND", 404);
-    return successResponse({ assessment });
+
+    // SECURITY: never expose the answer key to students
+    const sanitized =
+      session?.role === "STUDENT"
+        ? {
+            ...assessment,
+            questions: assessment.questions.map((q) => {
+              const { correctAnswer: _hidden, ...rest } = q;
+              return rest;
+            }),
+          }
+        : assessment;
+
+    return successResponse({ assessment: sanitized });
   } catch (err) {
     return handleApiError(err);
   }

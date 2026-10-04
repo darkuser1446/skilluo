@@ -92,22 +92,22 @@ export default function Hero() {
             variants={staggerItem}
             className="mt-8 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
           >
-            <Link
-              href="#register"
-              onClick={triggerConfetti}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-display font-bold text-sm tracking-wide shadow-[0_0_25px_rgba(240,124,39,0.5)] hover:shadow-[0_0_35px_rgba(240,124,39,0.8)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 group"
-            >
-              <span>Register for Workshop 2026</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
+              <Link
+                href="/register"
+                onClick={triggerConfetti}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-display font-bold text-sm tracking-wide shadow-[0_0_25px_rgba(240,124,39,0.5)] hover:shadow-[0_0_35px_rgba(240,124,39,0.8)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 group"
+              >
+                <span>Register for Workshop 2026</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
 
-            <Link
-              href="#program"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-full border border-white/20 hover:border-brand-orange/60 hover:bg-white/5 text-slate-200 font-display font-semibold text-sm tracking-wide transition-all flex items-center justify-center gap-2"
-            >
-              <Terminal className="w-4 h-4 text-brand-orange" />
-              <span>Explore Curriculum ↓</span>
-            </Link>
+              <Link
+                href="/curriculum"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-full border border-white/20 hover:border-brand-orange/60 hover:bg-white/5 text-slate-200 font-display font-semibold text-sm tracking-wide transition-all flex items-center justify-center gap-2"
+              >
+                <Terminal className="w-4 h-4 text-brand-orange" />
+                <span>Explore Curriculum ↓</span>
+              </Link>
           </motion.div>
 
 

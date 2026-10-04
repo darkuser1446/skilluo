@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth";
+import { requireAuth, requireRole } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
@@ -89,6 +89,16 @@ export async function POST(req: NextRequest) {
         role: true,
         college: true,
         createdAt: true,
+      },
+    });
+
+    const actor = await requireAuth();
+    await prisma.auditLog.create({
+      data: {
+        action: `USER_CREATED_${data.role}`,
+        performedBy: actor.sub,
+        targetId: user.id,
+        details: { email: user.email, name: user.name },
       },
     });
 

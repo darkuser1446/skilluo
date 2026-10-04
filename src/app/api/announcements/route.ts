@@ -3,21 +3,22 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser, requireRole } from "@/lib/auth";
 import { successResponse } from "@/utils/api-response";
 import { handleApiError, ApiError } from "@/utils/errors";
+import { notifyMany, workshopStudentIds } from "@/lib/notify";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId") || undefined;
     const isPublicParam = searchParams.get("isPublic");
+    const user = await getSessionUser();
 
     const where: Record<string, unknown> = {};
     if (workshopId) where.workshopId = workshopId;
     if (isPublicParam === "true") where.isPublic = true;
 
-    // If workshop-specific, require auth
-    if (workshopId) {
-      const user = await getSessionUser();
-      if (!user) throw new ApiError("Authentication required", 401, "UNAUTHORIZED");
+    // SECURITY: unauthenticated visitors may only ever see public announcements
+    if (!user) {
+      where.isPublic = true;
     }
 
     const announcements = await prisma.announcement.findMany({
@@ -52,6 +53,18 @@ export async function POST(req: NextRequest) {
         createdBy: user.sub,
       },
     });
+
+    // Push an in-app notification to the target audience
+    if (workshopId) {
+      const studentIds = await workshopStudentIds(workshopId, labId);
+      await notifyMany(
+        studentIds,
+        pinned ? `📌 Pinned: ${title}` : `📢 ${title}`,
+        bodyText.length > 160 ? `${bodyText.slice(0, 160)}…` : bodyText,
+        "ANNOUNCEMENT",
+        "/student"
+      );
+    }
 
     return successResponse({ announcement }, undefined, 201);
   } catch (err) {

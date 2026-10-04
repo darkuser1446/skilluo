@@ -4,6 +4,7 @@ import { requireRole, getSessionUser } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
+import { notifyMany, workshopStudentIds } from "@/lib/notify";
 
 export async function GET(req: NextRequest) {
   try {
@@ -31,7 +32,19 @@ export async function GET(req: NextRequest) {
       orderBy: { startsAt: "desc" },
     });
 
-    return successResponse({ assessments });
+    // SECURITY: never expose the answer key to students
+    const sanitized =
+      session?.role === "STUDENT"
+        ? assessments.map((a) => ({
+            ...a,
+            questions: a.questions.map((q) => {
+              const { correctAnswer: _hidden, ...rest } = q;
+              return rest;
+            }),
+          }))
+        : assessments;
+
+    return successResponse({ assessments: sanitized });
   } catch (err) {
     return handleApiError(err);
   }
@@ -50,6 +63,9 @@ const AssessmentCreateSchema = z.object({
   title: z.string().min(3),
   type: z.enum(["TEST", "QUIZ", "PROGRAMMING", "ASSIGNMENT"]).default("QUIZ"),
   totalMarks: z.number().int().positive().default(100),
+  passingMarks: z.number().min(0).optional(),
+  durationMinutes: z.number().int().positive().optional(),
+  instructions: z.string().optional(),
   startsAt: z.string(),
   endsAt: z.string(),
   questions: z.array(QuestionSchema).min(1),
@@ -57,9 +73,13 @@ const AssessmentCreateSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    await requireRole(["MENTOR", "ADMIN"]);
+    const creator = await requireRole(["MENTOR", "ADMIN"]);
     const body = await req.json();
     const data = AssessmentCreateSchema.parse(body);
+
+    if (new Date(data.endsAt) <= new Date(data.startsAt)) {
+      return errorResponse("End time must be after start time", "VALIDATION_ERROR", 400);
+    }
 
     const assessment = await prisma.assessment.create({
       data: {
@@ -68,6 +88,9 @@ export async function POST(req: NextRequest) {
         title: data.title,
         type: data.type,
         totalMarks: data.totalMarks,
+        passingMarks: data.passingMarks ?? null,
+        durationMinutes: data.durationMinutes ?? null,
+        instructions: data.instructions ?? null,
         startsAt: new Date(data.startsAt),
         endsAt: new Date(data.endsAt),
         questions: {
@@ -80,6 +103,25 @@ export async function POST(req: NextRequest) {
         },
       },
       include: { questions: true },
+    });
+
+    // Notify enrolled students that a new test is scheduled
+    const studentIds = await workshopStudentIds(data.workshopId, data.labId);
+    await notifyMany(
+      studentIds,
+      "New test scheduled",
+      `"${data.title}" (${data.type}) — ${data.totalMarks} marks. Starts ${new Date(data.startsAt).toLocaleString()}.`,
+      "ASSESSMENT",
+      "/student"
+    );
+
+    await prisma.auditLog.create({
+      data: {
+        action: "ASSESSMENT_CREATED",
+        performedBy: creator.sub,
+        targetId: assessment.id,
+        details: { title: data.title, type: data.type, workshopId: data.workshopId },
+      },
     });
 
     return successResponse({ assessment }, undefined, 201);

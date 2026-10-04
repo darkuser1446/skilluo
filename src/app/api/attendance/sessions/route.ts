@@ -46,6 +46,8 @@ const SessionSchema = z.object({
   labId: z.string().optional(),
   title: z.string().min(3),
   date: z.string(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
   topic: z.string().optional(),
 });
 
@@ -61,6 +63,8 @@ export async function POST(req: NextRequest) {
         labId: data.labId || null,
         title: data.title,
         date: new Date(data.date),
+        startTime: data.startTime || null,
+        endTime: data.endTime || null,
         topic: data.topic,
       },
     });

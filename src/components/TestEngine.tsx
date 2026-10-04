@@ -24,6 +24,9 @@ interface Assessment {
   title: string;
   type: string;
   totalMarks: number;
+  passingMarks?: number | null;
+  durationMinutes?: number | null;
+  instructions?: string | null;
   startsAt: string;
   endsAt: string;
   questions: Question[];
@@ -51,22 +54,57 @@ export default function TestEngine({
   const questions = assessment.questions || [];
   const totalQuestions = questions.length;
 
-  // Timer state: duration derived from endsAt - now (capped at 90 min)
+  // Timer state: prefer configured duration, else time remaining until endsAt (capped at 90 min)
   const calcInitialTime = () => {
     const end = new Date(assessment.endsAt).getTime();
     const now = Date.now();
-    const remaining = Math.max(0, Math.floor((end - now) / 1000));
-    return Math.min(remaining, 90 * 60); // cap at 90 min
+    const untilEnd = Math.max(0, Math.floor((end - now) / 1000));
+    if (assessment.durationMinutes && assessment.durationMinutes > 0) {
+      return Math.min(untilEnd, assessment.durationMinutes * 60);
+    }
+    return Math.min(untilEnd, 90 * 60); // cap at 90 min
   };
 
   const [timeLeft, setTimeLeft] = useState(calcInitialTime);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [markedForReview, setMarkedForReview] = useState<Set<string>>(new Set());
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const draftKey = `skillup-test-draft-${assessment.id}`;
 
   const currentQuestion = questions[currentIdx];
+
+  // ── AUTO-SAVE: persist answers to sessionStorage (survives refresh) ──
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(draftKey);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft && typeof draft === "object" && Object.keys(draft).length > 0) {
+          setQuizAnswers((prev) => ({ ...draft, ...prev }));
+          setSavedAt(new Date().toLocaleTimeString());
+        }
+      }
+    } catch {
+      /* ignore corrupt drafts */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assessment.id]);
+
+  useEffect(() => {
+    try {
+      if (Object.keys(quizAnswers).length > 0) {
+        sessionStorage.setItem(draftKey, JSON.stringify(quizAnswers));
+        setSavedAt(new Date().toLocaleTimeString());
+      }
+    } catch {
+      /* storage full / unavailable — answers still live in state */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quizAnswers]);
 
   // Countdown timer with auto-submit
   useEffect(() => {
@@ -78,10 +116,11 @@ export default function TestEngine({
     return () => clearInterval(interval);
   }, [timeLeft]);
 
-  // Auto-save answers every 30s (just saves to state, already reactive)
+  // Auto-save heartbeat — answers are persisted to sessionStorage above;
+  // this interval refreshes the "saved at" timestamp as a visible guarantee.
   useEffect(() => {
     autoSaveRef.current = setInterval(() => {
-      // answers are already in state; this is a hook point for future server-side draft saving
+      setSavedAt(new Date().toLocaleTimeString());
     }, 30000);
     return () => { if (autoSaveRef.current) clearInterval(autoSaveRef.current); };
   }, []);
@@ -148,8 +187,16 @@ export default function TestEngine({
           </span>
         </div>
 
-        {/* Right: Timer + submit */}
+        {/* Right: Timer + autosave + submit */}
         <div className="flex items-center gap-3 flex-shrink-0">
+          {savedAt && (
+            <span
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-500 border border-slate-800 text-[10px] font-mono"
+              title="Answers auto-save locally every change"
+            >
+              💾 saved {savedAt}
+            </span>
+          )}
           <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono font-black text-base border ${
             timerCritical
               ? "bg-rose-500/15 text-rose-400 border-rose-500/40 animate-pulse"
@@ -176,6 +223,30 @@ export default function TestEngine({
         </div>
       </div>
 
+      {/* ── INSTRUCTIONS (collapsible) ── */}
+      {assessment.instructions && showInstructions && (
+        <div className="rounded-2xl p-4 bg-sky-500/5 border border-sky-500/25 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="text-[10px] font-mono font-bold text-sky-400 uppercase tracking-wider block mb-1">
+              Instructions
+            </span>
+            <p className="text-xs text-slate-300 whitespace-pre-wrap">{assessment.instructions}</p>
+            {assessment.durationMinutes && (
+              <p className="text-[11px] font-mono text-slate-500 mt-1">
+                ⏱ Duration: {assessment.durationMinutes} minutes · one attempt only
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowInstructions(false)}
+            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 text-[11px] font-mono flex-shrink-0"
+          >
+            Hide
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* ── QUESTION PANEL ── */}
         <div className="lg:col-span-8">
@@ -199,9 +270,10 @@ export default function TestEngine({
                   </div>
                 </div>
 
-                {/* Options */}
+                {/* Options (multiple choice) OR free-text/code answer box */}
+                {currentQuestion.options && currentQuestion.options.length > 0 ? (
                 <div className="space-y-3">
-                  {currentQuestion.options?.map((opt: string, oi: number) => {
+                  {currentQuestion.options.map((opt: string, oi: number) => {
                     const isSelected = quizAnswers[currentQuestion.id] === opt;
                     const letter = ["A", "B", "C", "D", "E"][oi] || String(oi + 1);
                     return (
@@ -227,6 +299,36 @@ export default function TestEngine({
                     );
                   })}
                 </div>
+                ) : (
+                <div className="space-y-2">
+                  <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                    {assessment.type === "PROGRAMMING"
+                      ? "Your C++ solution (graded manually by your mentor)"
+                      : "Your answer (graded manually by your mentor)"}
+                  </label>
+                  <textarea
+                    value={quizAnswers[currentQuestion.id] || ""}
+                    onChange={(e) =>
+                      setQuizAnswers((prev) => ({ ...prev, [currentQuestion.id]: e.target.value }))
+                    }
+                    rows={assessment.type === "PROGRAMMING" ? 14 : 5}
+                    placeholder={
+                      assessment.type === "PROGRAMMING"
+                        ? "#include <iostream>\nusing namespace std;\n\nint main() {\n    // your code here\n    return 0;\n}"
+                        : "Type your answer…"
+                    }
+                    className={`w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-100 text-sm focus:outline-none focus:border-brand-orange transition-all ${
+                      assessment.type === "PROGRAMMING"
+                        ? "font-mono leading-relaxed resize-y"
+                        : "font-sans"
+                    }`}
+                    spellCheck={false}
+                  />
+                  <p className="text-[10px] font-mono text-slate-600">
+                    💾 Saved automatically — your mentor reviews this manually.
+                  </p>
+                </div>
+                )}
 
                 {/* Navigation row */}
                 <div className="flex items-center justify-between pt-2 border-t border-slate-800">
@@ -375,10 +477,9 @@ export default function TestEngine({
                 Go Back
               </button>
               <button
-                type="submit"
-                form="test-form"
+                type="button"
+                onClick={() => { setShowConfirm(false); formRef.current?.requestSubmit(); }}
                 disabled={submittingQuiz}
-                onClick={(e) => { setShowConfirm(false); formRef.current?.requestSubmit(); }}
                 className="flex-1 py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 shadow-md disabled:opacity-50"
               >
                 {submittingQuiz ? "Submitting..." : "Confirm Submit"}

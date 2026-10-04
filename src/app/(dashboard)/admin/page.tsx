@@ -26,7 +26,12 @@ import {
   AlertCircle,
   BarChart3,
   TrendingUp,
+  ClipboardList,
+  Megaphone,
+  History,
+  Download,
 } from "lucide-react";
+import TestManager from "@/components/TestManager";
 
 interface Workshop {
   id: string;
@@ -43,7 +48,10 @@ interface Workshop {
 interface Candidate {
   studentId: string;
   studentName: string;
+  email?: string;
   college: string;
+  labId?: string | null;
+  labName?: string;
   assignmentsScore: number;
   assessmentsScore: number;
   attendancePercentage: number;
@@ -111,14 +119,27 @@ export default function AdminDashboardPage() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [selectedWorkshopId, setSelectedWorkshopId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<
-    "selection" | "workshops" | "labs" | "users" | "weights" | "feedback"
+    "selection" | "workshops" | "labs" | "users" | "weights" | "feedback" | "tests" | "announcements" | "activity"
   >("selection");
   const [loading, setLoading] = useState(true);
+
+  // Announcements management
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [annTitle, setAnnTitle] = useState("");
+  const [annBody, setAnnBody] = useState("");
+  const [annPinned, setAnnPinned] = useState(false);
+  const [annPublic, setAnnPublic] = useState(false);
+  const [postingAnn, setPostingAnn] = useState(false);
+  const [annMsg, setAnnMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Audit / activity log
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   // Candidate filters
   const [candidateSearch, setCandidateSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [minScoreFilter, setMinScoreFilter] = useState(0);
+  const [selectedLabFilter, setSelectedLabFilter] = useState("ALL");
 
   // Workshop creation
   const [wsName, setWsName] = useState("");
@@ -194,6 +215,8 @@ export default function AdminDashboardPage() {
             loadLabs(firstId),
             loadUsers(""),
             loadMentors(firstId),
+            loadAnnouncements(firstId),
+            loadAudit(),
           ]);
         }
       }
@@ -246,6 +269,66 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const loadAnnouncements = async (wId: string) => {
+    if (!wId) return;
+    const res = await fetch(`/api/announcements?workshopId=${wId}`);
+    if (res.ok) {
+      const data = await res.json();
+      setAnnouncements(data.data.announcements || []);
+    }
+  };
+
+  const loadAudit = async () => {
+    const res = await fetch("/api/admin/audit?limit=50");
+    if (res.ok) {
+      const data = await res.json();
+      setAuditLogs(data.data.logs || []);
+    }
+  };
+
+  const handlePostAnnouncement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedWorkshopId) return;
+    setPostingAnn(true);
+    setAnnMsg(null);
+    try {
+      const res = await fetch("/api/announcements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: annTitle,
+          body: annBody,
+          workshopId: selectedWorkshopId,
+          isPublic: annPublic,
+          pinned: annPinned,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error?.message || "Failed to post");
+      }
+      setAnnTitle("");
+      setAnnBody("");
+      setAnnPinned(false);
+      setAnnPublic(false);
+      setAnnMsg({ text: "Announcement posted — students notified", ok: true });
+      await loadAnnouncements(selectedWorkshopId);
+    } catch (err: any) {
+      setAnnMsg({ text: err.message || "Failed to post announcement", ok: false });
+    } finally {
+      setPostingAnn(false);
+      setTimeout(() => setAnnMsg(null), 4000);
+    }
+  };
+
+  const handleDeleteAnnouncement = async (id: string) => {
+    if (!confirm("Delete this announcement?")) return;
+    const res = await fetch(`/api/announcements/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+    }
+  };
+
   const handleWorkshopChange = async (id: string) => {
     setSelectedWorkshopId(id);
     const ws = workshops.find((w) => w.id === id);
@@ -259,7 +342,7 @@ export default function AdminDashboardPage() {
         doubts: cfg.doubts ?? 5,
       });
     }
-    await Promise.all([loadReports(id), loadLabs(id), loadMentors(id)]);
+    await Promise.all([loadReports(id), loadLabs(id), loadMentors(id), loadAnnouncements(id)]);
   };
 
   const handleSelectionAction = async (
@@ -414,11 +497,55 @@ export default function AdminDashboardPage() {
     const matchSearch =
       candidateSearch === "" ||
       c.studentName.toLowerCase().includes(candidateSearch.toLowerCase()) ||
-      c.college?.toLowerCase().includes(candidateSearch.toLowerCase());
+      c.college?.toLowerCase().includes(candidateSearch.toLowerCase()) ||
+      (c.email && c.email.toLowerCase().includes(candidateSearch.toLowerCase()));
     const matchStatus = statusFilter === "ALL" || c.status === statusFilter;
     const matchScore = c.overallScore >= minScoreFilter;
-    return matchSearch && matchStatus && matchScore;
+    const matchLab = selectedLabFilter === "ALL" || c.labId === selectedLabFilter;
+    return matchSearch && matchStatus && matchScore && matchLab;
   });
+
+  const handleExportCSV = () => {
+    const headers = [
+      "Rank",
+      "Candidate Name",
+      "Email",
+      "College / Dept",
+      "Lab",
+      "Assignments (30%)",
+      "Assessments (35%)",
+      "Attendance (15%)",
+      "Doubts / Community",
+      "Overall Score (%)",
+      "Status",
+    ];
+    const rows = filteredCandidates.map((c) => [
+      c.rank,
+      `"${(c.studentName || "").replace(/"/g, '""')}"`,
+      `"${(c.email || "").replace(/"/g, '""')}"`,
+      `"${(c.college || "N/A").replace(/"/g, '""')}"`,
+      `"${(c.labName || "Unassigned").replace(/"/g, '""')}"`,
+      c.assignmentsScore,
+      c.assessmentsScore,
+      c.attendancePercentage,
+      c.doubtsResolved,
+      c.overallScore,
+      c.status,
+    ]);
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute(
+      "download",
+      `skillup_performance_report_${selectedWorkshopId || "workshop"}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const weightTotal = Object.values(weights).reduce((s, v) => s + v, 0);
 
@@ -427,8 +554,11 @@ export default function AdminDashboardPage() {
     { id: "workshops", label: "Workshops Management", icon: Calendar, count: workshops.length },
     { id: "labs", label: "Labs & Allocation", icon: Layers, count: labs.length },
     { id: "users", label: "Platform Users", icon: Users, count: users.length },
+    { id: "tests", label: "Tests & Quizzes", icon: ClipboardList, count: null },
+    { id: "announcements", label: "Announcements", icon: Megaphone, count: announcements.length },
     { id: "weights", label: "Evaluation Formula Weights", icon: Sliders, count: null },
     { id: "feedback", label: "Feedback Explorer", icon: MessageSquare, count: feedbacks.length },
+    { id: "activity", label: "Activity Log", icon: History, count: auditLogs.length },
   ];
 
   if (loading) {
@@ -602,6 +732,170 @@ export default function AdminDashboardPage() {
       {/* ══════════════════════════════════════════════════════════
           TAB 1: CANDIDATE SELECTION PIPELINE
       ══════════════════════════════════════════════════════════ */}
+      {/* ══ TESTS & QUIZZES ══ */}
+      {activeTab === "tests" && selectedWorkshopId && (
+        <TestManager workshopId={selectedWorkshopId} labs={labs} />
+      )}
+
+      {/* ══ ANNOUNCEMENTS MANAGEMENT ══ */}
+      {activeTab === "announcements" && (
+        <div className="space-y-5">
+          <div>
+            <h3 className="font-display font-bold text-white text-base">Announcements</h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Post workshop-wide updates — students receive an in-app notification
+            </p>
+          </div>
+
+          <form
+            onSubmit={handlePostAnnouncement}
+            className="rounded-2xl p-5 bg-[#0F172A]/80 border border-violet-500/30 space-y-3"
+          >
+            <input
+              className="w-full px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200 text-sm font-mono focus:outline-none focus:border-brand-orange"
+              placeholder="Title (e.g. Lab moved to Room 204)"
+              value={annTitle}
+              onChange={(e) => setAnnTitle(e.target.value)}
+              required
+              minLength={3}
+            />
+            <textarea
+              className="w-full px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200 text-sm font-mono focus:outline-none focus:border-brand-orange"
+              rows={3}
+              placeholder="Message body…"
+              value={annBody}
+              onChange={(e) => setAnnBody(e.target.value)}
+              required
+              minLength={5}
+            />
+            <div className="flex flex-wrap items-center gap-4">
+              <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={annPinned}
+                  onChange={(e) => setAnnPinned(e.target.checked)}
+                  className="accent-brand-orange"
+                />
+                📌 Pinned
+              </label>
+              <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={annPublic}
+                  onChange={(e) => setAnnPublic(e.target.checked)}
+                  className="accent-brand-orange"
+                />
+                Show on public site
+              </label>
+              <button
+                type="submit"
+                disabled={postingAnn}
+                className="ml-auto px-4 py-2.5 rounded-xl bg-brand-orange hover:brightness-110 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-md disabled:opacity-50"
+              >
+                {postingAnn ? "Posting…" : "Post Announcement"}
+              </button>
+            </div>
+            {annMsg && (
+              <p className={`text-xs font-mono ${annMsg.ok ? "text-emerald-400" : "text-rose-400"}`}>
+                {annMsg.text}
+              </p>
+            )}
+          </form>
+
+          <div className="space-y-2">
+            {announcements.length === 0 && (
+              <p className="text-xs font-mono text-slate-500 py-6 text-center">
+                No announcements yet
+              </p>
+            )}
+            {announcements.map((a) => (
+              <div
+                key={a.id}
+                className="p-4 rounded-xl bg-[#0F172A]/70 border border-slate-800/80 flex items-start justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {a.pinned && <span className="text-brand-orange text-xs">📌</span>}
+                    <span className="font-display font-bold text-white text-sm">{a.title}</span>
+                    {a.isPublic && (
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-mono border border-emerald-500/30">
+                        PUBLIC
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">{a.body}</p>
+                  <span className="text-[10px] font-mono text-slate-600">
+                    {new Date(a.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleDeleteAnnouncement(a.id)}
+                  className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 transition-all flex-shrink-0"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ══ ACTIVITY / AUDIT LOG ══ */}
+      {activeTab === "activity" && (
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-display font-bold text-white text-base">Activity Log</h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Administrative actions for accountability
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-800/80 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs font-mono">
+                <thead>
+                  <tr className="bg-slate-900/70 text-slate-500 text-[10px] uppercase">
+                    <th className="text-left py-2.5 px-4">When</th>
+                    <th className="text-left py-2.5 px-4">Action</th>
+                    <th className="text-left py-2.5 px-4">Performed By</th>
+                    <th className="text-left py-2.5 px-4">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-slate-500">
+                        No activity recorded yet
+                      </td>
+                    </tr>
+                  )}
+                  {auditLogs.map((l) => (
+                    <tr key={l.id} className="border-t border-slate-800/60">
+                      <td className="py-2.5 px-4 text-slate-400 whitespace-nowrap">
+                        {new Date(l.createdAt).toLocaleString()}
+                      </td>
+                      <td className="py-2.5 px-4">
+                        <span className="px-2 py-0.5 rounded bg-brand-orange/10 text-brand-orange border border-brand-orange/25 text-[10px] font-bold">
+                          {l.action}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-4 text-slate-300">
+                        {l.performer?.name || "System"}
+                        <span className="block text-[10px] text-slate-600">
+                          {l.performer?.email}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-4 text-slate-500 max-w-[320px] truncate">
+                        {l.details ? JSON.stringify(l.details) : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === "selection" && (
         <div className="space-y-4">
           {/* Search & Filter Toolbar */}
@@ -618,6 +912,20 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              {/* Lab Filter */}
+              <select
+                value={selectedLabFilter}
+                onChange={(e) => setSelectedLabFilter(e.target.value)}
+                className="bg-[#070B14] border border-slate-800 text-slate-300 font-mono text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-brand-orange"
+              >
+                <option value="ALL">All Labs</option>
+                {labs.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+
               {/* Status Filter */}
               <div className="flex items-center gap-1 bg-[#070B14] p-1 rounded-xl border border-slate-800 text-xs font-mono">
                 {["ALL", "SELECTED", "PENDING", "REJECTED"].map((st) => (
@@ -648,6 +956,16 @@ export default function AdminDashboardPage() {
                   className="w-20 accent-brand-orange cursor-pointer"
                 />
               </div>
+
+              {/* CSV Export Button */}
+              <button
+                onClick={handleExportCSV}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs font-semibold border border-slate-700 transition-all shadow-sm"
+                title="Download CSV performance report"
+              >
+                <Download className="w-3.5 h-3.5 text-brand-orange" />
+                <span>Export CSV</span>
+              </button>
             </div>
           </div>
 
@@ -660,6 +978,7 @@ export default function AdminDashboardPage() {
                     <th className="py-3 px-3">Rank</th>
                     <th className="py-3 px-3">Candidate</th>
                     <th className="py-3 px-3">College / Dept</th>
+                    <th className="py-3 px-3">Lab</th>
                     <th className="py-3 px-3">Assign. (30%)</th>
                     <th className="py-3 px-3">Assess. (35%)</th>
                     <th className="py-3 px-3">Attend. (15%)</th>
@@ -671,7 +990,7 @@ export default function AdminDashboardPage() {
                 <tbody className="divide-y divide-slate-800/60 font-mono">
                   {filteredCandidates.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="py-8 text-center text-slate-500 text-xs">
+                      <td colSpan={10} className="py-8 text-center text-slate-500 text-xs">
                         No candidates match the specified filter criteria.
                       </td>
                     </tr>
@@ -700,6 +1019,11 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="py-3 px-3 text-slate-300 font-sans text-[11px]">
                         {c.college || "Engineering"}
+                      </td>
+                      <td className="py-3 px-3 text-slate-400 font-mono text-[11px]">
+                        <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+                          {c.labName || "Unassigned"}
+                        </span>
                       </td>
                       <td className="py-3 px-3 text-slate-300">{c.assignmentsScore}%</td>
                       <td className="py-3 px-3 text-slate-300">{c.assessmentsScore}%</td>

@@ -18,3 +18,6 @@ export async function PATCH(_req: NextRequest) {
     return handleApiError(err);
   }
 }
+
+export const POST = PATCH;
+

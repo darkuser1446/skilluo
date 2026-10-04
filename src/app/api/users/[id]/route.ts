@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, requireRole } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
@@ -48,11 +48,19 @@ export async function GET(
   }
 }
 
+const avatarUrlSchema = z
+  .string()
+  .refine(
+    (v) => v === "" || v.startsWith("data:image/") || /^https?:\/\//.test(v),
+    "Must be an http(s) URL or an uploaded image"
+  )
+  .optional();
+
 const UpdateUserSchema = z.object({
   name: z.string().min(2).optional(),
   college: z.string().optional(),
   phone: z.string().optional(),
-  avatarUrl: z.string().url().optional(),
+  avatarUrl: avatarUrlSchema,
   isActive: z.boolean().optional(),
 });
 
@@ -75,6 +83,9 @@ export async function PUT(
     }
 
     const data = UpdateUserSchema.parse(body);
+    if (data.avatarUrl?.startsWith("data:") && data.avatarUrl.length > 700_000) {
+      return errorResponse("Image too large — maximum avatar size is 512 KB", "FILE_TOO_LARGE", 413);
+    }
     const updated = await prisma.user.update({
       where: { id },
       data,
@@ -100,8 +111,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuth();
-    // Only admins can deactivate users
+    // SECURITY: deactivating accounts is an admin-only operation
+    const actor = await requireRole(["ADMIN"]);
     const { id } = await params;
 
     // Soft delete — mark inactive instead of hard delete
@@ -109,6 +120,15 @@ export async function DELETE(
       where: { id },
       data: { isActive: false },
       select: { id: true, name: true, isActive: true },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        action: "USER_DEACTIVATED",
+        performedBy: actor.sub,
+        targetId: id,
+        details: { name: user.name },
+      },
     });
 
     return successResponse({ user, message: "User deactivated" });
@@ -122,7 +142,13 @@ const PatchUserSchema = z.object({
   name: z.string().min(2).optional(),
   college: z.string().optional(),
   phone: z.string().optional(),
-  avatarUrl: z.string().url().optional().or(z.literal("")),
+  avatarUrl: z
+    .string()
+    .refine(
+      (v) => v === "" || v.startsWith("data:image/") || /^https?:\/\//.test(v),
+      "Must be an http(s) URL or an uploaded image"
+    )
+    .optional(),
 });
 
 export async function PATCH(
@@ -140,6 +166,9 @@ export async function PATCH(
 
     const body = await req.json();
     const data = PatchUserSchema.parse(body);
+    if (data.avatarUrl?.startsWith("data:") && data.avatarUrl.length > 700_000) {
+      return errorResponse("Image too large — maximum avatar size is 512 KB", "FILE_TOO_LARGE", 413);
+    }
 
     const updated = await prisma.user.update({
       where: { id },

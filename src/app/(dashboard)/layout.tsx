@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import Super60Logo from "@/components/Super60Logo";
+import NotificationBell from "@/components/NotificationBell";
 import {
   LogOut,
   Calendar,
@@ -94,6 +95,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     loadData();
   }, [router]);
+
+  // ── ROLE-BASED ROUTE GUARD: the frontend must not trust the user ──
+  useEffect(() => {
+    if (!user) return;
+    const home =
+      user.role === "ADMIN" ? "/admin" : user.role === "MENTOR" ? "/mentor" : "/student";
+    if (pathname.startsWith("/admin") && user.role !== "ADMIN") {
+      router.replace(home);
+    } else if (pathname.startsWith("/mentor") && user.role === "STUDENT") {
+      router.replace("/student");
+    } else if (
+      pathname.startsWith("/student") &&
+      user.role === "MENTOR"
+    ) {
+      router.replace("/mentor");
+    }
+    // ADMIN may preview /student and /mentor (intentional "view as" links)
+  }, [user, pathname, router]);
 
 
   const handleLogout = async () => {
@@ -210,6 +229,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </span>
               </div>
             </div>
+
+            {/* Notifications */}
+            <NotificationBell />
 
             {/* Logout button */}
             <button

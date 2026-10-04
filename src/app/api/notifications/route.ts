@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
     const notifications = await prisma.notification.findMany({
       where,
       orderBy: { createdAt: "desc" },
+      take: Math.min(Number(searchParams.get("limit") || "30"), 100),
     });
 
     const unreadCount = await prisma.notification.count({

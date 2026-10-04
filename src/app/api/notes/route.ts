@@ -37,11 +37,23 @@ const NoteSchema = z.object({
   tags: z.array(z.string()).default([]),
 });
 
+// Max inline file size (~1 MB when base64-encoded)
+const MAX_INLINE_FILE_CHARS = 1_400_000;
+
 export async function POST(req: NextRequest) {
   try {
     const user = await requireRole(["MENTOR", "ADMIN"]);
     const body = await req.json();
     const data = NoteSchema.parse(body);
+
+    // FILE UPLOAD: attachments are stored as data-URLs; enforce size limit
+    if (data.fileUrl?.startsWith("data:") && data.fileUrl.length > MAX_INLINE_FILE_CHARS) {
+      return errorResponse(
+        "Attachment too large — maximum file size is 1 MB",
+        "FILE_TOO_LARGE",
+        413
+      );
+    }
 
     const note = await prisma.note.create({
       data: {
