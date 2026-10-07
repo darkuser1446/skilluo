@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 
 interface FacetProps {
   side: "left" | "right";
@@ -10,10 +11,20 @@ interface FacetProps {
 
 export default function GeometricFacet({ side, position, className = "" }: FacetProps) {
   const isLeft = side === "left";
+  const duration = position === "top" ? 7 : position === "middle" ? 8.5 : 9.5;
 
   return (
-    <div
+    <motion.div
       aria-hidden="true"
+      animate={{
+        y: [-6, 6, -6],
+        rotate: isLeft ? [-1.5, 1.5, -1.5] : [1.5, -1.5, 1.5],
+      }}
+      transition={{
+        duration,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
       className={`absolute pointer-events-none z-0 select-none ${
         isLeft ? "-left-4 sm:left-0" : "-right-4 sm:right-0"
       } ${className}`}
@@ -49,6 +60,6 @@ export default function GeometricFacet({ side, position, className = "" }: Facet
         <polygon points="110,175 155,220 65,245" fill={`url(#facet-grad2-${side}-${position})`} />
         <polygon points="65,245 120,260 0,260" fill={`url(#facet-grad3-${side}-${position})`} />
       </svg>
-    </div>
+    </motion.div>
   );
 }

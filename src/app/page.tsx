@@ -14,12 +14,20 @@ import CtaBand from "@/components/CtaBand";
 import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
 import InteractiveTileGrid from "@/components/InteractiveTileGrid";
+import AmbientAuraRays from "@/components/AmbientAuraRays";
+import LiveFloatingNotice from "@/components/LiveFloatingNotice";
 
 export default function HomePage() {
   return (
     <main className="relative min-h-screen bg-[#FAFAF9] text-[#0F172A] selection:bg-[#F07C27] selection:text-white overflow-x-hidden">
+      {/* Automatic Premium Ambient Lighting Aurora & Rays */}
+      <AmbientAuraRays />
+
       {/* Subtle Interactive Square Tiles Background (responds dynamically to cursor across entire page) */}
       <InteractiveTileGrid theme="light" showControls={true} tileSize={46} />
+
+      {/* Live Automatic Admissions & Cohort Milestone Status Pill */}
+      <LiveFloatingNotice />
 
       {/* S0: Top Navigation Bar */}
       <Navbar />

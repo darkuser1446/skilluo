@@ -3,26 +3,31 @@
 import React from "react";
 import { Users, UserCheck, TrendingUp, ThumbsUp } from "lucide-react";
 import GeometricFacet from "./GeometricFacet";
+import CountUp from "./CountUp";
 
 const IMPACT_METRICS = [
   {
     icon: Users,
-    number: "1000+",
+    end: 1000,
+    suffix: "+",
     label: "Students Guided",
   },
   {
     icon: UserCheck,
-    number: "8",
+    end: 8,
+    suffix: "",
     label: "Expert Mentors",
   },
   {
     icon: TrendingUp,
-    number: "4 Weeks",
+    end: 4,
+    suffix: " Weeks",
     label: "Structured Program",
   },
   {
     icon: ThumbsUp,
-    number: "95%",
+    end: 95,
+    suffix: "%",
     label: "Positive Feedback",
   },
 ];
@@ -54,20 +59,20 @@ export default function ImpactSection() {
             </p>
           </div>
 
-          {/* Right Column: 4 Stat Cards */}
+          {/* Right Column: 4 Stat Cards with Automatic CountUp */}
           <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
             {IMPACT_METRICS.map((metric) => {
               const Icon = metric.icon;
               return (
                 <div
                   key={metric.label}
-                  className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center text-center"
+                  className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center text-center group"
                 >
-                  <div className="w-12 h-12 rounded-full bg-orange-50 text-[#F07C27] flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-orange-50 text-[#F07C27] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="font-display font-black text-xl sm:text-2xl text-[#0F172A] leading-tight mb-1">
-                    {metric.number}
+                    <CountUp end={metric.end} suffix={metric.suffix} duration={1.6} />
                   </div>
                   <div className="text-xs text-slate-500 font-medium leading-tight">
                     {metric.label}
