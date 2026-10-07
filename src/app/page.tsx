@@ -3,52 +3,58 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import AboutSection from "@/components/AboutSection";
-import FeatureGrid from "@/components/FeatureGrid";
-import StudentSpotlight from "@/components/StudentSpotlight";
+import ProgramJourney from "@/components/ProgramJourney";
+import MentorsGrid from "@/components/MentorsGrid";
 import GallerySection from "@/components/GallerySection";
-import MentorsStrip from "@/components/MentorsStrip";
+import WhyJoinSection from "@/components/WhyJoinSection";
+import StudentSpotlight from "@/components/StudentSpotlight";
+import ImpactSection from "@/components/ImpactSection";
+import FaqSection from "@/components/FaqSection";
 import CtaBand from "@/components/CtaBand";
 import Footer from "@/components/Footer";
-import CustomCursor from "@/components/CustomCursor";
-import CursorSpotlight from "@/components/CursorSpotlight";
 import AuthModal from "@/components/AuthModal";
 import InteractiveTileGrid from "@/components/InteractiveTileGrid";
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen bg-[#0B1120] text-foreground selection:bg-brand-orange selection:text-white overflow-x-hidden">
-      {/* Interactive Square Tiles Canvas Background (Responds to mouse hover & clicks across entire page) */}
-      <InteractiveTileGrid showControls={true} tileSize={44} />
+    <main className="relative min-h-screen bg-white text-[#0F172A] selection:bg-[#F07C27] selection:text-white overflow-x-hidden">
+      {/* Subtle Interactive Square Tiles Background (responds dynamically to cursor) */}
+      <InteractiveTileGrid theme="light" showControls={false} tileSize={48} />
 
-      {/* Interactive Cursor Layer */}
-      <CustomCursor />
-      <CursorSpotlight />
-
-      {/* Sticky Navigation Bar */}
+      {/* S0: Top Navigation Bar */}
       <Navbar />
 
-      {/* S0: Hero Section with Three.js 3D Visual Center & Student Highlights */}
+      {/* S1: Hero Section - SUPER 60 PRESENTS SKILL UP */}
       <Hero />
 
-      {/* S1: About Super 60 Section */}
+      {/* S2: About Skill Up - A Stronger Start for Brighter Futures */}
       <AboutSection />
 
-      {/* S2: Program / Why Skill Up 3x2 Grid */}
-      <FeatureGrid />
+      {/* S3: The Program - A Complete Learning Journey (Roadmap 01 to 04) */}
+      <ProgramJourney />
 
-      {/* S3: Student Spotlight (Hero Students First) */}
-      <StudentSpotlight />
+      {/* S4: Meet Our Mentors - Learn from Experienced Guides (8 Mentors) */}
+      <MentorsGrid />
 
-      {/* S4: Previous Skill Up Photo Gallery with Lightbox */}
+      {/* S5: Glimpses From Past Sessions - Moments That Inspire (5-Photo Mosaic) */}
       <GallerySection />
 
-      {/* S5: Mentors Marquee Strip */}
-      <MentorsStrip />
+      {/* S6: Why Join Skill Up? - More Than Just a Course (6 Feature Cards) */}
+      <WhyJoinSection />
 
-      {/* S6: Final Call to Action Band with Live Countdown */}
+      {/* S7: Student Voices - Their Journey, Our Motivation (3 Testimonial Cards) */}
+      <StudentSpotlight />
+
+      {/* S8: Our Impact - Building a Brighter Community Together (4 Metrics) */}
+      <ImpactSection />
+
+      {/* S9: Frequently Asked Questions - Everything You Need to Know (6 Accordions) */}
+      <FaqSection />
+
+      {/* S10: Pre-Footer CTA Banner - Take the First Step Towards a Brighter Future */}
       <CtaBand />
 
-      {/* S7: Comprehensive Footer */}
+      {/* S11: Comprehensive Dark Slate Footer with Circular Chalk Badge */}
       <Footer />
 
       {/* Interactive Auth Modal for Login & Register */}

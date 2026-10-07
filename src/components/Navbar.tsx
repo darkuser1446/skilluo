@@ -1,19 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ArrowRight, Sparkles } from "lucide-react";
-import Super60Logo from "./Super60Logo";
+import { Menu, X, ArrowRight } from "lucide-react";
+import S60Logo from "./S60Logo";
 
 const NAV_LINKS = [
   { name: "Home", href: "#hero" },
-  { name: "About", href: "/about" },
-  { name: "Workshops", href: "/workshops" },
-  { name: "Curriculum", href: "/curriculum" },
-  { name: "Students", href: "#students" },
+  { name: "About", href: "#about" },
+  { name: "Program", href: "#program" },
   { name: "Mentors", href: "#mentors" },
+  { name: "Gallery", href: "#gallery" },
   { name: "Contact", href: "#contact" },
 ];
 
@@ -24,10 +22,10 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
+      setScrolled(window.scrollY > 20);
 
       const sections = NAV_LINKS.map((link) => link.href.substring(1));
-      const scrollPosition = window.scrollY + 220;
+      const scrollPosition = window.scrollY + 180;
 
       for (const sectionId of sections) {
         const el = document.getElementById(sectionId);
@@ -49,132 +47,105 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-[#0B1120]/90 backdrop-blur-xl border-b border-white/10 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.4)]"
-            : "bg-transparent py-4 sm:py-5"
+            ? "bg-white/95 backdrop-blur-md border-b border-slate-200/80 py-3 shadow-[0_2px_15px_rgba(0,0,0,0.04)]"
+            : "bg-white/90 backdrop-blur-sm border-b border-slate-100 py-4"
         }`}
       >
         <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
-          {/* Logo & Brand Identity: Precision Vector SVG Super 60 Emblem & Wordmark */}
-          <Link href="#hero">
-            <Super60Logo size="md" subtitleText="Skill Up 2026" />
+          {/* Logo: S60 Flame Ribbon Logo */}
+          <Link href="#hero" className="flex items-center">
+            <S60Logo size="md" theme="light" />
           </Link>
 
-
           {/* Desktop Nav Items */}
-          <nav className="hidden lg:flex items-center gap-7">
+          <nav className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map((link) => {
               const isActive = activeSection === link.href.substring(1);
               return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`relative text-sm font-medium transition-colors py-1 ${
-                    isActive ? "text-white font-semibold" : "text-slate-300 hover:text-white"
+                  className={`text-sm tracking-wide transition-colors duration-200 font-medium ${
+                    isActive
+                      ? "text-[#F07C27] font-semibold"
+                      : "text-slate-600 hover:text-[#F07C27]"
                   }`}
                 >
                   {link.name}
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeNavIndicator"
-                      className="absolute -bottom-1 left-0 right-0 h-[2px] bg-brand-orange rounded-full shadow-[0_0_8px_#F07C27]"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Right Action Buttons */}
-          <div className="hidden sm:flex items-center gap-3">
-            <Link
-              href="/login"
-              className="text-xs uppercase tracking-wider font-semibold text-slate-300 hover:text-white px-4 py-2 rounded-full border border-white/15 hover:border-white/40 hover:bg-white/5 transition-all"
-            >
-              Login
-            </Link>
+          {/* Right Action Button */}
+          <div className="hidden md:flex items-center gap-4">
             <Link
               href="/register"
-              className="relative group overflow-hidden text-xs uppercase tracking-wider font-semibold text-white px-5 py-2.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orangeLight shadow-[0_0_20px_rgba(240,124,39,0.4)] hover:shadow-[0_0_30px_rgba(240,124,39,0.7)] hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
+              className="bg-[#F07C27] hover:bg-[#e06c17] active:scale-[0.98] text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow transition-all duration-200 flex items-center gap-1.5"
             >
               <span>Register Now</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="w-4 h-4 ml-0.5" />
             </Link>
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <div className="flex sm:hidden items-center gap-2">
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center gap-2">
             <Link
               href="/register"
-              className="text-[11px] font-semibold text-white px-3 py-1.5 rounded-full bg-brand-orange shadow-md"
+              className="bg-[#F07C27] text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg"
             >
               Register
             </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none"
+              className="p-2 text-slate-700 hover:text-slate-900 rounded-lg hover:bg-slate-100 focus:outline-none"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Full-screen Mobile Drawer */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-30 bg-[#0B1120]/98 backdrop-blur-2xl pt-24 px-6 pb-8 flex flex-col justify-between sm:hidden"
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-[65px] left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-xl md:hidden px-6 py-6"
           >
-            <div className="flex flex-col gap-4">
-              <div className="pb-4 border-b border-white/10">
-                <Super60Logo size="sm" subtitleText="Skill Up 2026" />
+            <nav className="flex flex-col gap-4">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-base font-medium text-slate-700 hover:text-[#F07C27] py-1 border-b border-slate-100"
+                >
+                  {link.name}
+                </Link>
+              ))}
+              <div className="pt-2 flex flex-col gap-2">
+                <Link
+                  href="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center bg-[#F07C27] text-white font-semibold py-2.5 rounded-lg text-sm"
+                >
+                  Register Now →
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center border border-slate-300 text-slate-700 font-medium py-2 rounded-lg text-sm"
+                >
+                  Student Login
+                </Link>
               </div>
-
-
-              <div className="flex flex-col gap-2 mt-2">
-                {NAV_LINKS.map((link, idx) => (
-                  <motion.div
-                    key={link.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                  >
-                    <Link
-                      href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block text-lg font-medium py-2.5 text-slate-200 hover:text-brand-orange border-b border-white/5"
-                    >
-                      {link.name}
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 pt-6 border-t border-white/10">
-              <Link
-                href="/register"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-semibold text-center text-sm shadow-[0_0_20px_rgba(240,124,39,0.4)]"
-              >
-                Register for Workshop 2026
-              </Link>
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-3 rounded-xl border border-white/20 text-slate-200 font-semibold text-center text-sm hover:bg-white/5"
-              >
-                Student Portal Login
-              </Link>
-            </div>
+            </nav>
           </motion.div>
         )}
       </AnimatePresence>

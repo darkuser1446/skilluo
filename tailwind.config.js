@@ -29,6 +29,7 @@ module.exports = {
         display: ["var(--font-sora)", "Space Grotesk", "sans-serif"],
         body: ["var(--font-inter)", "system-ui", "sans-serif"],
         mono: ["var(--font-jetbrains-mono)", "monospace"],
+        handwritten: ["var(--font-caveat)", "cursive"],
       },
       boxShadow: {
         "orange-glow": "0 0 30px -5px rgba(240, 124, 39, 0.45)",

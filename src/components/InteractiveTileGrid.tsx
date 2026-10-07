@@ -25,11 +25,13 @@ export default function InteractiveTileGrid({
   tileSize = 46,
   gap = 1,
   showControls = false,
+  theme = "light",
 }: {
   className?: string;
   tileSize?: number;
   gap?: number;
   showControls?: boolean;
+  theme?: "light" | "dark";
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -292,7 +294,10 @@ export default function InteractiveTileGrid({
             }
           } else {
             // Idle tile: sleek hairline border
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.038)";
+            ctx.strokeStyle =
+              theme === "light"
+                ? "rgba(240, 124, 39, 0.04)"
+                : "rgba(255, 255, 255, 0.038)";
             ctx.strokeRect(tileX + 0.5, tileY + 0.5, tileSize - 1, tileSize - 1);
           }
         }
@@ -313,7 +318,7 @@ export default function InteractiveTileGrid({
       document.removeEventListener("mouseleave", handleMouseLeave);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [tileSize, gap, accentMode, handleClick, handleMouseMove, handleMouseLeave, handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [tileSize, gap, accentMode, theme, handleClick, handleMouseMove, handleMouseLeave, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
     <div

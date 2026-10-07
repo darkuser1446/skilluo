@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Sora, Inter, JetBrains_Mono } from "next/font/google";
+import { Sora, Inter, JetBrains_Mono, Caveat } from "next/font/google";
 import "./globals.css";
 
 const sora = Sora({
@@ -20,6 +20,13 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
   weight: ["400", "500", "700"],
+  display: "swap",
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
+  weight: ["500", "700"],
   display: "swap",
 });
 
@@ -54,7 +61,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sora.variable} ${inter.variable} ${jetbrainsMono.variable} dark scroll-smooth`}>
+    <html lang="en" className={`${sora.variable} ${inter.variable} ${jetbrainsMono.variable} ${caveat.variable} scroll-smooth`}>
       <body className="bg-background text-foreground antialiased selection:bg-brand-orange selection:text-white relative">
         {children}
       </body>
