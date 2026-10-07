@@ -4,36 +4,50 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, ArrowRight, ShieldCheck, UserCheck, GraduationCap, AlertCircle } from "lucide-react";
+import {
+  Lock,
+  Mail,
+  ArrowRight,
+  ShieldCheck,
+  UserCheck,
+  GraduationCap,
+  AlertCircle,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import InteractiveTileGrid from "@/components/InteractiveTileGrid";
 import Super60Logo from "@/components/Super60Logo";
-
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (e?: React.FormEvent, customEmail?: string, customPass?: string) => {
-    if (e) e.preventDefault();
-    setLoading(true);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
 
-    const targetEmail = customEmail || email;
-    const targetPass = customPass || password;
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      setError("Please enter both your email address and password.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: targetEmail, password: targetPass }),
+        body: JSON.stringify({ email: cleanEmail, password }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error?.message || "Login failed");
+        throw new Error(data.error?.message || "Invalid credentials. Please check your email and password.");
       }
 
       const role = data.data?.user?.role;
@@ -45,16 +59,16 @@ export default function LoginPage() {
         router.push("/student");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to login");
+      setError(err.message || "Failed to login. Please verify your credentials.");
     } finally {
       setLoading(false);
     }
   };
 
-  const quickLogin = (e: string, p: string) => {
-    setEmail(e);
-    setPassword(p);
-    handleLogin(undefined, e, p);
+  const handleSelectRole = (roleEmail: string) => {
+    setEmail(roleEmail);
+    setPassword("");
+    setError(null);
   };
 
   return (
@@ -109,14 +123,22 @@ export default function LoginPage() {
               </label>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-orange transition-colors"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-orange transition-colors"
                 />
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-white transition-colors focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
@@ -139,37 +161,46 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Demo Switcher */}
+          {/* Demo Credentials Switcher */}
           <div className="mt-6 pt-5 border-t border-white/10">
             <span className="text-[11px] font-mono text-slate-400 block mb-2 text-center uppercase tracking-wider">
-              One-Click Demo Access
+              Demo Accounts (Click to Fill Email)
             </span>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => quickLogin("admin@super60.org", "admin123")}
-                className="px-2 py-2 rounded-lg bg-white/5 hover:bg-brand-orange/20 border border-white/10 hover:border-brand-orange/40 text-[11px] font-medium text-slate-300 hover:text-white flex flex-col items-center gap-1 transition-all"
+                onClick={() => handleSelectRole("admin@super60.org")}
+                className="px-2 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-orange/40 text-[11px] font-medium text-slate-300 hover:text-white flex flex-col items-center gap-1 transition-all"
+                title="Click to fill admin email"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-brand-orange" />
-                <span>Admin</span>
+                <ShieldCheck className="w-4 h-4 text-brand-orange" />
+                <span className="font-semibold text-white">Admin</span>
+                <span className="text-[9px] text-slate-400 font-mono">admin123</span>
               </button>
               <button
                 type="button"
-                onClick={() => quickLogin("vikram@super60.org", "mentor123")}
-                className="px-2 py-2 rounded-lg bg-white/5 hover:bg-brand-orange/20 border border-white/10 hover:border-brand-orange/40 text-[11px] font-medium text-slate-300 hover:text-white flex flex-col items-center gap-1 transition-all"
+                onClick={() => handleSelectRole("vikram@super60.org")}
+                className="px-2 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-orange/40 text-[11px] font-medium text-slate-300 hover:text-white flex flex-col items-center gap-1 transition-all"
+                title="Click to fill mentor email"
               >
-                <UserCheck className="w-3.5 h-3.5 text-sky-400" />
-                <span>Mentor</span>
+                <UserCheck className="w-4 h-4 text-sky-400" />
+                <span className="font-semibold text-white">Mentor</span>
+                <span className="text-[9px] text-slate-400 font-mono">mentor123</span>
               </button>
               <button
                 type="button"
-                onClick={() => quickLogin("aditya@student.super60.org", "student123")}
-                className="px-2 py-2 rounded-lg bg-white/5 hover:bg-brand-orange/20 border border-white/10 hover:border-brand-orange/40 text-[11px] font-medium text-slate-300 hover:text-white flex flex-col items-center gap-1 transition-all"
+                onClick={() => handleSelectRole("aditya@student.super60.org")}
+                className="px-2 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-orange/40 text-[11px] font-medium text-slate-300 hover:text-white flex flex-col items-center gap-1 transition-all"
+                title="Click to fill student email"
               >
-                <GraduationCap className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Student</span>
+                <GraduationCap className="w-4 h-4 text-emerald-400" />
+                <span className="font-semibold text-white">Student</span>
+                <span className="text-[9px] text-slate-400 font-mono">student123</span>
               </button>
             </div>
+            <p className="text-[10px] text-slate-400 mt-2 text-center font-mono">
+              Click a role to fill email, enter the password, then click Sign In.
+            </p>
           </div>
 
           <div className="mt-5 text-center text-xs text-slate-400">

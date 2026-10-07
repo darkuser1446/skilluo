@@ -80,7 +80,13 @@ export default function Navbar() {
           </nav>
 
           {/* Right Action Button */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/login"
+              className="text-slate-700 hover:text-[#F07C27] text-sm font-semibold px-4 py-2 rounded-lg border border-slate-300 hover:border-[#F07C27] hover:bg-orange-50/50 transition-all duration-200"
+            >
+              Login
+            </Link>
             <Link
               href="/register"
               className="bg-[#F07C27] hover:bg-[#e06c17] active:scale-[0.98] text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow transition-all duration-200 flex items-center gap-1.5"
@@ -93,8 +99,14 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
             <Link
+              href="/login"
+              className="border border-slate-300 text-slate-700 hover:text-[#F07C27] text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
+            >
+              Login
+            </Link>
+            <Link
               href="/register"
-              className="bg-[#F07C27] text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg"
+              className="bg-[#F07C27] text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
             >
               Register
             </Link>
@@ -140,9 +152,9 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center border border-slate-300 text-slate-700 font-medium py-2 rounded-lg text-sm"
+                  className="w-full text-center border border-slate-300 text-slate-700 hover:text-[#F07C27] hover:border-[#F07C27] font-semibold py-2.5 rounded-lg text-sm transition-colors"
                 >
-                  Student Login
+                  Login to Portal
                 </Link>
               </div>
             </nav>

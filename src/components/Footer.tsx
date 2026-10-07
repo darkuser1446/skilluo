@@ -81,6 +81,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/login" className="hover:text-[#F07C27] font-semibold text-[#F07C27] transition-colors flex items-center gap-1.5">
+                  <span>Portal Login</span>
+                  <span className="text-[10px] bg-[#F07C27]/15 text-[#F07C27] px-1.5 py-0.2 rounded border border-[#F07C27]/30 font-mono">Sign in</span>
+                </Link>
+              </li>
+              <li>
                 <Link href="#about" className="hover:text-[#F07C27] transition-colors">
                   About
                 </Link>
