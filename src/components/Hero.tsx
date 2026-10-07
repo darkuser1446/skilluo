@@ -280,6 +280,34 @@ export default function Hero() {
                   </div>
                 </div>
 
+                {/* Professional Systems Architecture & Memory Telemetry Graphic Card */}
+                <div className="absolute top-3 left-4 z-20 hidden sm:flex items-center gap-2 bg-[#0A101D]/90 backdrop-blur-md border border-orange-500/30 rounded-xl px-2.5 py-1.5 shadow-lg">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-mono font-bold text-orange-400 uppercase tracking-wider">
+                        MEM [0x7FFF00]
+                      </span>
+                      <span className="text-[8px] font-mono text-slate-400">|</span>
+                      <span className="text-[8px] font-mono text-emerald-300 font-semibold">
+                        L1/L2 CACHE OPTIMIZED
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {/* Mini Oscilloscope / Latency Wave Graphic */}
+                      <svg width="60" height="10" viewBox="0 0 60 10" fill="none" className="opacity-80">
+                        <path
+                          d="M0 5 L10 5 L15 1 L20 9 L25 3 L30 7 L35 5 L60 5"
+                          stroke="#F07C27"
+                          strokeWidth="1.2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="text-[8px] font-mono text-slate-300">0.04ms Latency</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Student Silhouette / Back View */}
                 <div className="absolute -bottom-6 left-1/3 -translate-x-1/4 z-20 pointer-events-none">
                   <svg width="220" height="190" viewBox="0 0 220 190" fill="none">

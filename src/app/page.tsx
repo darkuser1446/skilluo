@@ -15,6 +15,7 @@ import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
 import InteractiveTileGrid from "@/components/InteractiveTileGrid";
 import AmbientAuraRays from "@/components/AmbientAuraRays";
+import AnimatedTechBackground from "@/components/AnimatedTechBackground";
 import LiveFloatingNotice from "@/components/LiveFloatingNotice";
 
 export default function HomePage() {
@@ -22,6 +23,9 @@ export default function HomePage() {
     <main className="relative min-h-screen bg-[#FAFAF9] text-[#0F172A] selection:bg-[#F07C27] selection:text-white overflow-x-hidden">
       {/* Automatic Premium Ambient Lighting Aurora & Rays */}
       <AmbientAuraRays />
+
+      {/* Automatic Animated Drifting Constellation Nodes & Circuit Mesh */}
+      <AnimatedTechBackground />
 
       {/* Subtle Interactive Square Tiles Background (responds dynamically to cursor across entire page) */}
       <InteractiveTileGrid theme="light" showControls={true} tileSize={46} />
