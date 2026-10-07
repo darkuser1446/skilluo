@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Video, FileText, Users, BookOpen, Target, Award, Sparkles, CheckCircle2 } from "lucide-react";
+import Anime3DCard from "./Anime3DCard";
 
 const REASONS = [
   {
@@ -83,35 +84,34 @@ export default function WhyJoinSection() {
             </div>
           </div>
 
-          {/* Right Column: 6 Feature Cards with Embedded Graphical Badges */}
+          {/* Right Column: 6 Feature Cards with Anime.js 3D Tilt */}
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             {REASONS.map((reason) => {
               const Icon = reason.icon;
               return (
-                <div
-                  key={reason.title}
-                  className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col items-start justify-between group"
-                >
-                  <div>
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center mb-3.5 ${reason.iconColor} group-hover:scale-105 transition-transform`}
-                    >
-                      <Icon className="w-5 h-5" />
+                <Anime3DCard key={reason.title} maxTilt={6} depth={10} className="h-full">
+                  <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col items-start justify-between h-full group">
+                    <div>
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center mb-3.5 ${reason.iconColor} group-hover:scale-105 transition-transform`}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="font-display font-bold text-sm sm:text-base text-[#0F172A] mb-1.5">
+                        {reason.title}
+                      </h3>
+                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
+                        {reason.description}
+                      </p>
                     </div>
-                    <h3 className="font-display font-bold text-sm sm:text-base text-[#0F172A] mb-1.5">
-                      {reason.title}
-                    </h3>
-                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
-                      {reason.description}
-                    </p>
-                  </div>
 
-                  {/* Micro-Graphic Tag */}
-                  <div className="w-full pt-2.5 border-t border-slate-100 flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
-                    <CheckCircle2 className="w-3 h-3 text-[#F07C27]" />
-                    <span className="font-semibold text-slate-700">{reason.badge}</span>
+                    {/* Micro-Graphic Tag */}
+                    <div className="w-full pt-2.5 border-t border-slate-100 flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
+                      <CheckCircle2 className="w-3 h-3 text-[#F07C27]" />
+                      <span className="font-semibold text-slate-700">{reason.badge}</span>
+                    </div>
                   </div>
-                </div>
+                </Anime3DCard>
               );
             })}
           </div>

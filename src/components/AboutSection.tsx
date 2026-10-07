@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { BookOpen, Code, Users, BarChart3, ArrowRight, Cpu, Layers, GitBranch, ShieldCheck } from "lucide-react";
 import GeometricFacet from "./GeometricFacet";
+import Anime3DCard from "./Anime3DCard";
 
 const ABOUT_FEATURES = [
   {
@@ -62,58 +63,66 @@ export default function AboutSection() {
             </p>
           </div>
 
-          {/* Right Column: Classroom Lecture Photo & Floating Metrics */}
+          {/* Right Column: Classroom Lecture Photo & Floating Metrics with Anime.js 3D */}
           <div className="lg:col-span-6 relative flex justify-center lg:justify-end">
-            <div className="relative w-full max-w-lg">
-              {/* Classroom Lecture Photo */}
-              <div className="relative h-64 sm:h-72 w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200">
-                <Image
-                  src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1000&q=80"
-                  alt="Mentor teaching classroom session"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              </div>
+            <Anime3DCard maxTilt={5} depth={15} className="w-full max-w-lg">
+              <div className="relative w-full">
+                {/* Classroom Lecture Photo */}
+                <div className="relative h-64 sm:h-72 w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200">
+                  <Image
+                    src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1000&q=80"
+                    alt="Mentor teaching classroom session"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                </div>
 
-              {/* Floating Metrics Badge Card */}
-              <div className="absolute -bottom-6 -right-3 sm:-right-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-slate-100 flex flex-col gap-2 min-w-[170px]">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span>Learn</span>
+                {/* Floating Metrics Badge Card */}
+                <div
+                  style={{ transform: "translateZ(30px)" }}
+                  className="absolute -bottom-6 -right-3 sm:-right-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-slate-100 flex flex-col gap-2 min-w-[170px]"
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span>Learn</span>
+                    </div>
+                    <div className="w-12 h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="w-4/5 h-full bg-blue-500 rounded-full" />
+                    </div>
                   </div>
-                  <div className="w-12 h-2 rounded-full bg-slate-100 overflow-hidden">
-                    <div className="w-4/5 h-full bg-blue-500 rounded-full" />
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                      <span>Practice</span>
+                    </div>
+                    <div className="w-12 h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="w-full h-full bg-amber-500 rounded-full" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#F07C27]" />
+                      <span>Grow</span>
+                    </div>
+                    <div className="w-12 h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="w-5/6 h-full bg-[#F07C27] rounded-full" />
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span>Practice</span>
-                  </div>
-                  <div className="w-12 h-2 rounded-full bg-slate-100 overflow-hidden">
-                    <div className="w-full h-full bg-amber-500 rounded-full" />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#F07C27]" />
-                    <span>Grow</span>
-                  </div>
-                  <div className="w-12 h-2 rounded-full bg-slate-100 overflow-hidden">
-                    <div className="w-5/6 h-full bg-[#F07C27] rounded-full" />
-                  </div>
-                </div>
-              </div>
 
-              {/* Handwritten Note Callout */}
-              <div className="absolute -bottom-14 right-2 sm:right-0">
-                <span className="font-handwritten text-[#F07C27] text-xl sm:text-2xl font-bold tracking-wide -rotate-6 block">
-                  More than Just a Course
-                </span>
+                {/* Handwritten Note Callout */}
+                <div
+                  style={{ transform: "translateZ(45px)" }}
+                  className="absolute -bottom-14 right-2 sm:right-0 pointer-events-none"
+                >
+                  <span className="font-handwritten text-[#F07C27] text-xl sm:text-2xl font-bold tracking-wide -rotate-6 block">
+                    More than Just a Course
+                  </span>
+                </div>
               </div>
-            </div>
+            </Anime3DCard>
           </div>
         </div>
 
@@ -151,66 +160,65 @@ export default function AboutSection() {
           </div>
         </div>
 
-        {/* Bottom: 4 Feature Cards with Embedded Technical Micro-Graphics */}
+        {/* Bottom: 4 Feature Cards with Embedded Technical Micro-Graphics & Anime.js 3D Tilt */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {ABOUT_FEATURES.map((feat) => {
             const Icon = feat.icon;
             return (
-              <div
-                key={feat.title}
-                className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col items-start justify-between group"
-              >
-                <div>
-                  {/* Blue Icon Circular Badge */}
-                  <div className="w-11 h-11 rounded-full bg-blue-50 border border-blue-100/60 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                    <Icon className="w-5 h-5" />
+              <Anime3DCard key={feat.title} maxTilt={6} depth={12} className="h-full">
+                <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col items-start justify-between h-full group">
+                  <div>
+                    {/* Blue Icon Circular Badge */}
+                    <div className="w-11 h-11 rounded-full bg-blue-50 border border-blue-100/60 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-display font-bold text-base text-[#0F172A] mb-2">
+                      {feat.title}
+                    </h3>
+                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
+                      {feat.description}
+                    </p>
                   </div>
-                  <h3 className="font-display font-bold text-base text-[#0F172A] mb-2">
-                    {feat.title}
-                  </h3>
-                  <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
-                    {feat.description}
-                  </p>
+
+                  {/* Professional Content Micro-Graphic Inside Card */}
+                  {feat.graphicType === "steps" && (
+                    <div className="w-full bg-slate-50 border border-slate-100 rounded-lg p-2.5 flex items-center justify-between text-[10px] font-mono text-slate-600">
+                      <span className="text-blue-600 font-bold">Step 01</span>
+                      <span className="text-slate-300">➔</span>
+                      <span className="text-[#F07C27] font-bold">Step 02</span>
+                      <span className="text-slate-300">➔</span>
+                      <span className="text-emerald-600 font-bold">Step 03</span>
+                    </div>
+                  )}
+
+                  {feat.graphicType === "code" && (
+                    <div className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 font-mono text-[10px] text-slate-300">
+                      <span className="text-rose-400">int*</span> ptr = <span className="text-amber-300">&amp;val</span>;{" "}
+                      <span className="text-slate-500">// Zero Overhead</span>
+                    </div>
+                  )}
+
+                  {feat.graphicType === "mentor" && (
+                    <div className="w-full bg-blue-50/70 border border-blue-100 rounded-lg p-2.5 flex items-center justify-between text-[10px] font-mono text-blue-900">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        1:1 Reviews
+                      </span>
+                      <span className="text-slate-500">SLA &lt; 15m</span>
+                    </div>
+                  )}
+
+                  {feat.graphicType === "testbench" && (
+                    <div className="w-full bg-emerald-50/70 border border-emerald-100 rounded-lg p-2.5 flex items-center justify-between text-[10px] font-mono text-emerald-900">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        40/40 Tests
+                      </span>
+                      <span className="text-emerald-700 font-semibold">0 Memory Leaks</span>
+                    </div>
+                  )}
                 </div>
-
-                {/* Professional Content Micro-Graphic Inside Card */}
-                {feat.graphicType === "steps" && (
-                  <div className="w-full bg-slate-50 border border-slate-100 rounded-lg p-2.5 flex items-center justify-between text-[10px] font-mono text-slate-600">
-                    <span className="text-blue-600 font-bold">Step 01</span>
-                    <span className="text-slate-300">➔</span>
-                    <span className="text-[#F07C27] font-bold">Step 02</span>
-                    <span className="text-slate-300">➔</span>
-                    <span className="text-emerald-600 font-bold">Step 03</span>
-                  </div>
-                )}
-
-                {feat.graphicType === "code" && (
-                  <div className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 font-mono text-[10px] text-slate-300">
-                    <span className="text-rose-400">int*</span> ptr = <span className="text-amber-300">&amp;val</span>;{" "}
-                    <span className="text-slate-500">// Zero Overhead</span>
-                  </div>
-                )}
-
-                {feat.graphicType === "mentor" && (
-                  <div className="w-full bg-blue-50/70 border border-blue-100 rounded-lg p-2.5 flex items-center justify-between text-[10px] font-mono text-blue-900">
-                    <span className="font-bold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      1:1 Reviews
-                    </span>
-                    <span className="text-slate-500">SLA &lt; 15m</span>
-                  </div>
-                )}
-
-                {feat.graphicType === "testbench" && (
-                  <div className="w-full bg-emerald-50/70 border border-emerald-100 rounded-lg p-2.5 flex items-center justify-between text-[10px] font-mono text-emerald-900">
-                    <span className="font-bold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      40/40 Tests
-                    </span>
-                    <span className="text-emerald-700 font-semibold">0 Memory Leaks</span>
-                  </div>
-                )}
-              </div>
+              </Anime3DCard>
             );
           })}
         </div>

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import Anime3DCard from "./Anime3DCard";
 
 interface Testimonial {
   quote: string;
@@ -70,14 +71,14 @@ export default function StudentSpotlight() {
           <div className="flex items-center gap-3">
             <button
               onClick={handlePrev}
-              className="w-10 h-10 rounded-full border border-slate-300 text-slate-600 hover:text-[#F07C27] hover:border-[#F07C27] flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-full border border-slate-300 text-slate-600 hover:text-[#F07C27] hover:border-[#F07C27] flex items-center justify-center transition-colors cursor-pointer"
               aria-label="Previous testimonial"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={handleNext}
-              className="w-10 h-10 rounded-full bg-[#F07C27] text-white hover:bg-[#e06c17] flex items-center justify-center shadow-sm transition-colors"
+              className="w-10 h-10 rounded-full bg-[#F07C27] text-white hover:bg-[#e06c17] flex items-center justify-center shadow-sm transition-colors cursor-pointer"
               aria-label="Next testimonial"
             >
               <ChevronRight className="w-5 h-5" />
@@ -85,52 +86,51 @@ export default function StudentSpotlight() {
           </div>
         </div>
 
-        {/* 3 Testimonial Cards */}
+        {/* 3 Testimonial Cards with Anime.js 3D Tilt */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {TESTIMONIALS.map((item) => (
-            <div
-              key={item.name}
-              className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
-            >
-              <div>
-                {/* Large Orange Quote Mark */}
-                <div className="text-[#F07C27] text-4xl font-serif font-black leading-none mb-3">
-                  &ldquo;&ldquo;
-                </div>
-
-                {/* Quote Text */}
-                <p className="text-slate-700 text-sm sm:text-base leading-relaxed mb-6">
-                  &quot;{item.quote}&quot;
-                </p>
-              </div>
-
-              {/* Student Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="relative w-10 h-10 rounded-full overflow-hidden border border-orange-200">
-                    <Image
-                      src={item.avatar}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+            <Anime3DCard key={item.name} maxTilt={6} depth={14} className="h-full">
+              <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200/80 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between h-full">
+                <div>
+                  {/* Large Orange Quote Mark */}
+                  <div className="text-[#F07C27] text-4xl font-serif font-black leading-none mb-3">
+                    &ldquo;&ldquo;
                   </div>
-                  <div>
-                    <h4 className="font-display font-bold text-sm text-[#0F172A] leading-tight">
-                      {item.name}
-                    </h4>
-                    <p className="text-xs text-slate-500 font-medium">{item.sub}</p>
-                  </div>
+
+                  {/* Quote Text */}
+                  <p className="text-slate-700 text-sm sm:text-base leading-relaxed mb-6">
+                    &quot;{item.quote}&quot;
+                  </p>
                 </div>
 
-                {/* 5 Gold Stars */}
-                <div className="flex items-center gap-0.5 text-amber-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400" />
-                  ))}
+                {/* Student Footer */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-orange-200">
+                      <Image
+                        src={item.avatar}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-display font-bold text-sm text-[#0F172A] leading-tight">
+                        {item.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 font-medium">{item.sub}</p>
+                    </div>
+                  </div>
+
+                  {/* 5 Gold Stars */}
+                  <div className="flex items-center gap-0.5 text-amber-400">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-amber-400" />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            </Anime3DCard>
           ))}
         </div>
       </div>

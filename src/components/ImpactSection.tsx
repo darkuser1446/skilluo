@@ -4,6 +4,7 @@ import React from "react";
 import { Users, UserCheck, TrendingUp, ThumbsUp } from "lucide-react";
 import GeometricFacet from "./GeometricFacet";
 import CountUp from "./CountUp";
+import Anime3DCard from "./Anime3DCard";
 
 const IMPACT_METRICS = [
   {
@@ -91,27 +92,28 @@ export default function ImpactSection() {
             </p>
           </div>
 
-          {/* Right Column: 4 Stat Cards with Automatic CountUp & Data-Viz Micro-Graphics */}
+          {/* Right Column: 4 Stat Cards with Anime.js 3D Tilt */}
           <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
             {IMPACT_METRICS.map((metric) => {
               const Icon = metric.icon;
               return (
-                <div
-                  key={metric.label}
-                  className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center group"
-                >
-                  <div className="w-12 h-12 rounded-full bg-orange-50 text-[#F07C27] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Icon className="w-6 h-6" />
+                <Anime3DCard key={metric.label} maxTilt={8} depth={10} className="h-full">
+                  <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col items-center text-center h-full justify-between group">
+                    <div>
+                      <div className="w-12 h-12 rounded-full bg-orange-50 text-[#F07C27] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div className="font-display font-black text-xl sm:text-2xl text-[#0F172A] leading-tight mb-0.5">
+                        <CountUp end={metric.end} suffix={metric.suffix} duration={1.6} />
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium leading-tight mb-2">
+                        {metric.label}
+                      </div>
+                    </div>
+                    {/* Embedded Data Graphic */}
+                    {metric.graphic}
                   </div>
-                  <div className="font-display font-black text-xl sm:text-2xl text-[#0F172A] leading-tight mb-0.5">
-                    <CountUp end={metric.end} suffix={metric.suffix} duration={1.6} />
-                  </div>
-                  <div className="text-xs text-slate-500 font-medium leading-tight mb-2">
-                    {metric.label}
-                  </div>
-                  {/* Embedded Data Graphic */}
-                  {metric.graphic}
-                </div>
+                </Anime3DCard>
               );
             })}
           </div>

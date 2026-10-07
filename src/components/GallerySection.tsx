@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import GeometricFacet from "./GeometricFacet";
+import Anime3DCard from "./Anime3DCard";
 
 const GALLERY_PHOTOS = {
   auditorium: {
@@ -63,82 +64,94 @@ export default function GallerySection() {
           </Link>
         </div>
 
-        {/* 5-Photo Mosaic Grid Matching Reference Design */}
+        {/* 5-Photo Mosaic Grid with Anime.js 3D Tilt */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5">
           {/* Left Large Photo: Auditorium Lecture (Spans 5 cols on md/lg, full height) */}
-          <div className="md:col-span-5 relative min-h-[300px] md:min-h-[460px] rounded-2xl overflow-hidden shadow-sm border border-slate-200 group">
-            <Image
-              src={GALLERY_PHOTOS.auditorium.src}
-              alt={GALLERY_PHOTOS.auditorium.alt}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
-            <div className="absolute bottom-4 left-4 text-white text-xs font-medium">
-              {GALLERY_PHOTOS.auditorium.caption}
-            </div>
+          <div className="md:col-span-5 h-full">
+            <Anime3DCard maxTilt={5} depth={15} className="h-full">
+              <div className="relative min-h-[300px] md:min-h-[460px] h-full rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-slate-200 group">
+                <Image
+                  src={GALLERY_PHOTOS.auditorium.src}
+                  alt={GALLERY_PHOTOS.auditorium.alt}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                <div className="absolute bottom-4 left-4 text-white text-xs font-medium">
+                  {GALLERY_PHOTOS.auditorium.caption}
+                </div>
+              </div>
+            </Anime3DCard>
           </div>
 
           {/* Center Column: 2 Stacked Photos (Spans 4 cols on md/lg) */}
           <div className="md:col-span-4 flex flex-col gap-4 sm:gap-5">
             {/* Top Center: Cohort Banner Photo */}
-            <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-sm border border-slate-200 group">
-              <Image
-                src={GALLERY_PHOTOS.cohortBanner.src}
-                alt={GALLERY_PHOTOS.cohortBanner.alt}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
-              <div className="absolute bottom-3 left-3 text-white text-xs font-medium">
-                {GALLERY_PHOTOS.cohortBanner.caption}
+            <Anime3DCard maxTilt={6} depth={12}>
+              <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-slate-200 group">
+                <Image
+                  src={GALLERY_PHOTOS.cohortBanner.src}
+                  alt={GALLERY_PHOTOS.cohortBanner.alt}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
+                <div className="absolute bottom-3 left-3 text-white text-xs font-medium">
+                  {GALLERY_PHOTOS.cohortBanner.caption}
+                </div>
               </div>
-            </div>
+            </Anime3DCard>
 
             {/* Bottom Center: Laptop Discussion Photo */}
-            <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-sm border border-slate-200 group">
-              <Image
-                src={GALLERY_PHOTOS.laptopDiscussion.src}
-                alt={GALLERY_PHOTOS.laptopDiscussion.alt}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
-              <div className="absolute bottom-3 left-3 text-white text-xs font-medium">
-                {GALLERY_PHOTOS.laptopDiscussion.caption}
+            <Anime3DCard maxTilt={6} depth={12}>
+              <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-slate-200 group">
+                <Image
+                  src={GALLERY_PHOTOS.laptopDiscussion.src}
+                  alt={GALLERY_PHOTOS.laptopDiscussion.alt}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
+                <div className="absolute bottom-3 left-3 text-white text-xs font-medium">
+                  {GALLERY_PHOTOS.laptopDiscussion.caption}
+                </div>
               </div>
-            </div>
+            </Anime3DCard>
           </div>
 
           {/* Right Column: 2 Stacked Photos (Spans 3 cols on md/lg) */}
           <div className="md:col-span-3 flex flex-col gap-4 sm:gap-5">
             {/* Top Right: Speaker Stage Photo */}
-            <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-sm border border-slate-200 group">
-              <Image
-                src={GALLERY_PHOTOS.speakerStage.src}
-                alt={GALLERY_PHOTOS.speakerStage.alt}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
-              <div className="absolute bottom-3 left-3 text-white text-xs font-medium">
-                {GALLERY_PHOTOS.speakerStage.caption}
+            <Anime3DCard maxTilt={6} depth={12}>
+              <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-slate-200 group">
+                <Image
+                  src={GALLERY_PHOTOS.speakerStage.src}
+                  alt={GALLERY_PHOTOS.speakerStage.alt}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
+                <div className="absolute bottom-3 left-3 text-white text-xs font-medium">
+                  {GALLERY_PHOTOS.speakerStage.caption}
+                </div>
               </div>
-            </div>
+            </Anime3DCard>
 
             {/* Bottom Right: Team Celebration Photo */}
-            <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-sm border border-slate-200 group">
-              <Image
-                src={GALLERY_PHOTOS.teamCelebration.src}
-                alt={GALLERY_PHOTOS.teamCelebration.alt}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
-              <div className="absolute bottom-3 left-3 text-white text-xs font-medium">
-                {GALLERY_PHOTOS.teamCelebration.caption}
+            <Anime3DCard maxTilt={6} depth={12}>
+              <div className="relative h-48 sm:h-56 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-slate-200 group">
+                <Image
+                  src={GALLERY_PHOTOS.teamCelebration.src}
+                  alt={GALLERY_PHOTOS.teamCelebration.alt}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70" />
+                <div className="absolute bottom-3 left-3 text-white text-xs font-medium">
+                  {GALLERY_PHOTOS.teamCelebration.caption}
+                </div>
               </div>
-            </div>
+            </Anime3DCard>
           </div>
         </div>
       </div>

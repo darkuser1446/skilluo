@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import Anime3DCard from "./Anime3DCard";
 
 interface Mentor {
   name: string;
@@ -84,33 +85,32 @@ export default function MentorsGrid() {
           </Link>
         </div>
 
-        {/* 8 Mentors Responsive Grid / Row */}
+        {/* 8 Mentors Responsive Grid / Row with Anime.js 3D Tilt */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 sm:gap-5">
           {MENTORS.map((mentor) => (
-            <div
-              key={mentor.name}
-              className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center group"
-            >
-              {/* Mentor Avatar */}
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden mb-3 border-2 border-orange-100 group-hover:border-[#F07C27] transition-colors shadow-inner">
-                <Image
-                  src={mentor.image}
-                  alt={mentor.name}
-                  fill
-                  className="object-cover"
-                />
+            <Anime3DCard key={mentor.name} maxTilt={9} depth={10} className="h-full">
+              <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col items-center text-center h-full group">
+                {/* Mentor Avatar */}
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden mb-3 border-2 border-orange-100 group-hover:border-[#F07C27] transition-colors shadow-inner">
+                  <Image
+                    src={mentor.image}
+                    alt={mentor.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+
+                {/* Mentor Name */}
+                <h4 className="font-display font-bold text-xs sm:text-sm text-[#0F172A] leading-tight mb-1">
+                  {mentor.name}
+                </h4>
+
+                {/* Specialty */}
+                <p className="text-[11px] text-[#F07C27] font-medium leading-tight">
+                  {mentor.specialty}
+                </p>
               </div>
-
-              {/* Mentor Name */}
-              <h4 className="font-display font-bold text-xs sm:text-sm text-[#0F172A] leading-tight mb-1">
-                {mentor.name}
-              </h4>
-
-              {/* Specialty */}
-              <p className="text-[11px] text-[#F07C27] font-medium leading-tight">
-                {mentor.specialty}
-              </p>
-            </div>
+            </Anime3DCard>
           ))}
         </div>
       </div>

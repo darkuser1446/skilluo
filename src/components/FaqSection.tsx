@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Plus, Minus, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Anime3DCard from "./Anime3DCard";
 
 interface FaqItem {
   id: string;
@@ -102,41 +103,41 @@ export default function FaqSection() {
           </Link>
         </div>
 
-        {/* 2-Column Accordion Layout */}
+        {/* 2-Column Accordion Layout with Anime.js 3D Tilt */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* Column 1 */}
           <div className="flex flex-col gap-4">
             {FAQS_COL1.map((item) => {
               const isOpen = openIds[item.id];
               return (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-200"
-                >
-                  <button
-                    onClick={() => toggle(item.id)}
-                    className="w-full text-left p-5 flex items-center justify-between gap-4 font-display font-bold text-sm sm:text-base text-[#0F172A] hover:text-[#F07C27] transition-colors"
-                  >
-                    <span>{item.question}</span>
-                    <span className="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-500">
-                      {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                    </span>
-                  </button>
-                  <AnimatePresence>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-                          {item.answer}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <Anime3DCard key={item.id} maxTilt={4} depth={8} className="w-full">
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggle(item.id)}
+                      className="w-full text-left p-5 flex items-center justify-between gap-4 font-display font-bold text-sm sm:text-base text-[#0F172A] hover:text-[#F07C27] transition-colors cursor-pointer"
+                    >
+                      <span>{item.question}</span>
+                      <span className="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-500">
+                        {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                      </span>
+                    </button>
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+                            {item.answer}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </Anime3DCard>
               );
             })}
           </div>
@@ -146,34 +147,34 @@ export default function FaqSection() {
             {FAQS_COL2.map((item) => {
               const isOpen = openIds[item.id];
               return (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-200"
-                >
-                  <button
-                    onClick={() => toggle(item.id)}
-                    className="w-full text-left p-5 flex items-center justify-between gap-4 font-display font-bold text-sm sm:text-base text-[#0F172A] hover:text-[#F07C27] transition-colors"
-                  >
-                    <span>{item.question}</span>
-                    <span className="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-500">
-                      {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                    </span>
-                  </button>
-                  <AnimatePresence>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-                          {item.answer}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <Anime3DCard key={item.id} maxTilt={4} depth={8} className="w-full">
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggle(item.id)}
+                      className="w-full text-left p-5 flex items-center justify-between gap-4 font-display font-bold text-sm sm:text-base text-[#0F172A] hover:text-[#F07C27] transition-colors cursor-pointer"
+                    >
+                      <span>{item.question}</span>
+                      <span className="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-500">
+                        {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                      </span>
+                    </button>
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+                            {item.answer}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </Anime3DCard>
               );
             })}
           </div>

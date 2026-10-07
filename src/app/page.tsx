@@ -13,36 +13,30 @@ import FaqSection from "@/components/FaqSection";
 import CtaBand from "@/components/CtaBand";
 import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
-import InteractiveTileGrid from "@/components/InteractiveTileGrid";
-import AmbientAuraRays from "@/components/AmbientAuraRays";
-import AnimatedTechBackground from "@/components/AnimatedTechBackground";
-import LiveFloatingNotice from "@/components/LiveFloatingNotice";
 
 export default function HomePage() {
   return (
     <main className="relative min-h-screen bg-[#FAFAF9] text-[#0F172A] selection:bg-[#F07C27] selection:text-white overflow-x-hidden">
-      {/* Automatic Premium Ambient Lighting Aurora & Rays */}
-      <AmbientAuraRays />
-
-      {/* Automatic Animated Drifting Constellation Nodes & Circuit Mesh */}
-      <AnimatedTechBackground />
-
-      {/* Subtle Interactive Square Tiles Background (responds dynamically to cursor across entire page) */}
-      <InteractiveTileGrid theme="light" showControls={true} tileSize={46} />
-
-      {/* Live Automatic Admissions & Cohort Milestone Status Pill */}
-      <LiveFloatingNotice />
+      {/* High-Performance Zero-Lag Tech Grid Background (0% CPU/GPU overhead) */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(#e2e8f0_1.2px,transparent_1.2px)] [background-size:28px_28px] opacity-75"
+      />
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(ellipse_80%_45%_at_50%_-15%,rgba(240,124,39,0.1),transparent_70%)]"
+      />
 
       {/* S0: Top Navigation Bar */}
       <Navbar />
 
-      {/* S1: Hero Section - SUPER 60 PRESENTS SKILL UP */}
+      {/* S1: Hero Section - SUPER 60 PRESENTS SKILL UP with Anime.js 3D Showcase */}
       <Hero />
 
       {/* S2: About Skill Up - A Stronger Start for Brighter Futures */}
       <AboutSection />
 
-      {/* S3: The Program - A Complete Learning Journey (Roadmap 01 to 04) */}
+      {/* S3: The Program - A Complete Learning Journey (with Anime.js 3D Cards) */}
       <ProgramJourney />
 
       {/* S4: Meet Our Mentors - Learn from Experienced Guides (8 Mentors) */}
