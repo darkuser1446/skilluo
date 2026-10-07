@@ -43,7 +43,7 @@ export default function InteractiveTileGrid({
   const ripplesRef = useRef<Ripple[]>([]);
   const tilesRef = useRef<Map<string, Tile>>(new Map());
   const animFrameRef = useRef<number | null>(null);
-  const [accentMode, setAccentMode] = useState<"orange" | "gold" | "navy">("orange");
+  const [accentMode, setAccentMode] = useState<"orange" | "cyan" | "gold">("orange");
 
   // Track mouse coordinates relative to canvas
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -272,9 +272,9 @@ export default function InteractiveTileGrid({
             if (accentMode === "gold") {
               strokeColor = `rgba(255, 183, 3, ${0.25 + active * 0.75})`;
               fillColor = `rgba(255, 183, 3, ${active * 0.18})`;
-            } else if (accentMode === "navy") {
-              strokeColor = `rgba(45, 50, 94, ${0.25 + active * 0.75})`;
-              fillColor = `rgba(45, 50, 94, ${active * 0.15})`;
+            } else if (accentMode === "cyan") {
+              strokeColor = `rgba(56, 189, 248, ${0.25 + active * 0.75})`;
+              fillColor = `rgba(56, 189, 248, ${active * 0.18})`;
             }
 
             ctx.fillStyle = fillColor;
@@ -358,8 +358,17 @@ export default function InteractiveTileGrid({
             className={`w-3.5 h-3.5 rounded-full bg-[#F07C27] transition-transform ${
               accentMode === "orange" ? "ring-2 ring-slate-800 scale-110" : "opacity-60"
             }`}
-            title="Flame Orange Accent"
-            aria-label="Flame Orange Accent"
+            title="Orange Flame Accent"
+            aria-label="Orange Flame Accent"
+          />
+          <button
+            type="button"
+            onClick={() => setAccentMode("cyan")}
+            className={`w-3.5 h-3.5 rounded-full bg-sky-400 transition-transform ${
+              accentMode === "cyan" ? "ring-2 ring-slate-800 scale-110" : "opacity-60"
+            }`}
+            title="Electric Cyan Accent"
+            aria-label="Electric Cyan Accent"
           />
           <button
             type="button"
@@ -369,15 +378,6 @@ export default function InteractiveTileGrid({
             }`}
             title="Super 60 Gold Accent"
             aria-label="Super 60 Gold Accent"
-          />
-          <button
-            type="button"
-            onClick={() => setAccentMode("navy")}
-            className={`w-3.5 h-3.5 rounded-full bg-[#2D325E] transition-transform ${
-              accentMode === "navy" ? "ring-2 ring-slate-800 scale-110" : "opacity-60"
-            }`}
-            title="Navy Accent"
-            aria-label="Navy Accent"
           />
         </div>
       )}
