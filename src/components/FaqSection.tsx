@@ -66,7 +66,7 @@ export default function FaqSection() {
   return (
     <section
       id="faq"
-      className="relative py-20 sm:py-24 bg-white overflow-hidden border-t border-slate-100"
+      className="relative py-20 sm:py-24 bg-transparent overflow-hidden border-t border-slate-100/80"
     >
       {/* Decorative Floating Blue Question Marks on Borders */}
       <div

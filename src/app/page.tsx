@@ -17,9 +17,9 @@ import InteractiveTileGrid from "@/components/InteractiveTileGrid";
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen bg-white text-[#0F172A] selection:bg-[#F07C27] selection:text-white overflow-x-hidden">
-      {/* Subtle Interactive Square Tiles Background (responds dynamically to cursor) */}
-      <InteractiveTileGrid theme="light" showControls={false} tileSize={48} />
+    <main className="relative min-h-screen bg-[#FAFAF9] text-[#0F172A] selection:bg-[#F07C27] selection:text-white overflow-x-hidden">
+      {/* Subtle Interactive Square Tiles Background (responds dynamically to cursor across entire page) */}
+      <InteractiveTileGrid theme="light" showControls={true} tileSize={46} />
 
       {/* S0: Top Navigation Bar */}
       <Navbar />

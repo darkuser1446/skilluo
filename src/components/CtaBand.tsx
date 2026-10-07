@@ -18,7 +18,7 @@ export default function CtaBand() {
   };
 
   return (
-    <section className="relative py-16 sm:py-20 bg-white overflow-hidden">
+    <section className="relative py-16 sm:py-20 bg-transparent overflow-hidden">
       {/* Facet decor */}
       <GeometricFacet side="left" position="bottom" className="bottom-4 -translate-x-6" />
 

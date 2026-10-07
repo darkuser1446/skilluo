@@ -52,7 +52,7 @@ export default function ProgramJourney() {
   return (
     <section
       id="program"
-      className="relative py-20 sm:py-24 bg-white overflow-hidden border-t border-slate-100"
+      className="relative py-20 sm:py-24 bg-transparent overflow-hidden border-t border-slate-100/80"
     >
       {/* Decorative Shard on Left */}
       <GeometricFacet side="left" position="middle" className="top-12 -translate-x-6" />

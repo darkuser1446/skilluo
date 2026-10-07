@@ -9,7 +9,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative pt-28 pb-16 sm:pt-32 sm:pb-20 overflow-hidden bg-white"
+      className="relative pt-28 pb-16 sm:pt-32 sm:pb-20 overflow-hidden bg-transparent"
     >
       {/* Decorative Geometric Polygonal Shards in Margins */}
       <GeometricFacet side="left" position="top" className="top-12 -translate-x-6" />

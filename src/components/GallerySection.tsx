@@ -38,7 +38,7 @@ export default function GallerySection() {
   return (
     <section
       id="gallery"
-      className="relative py-20 sm:py-24 bg-white overflow-hidden border-t border-slate-100"
+      className="relative py-20 sm:py-24 bg-transparent overflow-hidden border-t border-slate-100/80"
     >
       {/* Polygonal Crystal Facet on Right */}
       <GeometricFacet side="right" position="middle" className="top-12 translate-x-6" />

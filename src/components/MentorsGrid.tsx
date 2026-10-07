@@ -58,7 +58,7 @@ export default function MentorsGrid() {
   return (
     <section
       id="mentors"
-      className="relative py-20 sm:py-24 bg-[#FAFAF8] overflow-hidden border-t border-slate-100"
+      className="relative py-20 sm:py-24 bg-white/40 backdrop-blur-[1px] overflow-hidden border-t border-slate-100/80"
     >
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8">
         {/* Header */}

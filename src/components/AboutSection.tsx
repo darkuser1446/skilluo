@@ -32,7 +32,7 @@ export default function AboutSection() {
   return (
     <section
       id="about"
-      className="relative py-20 sm:py-24 bg-[#FAFAF8] overflow-hidden border-t border-slate-100"
+      className="relative py-20 sm:py-24 bg-white/40 backdrop-blur-[1px] overflow-hidden border-t border-slate-100/80"
     >
       {/* Polygonal Crystal Facet Decor */}
       <GeometricFacet side="right" position="middle" className="top-8 translate-x-6" />
