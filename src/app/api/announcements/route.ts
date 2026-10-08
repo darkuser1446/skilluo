@@ -26,7 +26,9 @@ export async function GET(req: NextRequest) {
       orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
     });
 
-    return successResponse({ announcements });
+    const response = successResponse({ announcements });
+    response.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");
+    return response;
   } catch (err) {
     return handleApiError(err);
   }
