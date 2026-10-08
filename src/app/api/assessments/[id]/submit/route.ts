@@ -9,6 +9,8 @@ import { notifyMany, labMentorIds } from "@/lib/notify";
 const AssessmentSubmitSchema = z.object({
   answers: z.record(z.string(), z.string()), // questionId -> selected answer / code / text
   durationSec: z.number().int().nonnegative().optional(), // time taken by the student
+  violationReason: z.string().optional(),
+  warningCount: z.number().int().nonnegative().optional(),
 });
 
 export async function POST(
@@ -22,7 +24,7 @@ export async function POST(
     }
     const { id: assessmentId } = await params;
     const body = await req.json();
-    const { answers, durationSec } = AssessmentSubmitSchema.parse(body);
+    const { answers, durationSec, violationReason, warningCount } = AssessmentSubmitSchema.parse(body);
 
     const assessment = await prisma.assessment.findUnique({
       where: { id: assessmentId },
@@ -89,24 +91,60 @@ export async function POST(
       }
     }
 
-    const status = hasManualQuestions ? "PENDING_REVIEW" : "COMPLETED";
+    const isDisqualified = Boolean(violationReason);
+    const status = isDisqualified
+      ? "DISQUALIFIED"
+      : hasManualQuestions
+      ? "PENDING_REVIEW"
+      : "COMPLETED";
+
+    const feedback = isDisqualified
+      ? `Auto-submitted due to proctoring violation: ${violationReason}. (Total violations recorded: ${warningCount ?? 0})`
+      : null;
+
+    const finalScore = isDisqualified ? 0 : totalScore;
 
     const result = await prisma.assessmentResult.create({
       data: {
         assessmentId,
         studentId: user.sub,
-        score: totalScore,
+        score: finalScore,
         status,
-        answers: answers as object,
+        answers: {
+          ...answers,
+          _proctoring: isDisqualified
+            ? {
+                violationReason,
+                warningCount: warningCount ?? 0,
+                flaggedAt: new Date().toISOString(),
+                disqualified: true,
+              }
+            : null,
+        } as object,
         correctCount,
         incorrectCount,
         unansweredCount,
         durationSec: durationSec ?? null,
+        feedback,
       },
     });
 
-    // Notify mentors when answers need manual review
-    if (hasManualQuestions) {
+    // Notify mentors AND admins immediately when a student is disqualified for proctoring violations
+    if (isDisqualified) {
+      const [mentorIds, admins] = await Promise.all([
+        labMentorIds(assessment.workshopId, assessment.labId),
+        prisma.user.findMany({ where: { role: "ADMIN", isActive: true }, select: { id: true } }),
+      ]);
+      const notifyIds = Array.from(new Set([...mentorIds, ...admins.map((a) => a.id)]));
+      await notifyMany(
+        notifyIds,
+        `🚨 Proctoring Violation: ${user.name}`,
+        `Student ${user.name} was disqualified during assessment "${assessment.title}". Reason: ${violationReason}`,
+        "ASSESSMENT",
+        "/admin"
+      );
+    } else if (hasManualQuestions) {
+      // Normal review notification for mentors
       const mentorIds = await labMentorIds(assessment.workshopId, assessment.labId);
       await notifyMany(
         mentorIds,
@@ -119,7 +157,7 @@ export async function POST(
 
     return successResponse({
       result,
-      score: totalScore,
+      score: finalScore,
       totalMarks: assessment.totalMarks,
       passingMarks: assessment.passingMarks ?? assessment.totalMarks * 0.6,
       correctCount,
@@ -127,6 +165,8 @@ export async function POST(
       unansweredCount,
       durationSec: durationSec ?? null,
       status,
+      disqualified: isDisqualified,
+      violationReason: violationReason || null,
     });
   } catch (err) {
     return handleApiError(err);

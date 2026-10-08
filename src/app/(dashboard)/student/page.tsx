@@ -327,8 +327,12 @@ export default function StudentDashboardPage() {
     }
   };
 
-  const handleSubmitQuiz = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitQuiz = async (
+    e?: React.FormEvent,
+    violationReason?: string,
+    warningCount?: number
+  ) => {
+    if (e?.preventDefault) e.preventDefault();
     if (!activeAssessment) return;
     setSubmittingQuiz(true);
     setQuizError(null);
@@ -339,7 +343,7 @@ export default function StudentDashboardPage() {
       const res = await fetch(`/api/assessments/${activeAssessment.id}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers: quizAnswers, durationSec }),
+        body: JSON.stringify({ answers: quizAnswers, durationSec, violationReason, warningCount }),
       });
 
       if (res.ok) {
@@ -1731,16 +1735,43 @@ export default function StudentDashboardPage() {
       {/* ══ TEST RESULT SCREEN ══ */}
       {activeTab === "assessments" && activeAssessment && quizResult && (
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="rounded-2xl p-8 bg-[#0F172A] border border-emerald-500/30 shadow-2xl text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-            </div>
+          <div className={`rounded-2xl p-8 bg-[#0F172A] border shadow-2xl text-center space-y-4 ${
+            quizResult.status === "DISQUALIFIED" || quizResult.disqualified
+              ? "border-rose-500/40 shadow-rose-950/30"
+              : "border-emerald-500/30"
+          }`}>
+            {quizResult.status === "DISQUALIFIED" || quizResult.disqualified ? (
+              <div className="w-16 h-16 rounded-full bg-rose-500/15 border-2 border-rose-500/40 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-8 h-8 text-rose-400" />
+              </div>
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              </div>
+            )}
             <h3 className="font-display font-extrabold text-2xl text-white">
-              {quizResult.history ? "Your Result" : "Test Submitted!"}
+              {quizResult.status === "DISQUALIFIED" || quizResult.disqualified
+                ? "Test Terminated — Disqualified"
+                : quizResult.history
+                ? "Your Result"
+                : "Test Submitted!"}
             </h3>
             <div className="space-y-1">
-              <div className="font-display font-black text-5xl text-brand-orange">{quizResult.score}<span className="text-2xl text-slate-400">/{quizResult.totalMarks}</span></div>
+              <div className={`font-display font-black text-5xl ${
+                quizResult.status === "DISQUALIFIED" || quizResult.disqualified
+                  ? "text-rose-400"
+                  : "text-brand-orange"
+              }`}>
+                {quizResult.score}<span className="text-2xl text-slate-400">/{quizResult.totalMarks}</span>
+              </div>
               {(() => {
+                if (quizResult.status === "DISQUALIFIED" || quizResult.disqualified) {
+                  return (
+                    <div className="mt-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
+                      🚨 <strong>Disqualified for Proctoring Violations</strong>: You exceeded the limit of tab switches or window blurs during this test. A disciplinary report was automatically dispatched to your mentors and administrators.
+                    </div>
+                  );
+                }
                 const passMark = quizResult.passingMarks ?? Math.round(quizResult.totalMarks * 0.6);
                 const passed = quizResult.score >= passMark;
                 const pending = quizResult.status === "PENDING_REVIEW";
