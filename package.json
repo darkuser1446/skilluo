@@ -8,7 +8,10 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "node -e \"const c=JSON.parse(require('fs').readFileSync('./.eslintrc.json')); if(c.extends!=='next/core-web-vitals') throw new Error('invalid config'); console.log('ESLint: clean config next/core-web-vitals');\"",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:load": "node scripts/load-test-500.mjs",
+    "test:load:burst": "node scripts/load-test-500.mjs --mode burst",
+    "test:load:cleanup": "node scripts/load-test-500.mjs --only-cleanup"
   },
   "dependencies": {
     "@prisma/client": "6.4.1",
