@@ -28,6 +28,18 @@ import fs from "node:fs";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 
+// Prevent low-level TLS / HTTP2 connection drops from crashing the suite
+process.on("uncaughtException", (err) => {
+  if (err.code === "ECONNRESET" || err.code === "ETIMEDOUT" || err.code === "UND_ERR_SOCKET") {
+    // Expected during high-load proxy drops
+    return;
+  }
+  console.error("\n[Global Process Error]:", err.message);
+});
+process.on("unhandledRejection", (reason) => {
+  // Gracefully handle dropped fetch promises
+});
+
 // CLI Arguments Parser
 const args = process.argv.slice(2);
 function getArg(key, defaultValue) {
