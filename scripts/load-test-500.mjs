@@ -58,7 +58,13 @@ const MODE = getArg("mode", "pool"); // "pool" or "burst"
 const DO_CLEANUP = hasFlag("cleanup");
 const ONLY_CLEANUP = hasFlag("only-cleanup");
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DIRECT_URL || process.env.DATABASE_URL,
+    },
+  },
+});
 
 // Helper: Format milliseconds nicely
 function fmtMs(ms) {
