@@ -8,9 +8,6 @@ import {
   Lock,
   Mail,
   ArrowRight,
-  ShieldCheck,
-  UserCheck,
-  GraduationCap,
   AlertCircle,
   Eye,
   EyeOff,
@@ -63,12 +60,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSelectRole = (roleEmail: string, rolePassword = "") => {
-    setEmail(roleEmail);
-    setPassword(rolePassword);
-    setError(null);
   };
 
   return (
@@ -161,49 +152,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo Credentials Switcher */}
-          <div className="mt-6 pt-5 border-t border-white/10">
-            <span className="text-[11px] font-mono text-slate-400 block mb-2 text-center uppercase tracking-wider">
-              Demo Accounts (Click to Autofill)
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleSelectRole("admin@super60.org", "admin123")}
-                className="px-2 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-orange/40 text-[11px] font-medium text-slate-300 hover:text-white flex flex-col items-center gap-1 transition-all"
-                title="Click to autofill admin credentials"
-              >
-                <ShieldCheck className="w-4 h-4 text-brand-orange" />
-                <span className="font-semibold text-white">Admin</span>
-                <span className="text-[9px] text-slate-400 font-mono">admin123</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectRole("vikram@super60.org", "mentor123")}
-                className="px-2 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-orange/40 text-[11px] font-medium text-slate-300 hover:text-white flex flex-col items-center gap-1 transition-all"
-                title="Click to autofill mentor credentials"
-              >
-                <UserCheck className="w-4 h-4 text-sky-400" />
-                <span className="font-semibold text-white">Mentor</span>
-                <span className="text-[9px] text-slate-400 font-mono">mentor123</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectRole("aditya@student.super60.org", "student123")}
-                className="px-2 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-orange/40 text-[11px] font-medium text-slate-300 hover:text-white flex flex-col items-center gap-1 transition-all"
-                title="Click to autofill student credentials"
-              >
-                <GraduationCap className="w-4 h-4 text-emerald-400" />
-                <span className="font-semibold text-white">Student</span>
-                <span className="text-[9px] text-slate-400 font-mono">student123</span>
-              </button>
-            </div>
-            <p className="text-[10px] text-slate-400 mt-2 text-center font-mono">
-              Click any role above to autofill email & password, then click Sign In.
-            </p>
-          </div>
-
-          <div className="mt-5 text-center text-xs text-slate-400">
+          <div className="mt-6 pt-5 border-t border-white/10 text-center text-xs text-slate-400">
             Need an account?{" "}
             <Link href="/register" className="text-brand-orange font-semibold hover:underline">
               Register here
