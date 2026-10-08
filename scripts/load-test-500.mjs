@@ -191,10 +191,15 @@ async function simulateStudent(index, total, runId) {
     if (!regRes.ok) {
       let errBody = "";
       try {
-        const bodyJson = await regRes.json();
-        errBody = bodyJson.error?.message || JSON.stringify(bodyJson);
-      } catch {
-        errBody = await regRes.text();
+        const raw = await regRes.text();
+        try {
+          const bodyJson = JSON.parse(raw);
+          errBody = bodyJson.error?.message || JSON.stringify(bodyJson);
+        } catch {
+          errBody = raw;
+        }
+      } catch (e) {
+        errBody = e.message;
       }
       result.regError = `HTTP ${regRes.status}: ${errBody.slice(0, 100)}`;
       return result;
