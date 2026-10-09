@@ -59,8 +59,8 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Desktop Nav Items (Curriculum & Workshops separated out to dedicated Sidebar) */}
-          <nav className="hidden lg:flex items-center gap-6">
+          {/* Desktop Nav Items */}
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
             {NAV_LINKS.map((link) => {
               const isActive = link.href.startsWith("#")
                 ? activeSection === link.href.substring(1)
@@ -71,8 +71,8 @@ export default function Navbar() {
                   href={link.href}
                   className={`text-xs font-display font-extrabold uppercase tracking-wider transition-all pb-1 ${
                     isActive
-                      ? "text-[#111111] border-b-[3px] border-[#111111]"
-                      : "text-slate-700 hover:text-[#111111] hover:border-b-[3px] hover:border-[#111111]"
+                      ? "text-[#111111] border-b-[2.5px] border-[#111111]"
+                      : "text-slate-600 hover:text-[#111111] hover:border-b-[2.5px] hover:border-[#111111]"
                   }`}
                 >
                   {link.name}
@@ -82,19 +82,19 @@ export default function Navbar() {
           </nav>
 
           {/* Right Action Buttons */}
-          <div className="hidden sm:flex items-center gap-2.5">
+          <div className="hidden sm:flex items-center gap-2 xl:gap-2.5">
             {/* Highlighted Test Syllabus PDF Download */}
             <a
               href="/SkillUp-3.0-Screening-Test-Syllabus.pdf"
               download="SkillUp-3.0-Screening-Test-Syllabus.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 bg-[#FFB703] hover:bg-[#F07C27] text-[#111111] hover:text-white font-mono text-xs font-black uppercase px-3 py-2 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] hover:shadow-[1px_1px_0px_#111111] hover:translate-x-[1px] hover:translate-y-[1px] transition-all cursor-pointer group"
+              className="flex items-center gap-1.5 bg-[#FFB703] hover:bg-[#F07C27] text-[#111111] hover:text-white font-mono text-[11px] font-black uppercase px-2.5 py-1.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] hover:shadow-[1px_1px_0px_#111111] hover:translate-x-[1px] hover:translate-y-[1px] transition-all cursor-pointer group flex-shrink-0"
               title="Download SkillUp 3.0 Screening Test Syllabus PDF"
             >
               <FileDown className="w-3.5 h-3.5 text-[#111111] group-hover:text-white" />
               <span>TEST SYLLABUS</span>
-              <span className="bg-[#111111] text-white text-[9px] font-mono px-1 py-0.5 uppercase tracking-tighter">
+              <span className="bg-[#111111] text-white text-[8px] font-mono px-1 py-0.2">
                 PDF
               </span>
             </a>
@@ -102,35 +102,40 @@ export default function Navbar() {
             {/* Dedicated Sidebar Trigger Button for Curriculum & Workshops */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="flex items-center gap-2 bg-[#FFF0E5] hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-xs font-bold uppercase px-3 py-2 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] hover:shadow-[1px_1px_0px_#111111] hover:translate-x-[1px] hover:translate-y-[1px] transition-all cursor-pointer group"
+              className="hidden xl:flex items-center gap-1.5 bg-[#FFF0E5] hover:bg-[#111111] text-[#111111] hover:text-white font-mono text-[11px] font-bold uppercase px-2.5 py-1.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] hover:shadow-[1px_1px_0px_#111111] hover:translate-x-[1px] hover:translate-y-[1px] transition-all cursor-pointer group flex-shrink-0"
+              title="Open Curriculum & Workshops Panel"
             >
               <Layers className="w-3.5 h-3.5 text-[#F07C27] group-hover:text-white" />
-              <span>[ CURRICULUM & WORKSHOPS ]</span>
+              <span>TRACKS</span>
             </button>
 
             <Link
               href="/login"
-              className="bg-[#FFFFFF] text-[#111111] font-display text-xs font-bold uppercase px-4 py-2 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_#111111] transition-all"
+              className="text-xs font-display font-black uppercase text-[#111111] hover:text-[#F07C27] px-2 py-1 transition-colors flex-shrink-0"
             >
               LOGIN
             </Link>
             <Link
               href="/register"
-              className="bg-[#F07C27] text-white font-display text-xs font-extrabold uppercase px-4 py-2 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#111111] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center gap-1.5"
+              className="bg-[#F07C27] hover:bg-[#111111] text-white font-display text-xs font-black uppercase px-3.5 py-1.5 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] hover:shadow-[1px_1px_0px_#111111] hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center gap-1 flex-shrink-0"
             >
-              <span>[ REGISTER NOW → ]</span>
+              <span>REGISTER →</span>
             </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center gap-2">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-1.5 border-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] shadow-[2px_2px_0px_#111111] font-mono text-[11px] font-bold uppercase"
-              aria-label="Open sidebar"
+            <a
+              href="/SkillUp-3.0-Screening-Test-Syllabus.pdf"
+              download="SkillUp-3.0-Screening-Test-Syllabus.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sm:hidden px-2 py-1 border-[2px] border-[#111111] bg-[#FFB703] text-[#111111] shadow-[2px_2px_0px_#111111] font-mono text-[10px] font-black uppercase flex items-center gap-1"
+              title="Download Syllabus PDF"
             >
-              <Layers className="w-4 h-4 text-[#F07C27]" />
-            </button>
+              <FileDown className="w-3.5 h-3.5" />
+              <span>SYLLABUS</span>
+            </a>
             <Link
               href="/login"
               className="bg-[#FFFFFF] text-[#111111] font-display text-[11px] font-bold uppercase px-2.5 py-1 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]"
