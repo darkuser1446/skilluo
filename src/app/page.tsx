@@ -7,7 +7,6 @@ import ProgramJourney from "@/components/ProgramJourney";
 import MentorsGrid from "@/components/MentorsGrid";
 import GallerySection from "@/components/GallerySection";
 import WhyJoinSection from "@/components/WhyJoinSection";
-import StudentSpotlight from "@/components/StudentSpotlight";
 import ImpactSection from "@/components/ImpactSection";
 import FaqSection from "@/components/FaqSection";
 import CtaBand from "@/components/CtaBand";
@@ -48,10 +47,7 @@ export default function HomePage() {
       {/* S6: Why Join Skill Up? - More Than Just a Course (6 Feature Cards) */}
       <WhyJoinSection />
 
-      {/* S7: Student Voices - Their Journey, Our Motivation (3 Testimonial Cards) */}
-      <StudentSpotlight />
-
-      {/* S8: Our Impact - Building a Brighter Community Together (4 Metrics) */}
+      {/* S7: Our Impact - Building a Brighter Community Together */}
       <ImpactSection />
 
       {/* S9: Frequently Asked Questions - Everything You Need to Know (6 Accordions) */}

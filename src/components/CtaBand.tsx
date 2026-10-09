@@ -3,94 +3,74 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Terminal } from "lucide-react";
 import confetti from "canvas-confetti";
-import GeometricFacet from "./GeometricFacet";
-import Anime3DCard from "./Anime3DCard";
 
 export default function CtaBand() {
   const triggerConfetti = () => {
     confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.7 },
-      colors: ["#F07C27", "#FFA048", "#FFB703", "#2563EB", "#ffffff"],
+      particleCount: 90,
+      spread: 75,
+      origin: { y: 0.65 },
+      colors: ["#F07C27", "#111111", "#FFB703", "#22C55E", "#ffffff"],
     });
   };
 
   return (
-    <section className="relative py-16 sm:py-20 bg-transparent overflow-hidden">
-      {/* Facet decor */}
-      <GeometricFacet side="left" position="bottom" className="bottom-4 -translate-x-6" />
+    <section id="apply-band" className="relative py-16 sm:py-20 bg-[#F9F9F9] overflow-hidden border-t-[3px] border-[#111111]">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8">
+        {/* Banner Card — Neo-Brutalist Physical Structural Poster */}
+        <div className="bg-[#FFF0E5] border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] grid grid-cols-1 lg:grid-cols-12 items-stretch">
+          {/* Left Side: Photo Frame with Hardware Decal */}
+          <div className="lg:col-span-5 relative min-h-[260px] sm:min-h-[320px] border-b-[3px] lg:border-b-0 lg:border-r-[3px] border-[#111111] overflow-hidden bg-slate-900">
+            <Image
+              src="/img/session-1.jpg"
+              alt="Super 60 Systems Engineering Cohort"
+              fill
+              sizes="(max-width: 1024px) 100vw, 500px"
+              className="object-cover opacity-85"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8">
-        {/* Banner Card Container with Anime.js 3D Tilt */}
-        <Anime3DCard maxTilt={3} depth={15} className="w-full">
-          <div className="relative rounded-3xl overflow-hidden border border-orange-200/80 bg-gradient-to-r from-[#FFF5ED] via-[#FFF9F5] to-white shadow-xl hover:shadow-2xl transition-shadow duration-300 grid grid-cols-1 lg:grid-cols-12 items-center">
-            {/* Left Side: Student Looking at Sunrise Mountain Landscape */}
-            <div className="lg:col-span-6 relative h-64 sm:h-80 lg:h-96 w-full overflow-hidden">
-              <Image
-                src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1000&q=80"
-                alt="Student gazing at mountain sunrise"
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-
-              {/* Silhouette of Student with Backpack */}
-              <div className="absolute bottom-0 left-12 sm:left-20 z-10">
-                <svg width="140" height="150" viewBox="0 0 140 150" fill="none">
-                  {/* Head */}
-                  <ellipse cx="70" cy="35" rx="20" ry="24" fill="#090D16" />
-                  {/* Backpack */}
-                  <rect x="42" y="60" width="22" height="48" rx="8" fill="#1E293B" />
-                  {/* Body / Coat */}
-                  <path
-                    d="M48 150 C50 85 60 62 70 62 C80 62 100 85 105 150 Z"
-                    fill="#0F172A"
-                  />
-                </svg>
-              </div>
-
-              {/* Handwritten Floating Annotation */}
-              <div
-                style={{ transform: "translateZ(30px)" }}
-                className="absolute top-8 right-6 sm:right-12 z-20 pointer-events-none"
-              >
-                <span className="font-handwritten text-[#0F172A] text-2xl sm:text-3xl font-bold tracking-wide -rotate-6 block drop-shadow-sm bg-white/70 backdrop-blur-sm px-3 py-1 rounded-xl border border-white/50">
-                  Some Students Bigger Dreams
-                </span>
-              </div>
+            {/* Top Decal Stamp */}
+            <div className="absolute top-3 left-3 bg-[#111111] text-white font-mono text-[11px] font-bold px-2 py-0.5 border border-[#111111] uppercase">
+              ADMISSIONS // ACTIVE
             </div>
 
-            {/* Right Side: Copy & Register Button */}
-            <div className="lg:col-span-6 p-8 sm:p-12 lg:p-14 flex flex-col items-start">
-              <div className="text-xs sm:text-sm font-extrabold tracking-[0.25em] text-[#F07C27] uppercase mb-3">
-                BE A PART OF SKILL UP
-              </div>
-
-              <h2 className="font-display font-black text-2xl sm:text-3xl lg:text-4xl text-[#0F172A] tracking-tight leading-snug mb-4">
-                Take the First Step Towards a{" "}
-                <span className="text-[#F07C27]">Brighter Future</span>
-              </h2>
-
-              <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-8 max-w-lg">
-                Join Skill Up and build a strong foundation in C++ with guidance, practice and a
-                supportive community.
-              </p>
-
-              <Link
-                href="/register"
-                onClick={triggerConfetti}
-                className="bg-[#F07C27] hover:bg-[#e06c17] active:scale-[0.98] text-white font-semibold text-sm sm:text-base px-7 py-3.5 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <span>Register Now</span>
-                <ArrowRight className="w-4 h-4 ml-0.5" />
-              </Link>
+            <div className="absolute bottom-3 left-3 right-3 bg-white/95 border-[2px] border-[#111111] p-2 flex items-center justify-between text-[11px] font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111]">
+              <span>CAPACITY: 10 SEATS ONLY</span>
+              <span className="text-[#F07C27]">CYCLE 2026</span>
             </div>
           </div>
-        </Anime3DCard>
+
+          {/* Right Side: Copy & Register Button */}
+          <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 flex flex-col items-start justify-between">
+            <div>
+              <div className="bg-[#111111] text-white font-mono text-xs font-bold px-2.5 py-1 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] uppercase tracking-widest inline-block mb-3">
+                [ APPLICATIONS CYCLE // OPEN ]
+              </div>
+
+              <h2 className="font-display font-black text-2xl sm:text-4xl text-[#111111] tracking-tight uppercase leading-snug mb-3">
+                TAKE THE FIRST STEP TOWARDS A{" "}
+                <span className="bg-[#F07C27] text-white px-2 py-0.5 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] inline-block -rotate-1">
+                  BRIGHTER FUTURE
+                </span>
+              </h2>
+
+              <p className="font-body text-slate-700 text-xs sm:text-sm leading-relaxed mb-6 font-medium max-w-lg">
+                Join Skill Up and master low-level systems programming in C++ through rigorous lab sessions, line-by-line mentor reviews, and competitive candidate evaluation.
+              </p>
+            </div>
+
+            <Link
+              href="/register"
+              onClick={triggerConfetti}
+              className="neo-btn bg-[#F07C27] text-white text-xs sm:text-sm font-extrabold uppercase px-8 py-4 border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0px_#111111] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>[ REGISTER FOR SKILL UP 2026 → ]</span>
+            </Link>
+          </div>
+        </div>
       </div>
     </section>
   );

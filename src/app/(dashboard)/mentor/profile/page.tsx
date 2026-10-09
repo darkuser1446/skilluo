@@ -248,21 +248,18 @@ export default function MentorProfilePage() {
       <div className="flex items-center justify-between">
         <Link
           href="/mentor"
-          className="inline-flex items-center gap-2 text-xs font-mono font-bold text-slate-400 hover:text-white transition-colors group"
+          className="inline-flex items-center gap-2 text-xs font-mono font-bold text-[#111111] hover:text-[#F07C27] transition-colors group"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-sky-400 group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft className="w-3.5 h-3.5 text-[#F07C27] group-hover:-translate-x-1 transition-transform" />
           <span>Back to Mentor Workspace</span>
         </Link>
-        <span className="text-[11px] font-mono text-slate-500">
+        <span className="text-[11px] font-mono text-slate-600">
           Last refreshed: {new Date().toLocaleDateString()}
         </span>
       </div>
 
       {/* ── HERO BANNER ── */}
-      <div className="rounded-2xl p-6 sm:p-8 bg-gradient-to-br from-[#111C35]/95 to-[#0D1527]/95 border border-slate-800/80 shadow-2xl relative overflow-hidden backdrop-blur-xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/10 blur-[100px] pointer-events-none rounded-full" />
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-brand-orange/5 blur-[90px] pointer-events-none rounded-full" />
-
+      <div className="bg-white border-[3px] border-[#111111] p-6 sm:p-8 shadow-[8px_8px_0px_#111111] relative overflow-hidden">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 relative z-10">
           {/* Avatar with Upload Badge */}
           <div className="relative flex-shrink-0">
@@ -271,18 +268,18 @@ export default function MentorProfilePage() {
               <img
                 src={user.avatarUrl}
                 alt={user.name}
-                className="w-24 h-24 rounded-2xl object-cover border-2 border-sky-500/40 shadow-xl"
+                className="w-24 h-24 object-cover border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]"
               />
             ) : (
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-sky-600/30 to-[#070B14] border-2 border-sky-500/40 flex items-center justify-center text-3xl font-mono font-black text-white shadow-xl">
+              <div className="w-24 h-24 bg-[#FFF0E5] border-[3px] border-[#111111] flex items-center justify-center text-3xl font-mono font-black text-[#F07C27] shadow-[4px_4px_0px_#111111]">
                 {initials}
               </div>
             )}
             <label
-              className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-[#070B14] border border-slate-700 flex items-center justify-center cursor-pointer hover:border-sky-400 hover:scale-105 transition-all shadow-md"
+              className="absolute -bottom-2 -right-2 w-8 h-8 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center cursor-pointer hover:bg-[#FFF0E5] transition-all"
               title="Upload profile photo (max 512 KB)"
             >
-              <Camera className="w-3.5 h-3.5 text-sky-400" />
+              <Camera className="w-4 h-4 text-[#111111]" />
               <input
                 type="file"
                 accept="image/*"
@@ -295,40 +292,40 @@ export default function MentorProfilePage() {
           {/* Identity & Badges */}
           <div className="flex-1 space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase tracking-wider flex items-center gap-1">
-                <Shield className="w-3 h-3 text-sky-400" />
-                SUPER 60 MENTOR & LEAD EVALUATOR
+              <span className="px-2.5 py-0.5 text-[10px] font-mono font-black bg-[#FFF0E5] text-[#F07C27] border border-[#111111] uppercase tracking-wider shadow-[2px_2px_0px_#111111] flex items-center gap-1.5">
+                <Shield className="w-3 h-3 text-[#F07C27]" />
+                [ IDENT: SUPER_60_MENTOR // EVALUATOR ]
               </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-xs font-mono text-slate-400">
+              <span className="text-slate-400">•</span>
+              <span className="text-xs font-mono font-bold text-slate-700">
                 {editCompany || user?.mentorProfile?.company || "Super 60 Systems Faculty"}
               </span>
             </div>
 
             <div>
-              <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
+              <h1 className="font-mono font-black text-2xl sm:text-3xl text-[#111111] tracking-tight">
                 {user?.name}
               </h1>
-              <p className="text-xs sm:text-sm text-sky-300 font-mono mt-0.5">
+              <p className="text-xs sm:text-sm text-[#F07C27] font-mono font-bold mt-0.5">
                 {editTitle || user?.mentorProfile?.title || "Systems Engineering Mentor"} ·{" "}
                 {editSpecialty || user?.mentorProfile?.specialty || "C++ Low-Latency & Systems Architecture"}
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-4 text-xs font-mono text-slate-400 pt-1">
+            <div className="flex flex-wrap gap-4 text-xs font-mono text-slate-700 pt-1">
               <span className="flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-sky-400" />
+                <Mail className="w-3.5 h-3.5 text-[#111111]" />
                 {user?.email}
               </span>
               {user?.phone && (
                 <span className="flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                  <Phone className="w-3.5 h-3.5 text-emerald-600" />
                   {user.phone}
                 </span>
               )}
               {labMentors.length > 0 && (
                 <span className="flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-brand-orange" />
+                  <Layers className="w-3.5 h-3.5 text-[#F07C27]" />
                   {labMentors.length} Assigned Lab{labMentors.length > 1 ? "s" : ""}
                 </span>
               )}
@@ -338,7 +335,7 @@ export default function MentorProfilePage() {
       </div>
 
       {/* ── NAVIGATION TABS ── */}
-      <div className="flex gap-2 border-b border-slate-800/80 pb-2 overflow-x-auto scrollbar-none">
+      <div className="flex gap-2 border-b-[2px] border-[#111111] pb-2 overflow-x-auto scrollbar-none">
         {[
           { id: "profile", label: "Profile & Specialty", icon: Edit3 },
           { id: "labs", label: "Assigned Laboratories", icon: Layers, count: labMentors.length },
@@ -350,18 +347,20 @@ export default function MentorProfilePage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-mono font-bold uppercase transition-all whitespace-nowrap border-[2px] ${
                 isActive
-                  ? "bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(56,189,248,0.15)]"
-                  : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
+                  ? "bg-[#F07C27] text-white border-[#111111] shadow-[3px_3px_0px_#111111]"
+                  : "bg-white text-slate-700 hover:text-[#111111] border-[#111111] shadow-[2px_2px_0px_#111111]"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
               {tab.count !== undefined && (
                 <span
-                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
-                    isActive ? "bg-sky-400/20 text-sky-300" : "bg-slate-800 text-slate-400"
+                  className={`text-[10px] font-mono px-1.5 py-0.2 border ${
+                    isActive
+                      ? "bg-white text-[#111111] border-[#111111]"
+                      : "bg-[#F4F3F3] text-slate-700 border-[#111111]"
                   }`}
                 >
                   {tab.count}
@@ -376,15 +375,15 @@ export default function MentorProfilePage() {
       {activeTab === "profile" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Edit Form */}
-          <div className="lg:col-span-8 rounded-2xl p-6 sm:p-7 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="lg:col-span-8 bg-white border-[3px] border-[#111111] p-6 sm:p-7 shadow-[8px_8px_0px_#111111] space-y-5">
+            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3">
               <div className="flex items-center gap-2">
-                <Edit3 className="w-4 h-4 text-sky-400" />
-                <h3 className="font-display font-bold text-white text-base">
+                <Edit3 className="w-4 h-4 text-[#F07C27]" />
+                <h3 className="font-mono font-black text-[#111111] text-base uppercase">
                   Mentor Professional Information
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-slate-500 uppercase">
+              <span className="text-[10px] font-mono font-bold text-slate-600 uppercase">
                 Role: Evaluator & Guide
               </span>
             </div>
@@ -392,113 +391,113 @@ export default function MentorProfilePage() {
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                  <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1.5">
                     Full Name
                   </label>
                   <div className="relative">
-                    <User className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <User className="w-3.5 h-3.5 text-[#111111] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       required
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       placeholder="Mentor full name"
-                      className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono transition-colors"
+                      className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] pl-9 pr-3 py-2.5 text-sm text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                  <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1.5">
                     Phone Number
                   </label>
                   <div className="relative">
-                    <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Phone className="w-3.5 h-3.5 text-[#111111] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="tel"
                       value={editPhone}
                       onChange={(e) => setEditPhone(e.target.value)}
                       placeholder="+91 98765 43210"
-                      className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono transition-colors"
+                      className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] pl-9 pr-3 py-2.5 text-sm text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1.5">
                   Account Email Address
                 </label>
-                <div className="relative opacity-60">
-                  <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <div className="relative opacity-70">
+                  <Mail className="w-3.5 h-3.5 text-slate-600 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
                     disabled
                     value={user?.email || ""}
-                    className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-400 font-mono cursor-not-allowed"
+                    className="w-full bg-[#E5E5E5] border-[2px] border-[#111111] pl-9 pr-3 py-2.5 text-sm text-slate-700 font-mono cursor-not-allowed shadow-[2px_2px_0px_#111111]"
                   />
                 </div>
-                <p className="text-[10px] font-mono text-slate-500 mt-1">
+                <p className="text-[10px] font-mono text-slate-600 mt-1">
                   Mentor email is your primary login credential and workshop ID. Contact executive admin to rebind.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                  <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1.5">
                     Professional Title
                   </label>
                   <div className="relative">
-                    <Briefcase className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Briefcase className="w-3.5 h-3.5 text-[#111111] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       placeholder="e.g. Senior Systems Architect"
-                      className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono transition-colors"
+                      className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] pl-9 pr-3 py-2.5 text-sm text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                  <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1.5">
                     Company / Organization
                   </label>
                   <div className="relative">
-                    <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Building2 className="w-3.5 h-3.5 text-[#111111] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={editCompany}
                       onChange={(e) => setEditCompany(e.target.value)}
                       placeholder="e.g. Google · Super 60 Alumni"
-                      className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono transition-colors"
+                      className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] pl-9 pr-3 py-2.5 text-sm text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1.5">
                   Core Technical Specialty
                 </label>
                 <div className="relative">
-                  <Sparkles className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#111111] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={editSpecialty}
                     onChange={(e) => setEditSpecialty(e.target.value)}
                     placeholder="e.g. Low-Latency C++, Memory Allocators & SIMD"
-                    className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono transition-colors"
+                    className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] pl-9 pr-3 py-2.5 text-sm text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                   />
                 </div>
-                <p className="text-[10px] font-mono text-slate-500 mt-1">
+                <p className="text-[10px] font-mono text-slate-600 mt-1">
                   Displayed on student grading notes, doubt discussions, and workshop rosters.
                 </p>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-mono text-slate-400 uppercase">
+                  <label className="block text-[10px] font-mono font-black text-[#111111] uppercase">
                     Mentor Biography & Background
                   </label>
                   <span className="text-[10px] font-mono text-slate-500">
@@ -512,23 +511,23 @@ export default function MentorProfilePage() {
                     value={editBio}
                     onChange={(e) => setEditBio(e.target.value)}
                     placeholder="Brief summary of your systems engineering background, industry experience, and mentorship focus area..."
-                    className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono transition-colors"
+                    className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] p-3 text-sm text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                   />
                 </div>
               </div>
 
               {saveMsg && (
                 <div
-                  className={`p-3.5 rounded-xl text-xs font-mono flex items-center gap-2.5 ${
+                  className={`p-3.5 border-[2px] border-[#111111] text-xs font-mono font-bold flex items-center gap-2.5 shadow-[2px_2px_0px_#111111] ${
                     saveMsg.ok
-                      ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                      : "bg-rose-500/15 text-rose-300 border border-rose-500/30"
+                      ? "bg-emerald-100 text-emerald-950"
+                      : "bg-rose-100 text-rose-950"
                   }`}
                 >
                   {saveMsg.ok ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-rose-700 flex-shrink-0" />
                   )}
                   <span>{saveMsg.text}</span>
                 </div>
@@ -537,7 +536,7 @@ export default function MentorProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3 bg-[#F07C27] hover:bg-[#d96716] text-white font-mono text-xs font-black uppercase tracking-wider border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 <span>{saving ? "Saving Profile Changes..." : "Save Mentor Profile"}</span>
@@ -547,35 +546,35 @@ export default function MentorProfilePage() {
 
           {/* Sidebar Info Card */}
           <div className="lg:col-span-4 space-y-4">
-            <div className="rounded-2xl p-5 sm:p-6 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-4">
-              <h3 className="font-display font-bold text-white text-sm flex items-center gap-2 border-b border-slate-800 pb-2">
-                <Shield className="w-4 h-4 text-sky-400" />
+            <div className="bg-white border-[3px] border-[#111111] p-5 sm:p-6 shadow-[6px_6px_0px_#111111] space-y-4">
+              <h3 className="font-mono font-black text-[#111111] text-xs uppercase tracking-wider flex items-center gap-2 border-b-[2px] border-[#111111] pb-2">
+                <Shield className="w-4 h-4 text-[#F07C27]" />
                 Mentorship Credentials
               </h3>
 
               <div className="space-y-3 font-mono text-xs">
-                <div className="p-3 rounded-xl bg-[#070B14]/80 border border-slate-800">
-                  <span className="text-slate-500 text-[10px] uppercase block mb-0.5">
+                <div className="p-3 bg-[#F4F3F3] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <span className="text-slate-600 text-[10px] font-bold uppercase block mb-0.5">
                     Platform Role
                   </span>
-                  <span className="text-white font-bold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="text-[#111111] font-black flex items-center gap-1.5">
+                    <span className="w-2 h-2 bg-emerald-500 border border-[#111111]" />
                     SUPER 60 MENTOR
                   </span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#070B14]/80 border border-slate-800">
-                  <span className="text-slate-500 text-[10px] uppercase block mb-0.5">
+                <div className="p-3 bg-[#F4F3F3] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <span className="text-slate-600 text-[10px] font-bold uppercase block mb-0.5">
                     Account Status
                   </span>
-                  <span className="text-emerald-400 font-bold">ACTIVE & VERIFIED</span>
+                  <span className="text-emerald-700 font-black">ACTIVE & VERIFIED</span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#070B14]/80 border border-slate-800">
-                  <span className="text-slate-500 text-[10px] uppercase block mb-0.5">
+                <div className="p-3 bg-[#F4F3F3] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <span className="text-slate-600 text-[10px] font-bold uppercase block mb-0.5">
                     Joined Super 60
                   </span>
-                  <span className="text-slate-300">
+                  <span className="text-slate-800 font-bold">
                     {user?.createdAt
                       ? new Date(user.createdAt).toLocaleDateString(undefined, {
                           year: "numeric",
@@ -587,7 +586,7 @@ export default function MentorProfilePage() {
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-[11px] font-mono text-sky-300 leading-relaxed">
+              <div className="p-3 bg-[#FFF0E5] border-[2px] border-[#111111] text-[11px] font-mono text-[#111111] leading-relaxed shadow-[2px_2px_0px_#111111]">
                 Mentor bio and specialty details are visible to students when viewing assignment reviews and laboratory roll calls.
               </div>
             </div>
@@ -597,26 +596,26 @@ export default function MentorProfilePage() {
 
       {/* ── TAB 2: ASSIGNED LABS ── */}
       {activeTab === "labs" && (
-        <div className="rounded-2xl p-6 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="bg-white border-[3px] border-[#111111] p-6 shadow-[8px_8px_0px_#111111] space-y-5">
+          <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-sky-400" />
-              <h3 className="font-display font-bold text-white text-base">
+              <Layers className="w-4 h-4 text-[#F07C27]" />
+              <h3 className="font-mono font-black text-[#111111] text-base uppercase">
                 Assigned Laboratories & Cohorts
               </h3>
             </div>
-            <span className="text-xs font-mono text-slate-400">
+            <span className="text-xs font-mono font-bold text-slate-700">
               Total Labs: {labMentors.length}
             </span>
           </div>
 
           {labMentors.length === 0 ? (
             <div className="py-12 text-center space-y-2">
-              <Layers className="w-10 h-10 text-slate-600 mx-auto" />
-              <p className="font-display font-bold text-slate-300 text-sm">
+              <Layers className="w-10 h-10 text-slate-400 mx-auto" />
+              <p className="font-mono font-black text-[#111111] text-sm">
                 No Laboratories Assigned Yet
               </p>
-              <p className="font-mono text-xs text-slate-500 max-w-md mx-auto">
+              <p className="font-mono text-xs text-slate-600 max-w-md mx-auto">
                 Laboratory allocations are managed by platform administrators. Once assigned, your lab roster, grading queue, and roll call will appear here.
               </p>
             </div>
@@ -628,54 +627,54 @@ export default function MentorProfilePage() {
                 return (
                   <div
                     key={lm.id}
-                    className="rounded-xl p-5 bg-[#070B14] border border-slate-800 space-y-3.5 hover:border-sky-500/40 transition-colors shadow-inner"
+                    className="p-5 bg-white border-[2px] border-[#111111] space-y-3.5 shadow-[4px_4px_0px_#111111]"
                   >
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-display font-bold text-base text-white">
+                          <h4 className="font-mono font-black text-base text-[#111111]">
                             {lab?.name || "Lab"}
                           </h4>
                           {lm.isLead && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-gold/15 text-brand-gold border border-brand-gold/30 uppercase">
+                            <span className="px-2 py-0.5 text-[10px] font-mono font-black bg-[#FFF0E5] text-[#F07C27] border border-[#111111] uppercase shadow-[1px_1px_0px_#111111]">
                               Lead Evaluator
                             </span>
                           )}
                         </div>
-                        <p className="text-xs font-mono text-sky-300 mt-0.5">
+                        <p className="text-xs font-mono font-bold text-[#F07C27] mt-0.5">
                           {workshop?.name || "Skill Up Cohort"}
                           {workshop?.year ? ` (${workshop.year})` : ""}
                         </p>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                      <span className="px-2 py-0.5 text-[10px] font-mono font-black uppercase bg-[#F4F3F3] text-[#111111] border border-[#111111] shadow-[1px_1px_0px_#111111]">
                         {workshop?.status || "ACTIVE"}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
-                      <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/80">
-                        <span className="text-[10px] text-slate-500 uppercase block flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-slate-500" /> Schedule
+                      <div className="p-2.5 bg-[#F4F3F3] border border-[#111111] shadow-[1px_1px_0px_#111111]">
+                        <span className="text-[10px] text-slate-600 font-bold uppercase block flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-[#111111]" /> Schedule
                         </span>
-                        <span className="text-slate-300 font-semibold block mt-0.5 truncate">
+                        <span className="text-[#111111] font-bold block mt-0.5 truncate">
                           {lab?.schedule || "Mon-Fri Standard"}
                         </span>
                       </div>
-                      <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/80">
-                        <span className="text-[10px] text-slate-500 uppercase block flex items-center gap-1">
-                          <Users className="w-3 h-3 text-slate-500" /> Capacity
+                      <div className="p-2.5 bg-[#F4F3F3] border border-[#111111] shadow-[1px_1px_0px_#111111]">
+                        <span className="text-[10px] text-slate-600 font-bold uppercase block flex items-center gap-1">
+                          <Users className="w-3 h-3 text-[#111111]" /> Capacity
                         </span>
-                        <span className="text-slate-300 font-semibold block mt-0.5">
+                        <span className="text-[#111111] font-bold block mt-0.5">
                           {lab?.capacity || 30} Students Max
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[11px] font-mono text-slate-400">
+                    <div className="flex items-center justify-between pt-2 border-t border-[#111111]/15 text-[11px] font-mono text-slate-700">
                       <span>Allocation: Relational</span>
                       <Link
                         href={`/mentor`}
-                        className="text-sky-400 hover:text-sky-300 font-bold hover:underline"
+                        className="text-[#F07C27] font-black hover:underline"
                       >
                         Open Lab Queue →
                       </Link>
@@ -691,17 +690,17 @@ export default function MentorProfilePage() {
       {/* ── TAB 3: SECURITY & PASSWORD ── */}
       {activeTab === "security" && (
         <div className="max-w-lg">
-          <div className="rounded-2xl p-6 sm:p-7 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-5">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Lock className="w-4 h-4 text-sky-400" />
-              <h3 className="font-display font-bold text-white text-base">
+          <div className="bg-white border-[3px] border-[#111111] p-6 sm:p-7 shadow-[8px_8px_0px_#111111] space-y-5">
+            <div className="flex items-center gap-2 border-b-[2px] border-[#111111] pb-3">
+              <Lock className="w-4 h-4 text-[#F07C27]" />
+              <h3 className="font-mono font-black text-[#111111] text-base uppercase">
                 Change Account Password
               </h3>
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1.5">
                   Current Password
                 </label>
                 <input
@@ -710,12 +709,12 @@ export default function MentorProfilePage() {
                   value={currentPw}
                   onChange={(e) => setCurrentPw(e.target.value)}
                   placeholder="Enter current password"
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono transition-colors"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2.5 text-sm text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1.5">
                   New Password
                 </label>
                 <input
@@ -724,12 +723,12 @@ export default function MentorProfilePage() {
                   value={newPw}
                   onChange={(e) => setNewPw(e.target.value)}
                   placeholder="Minimum 6 characters"
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono transition-colors"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2.5 text-sm text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1.5">
                   Confirm New Password
                 </label>
                 <input
@@ -738,22 +737,22 @@ export default function MentorProfilePage() {
                   value={confirmPw}
                   onChange={(e) => setConfirmPw(e.target.value)}
                   placeholder="Repeat new password"
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono transition-colors"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2.5 text-sm text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
               </div>
 
               {pwMsg && (
                 <div
-                  className={`p-3.5 rounded-xl text-xs font-mono flex items-center gap-2.5 ${
+                  className={`p-3.5 border-[2px] border-[#111111] text-xs font-mono font-bold flex items-center gap-2.5 shadow-[2px_2px_0px_#111111] ${
                     pwMsg.ok
-                      ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                      : "bg-rose-500/15 text-rose-300 border border-rose-500/30"
+                      ? "bg-emerald-100 text-emerald-950"
+                      : "bg-rose-100 text-rose-950"
                   }`}
                 >
                   {pwMsg.ok ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-rose-700 flex-shrink-0" />
                   )}
                   <span>{pwMsg.text}</span>
                 </div>
@@ -762,7 +761,7 @@ export default function MentorProfilePage() {
               <button
                 type="submit"
                 disabled={pwSaving}
-                className="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3 bg-[#F07C27] hover:bg-[#d96716] text-white font-mono text-xs font-black uppercase tracking-wider border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Shield className="w-4 h-4" />
                 <span>{pwSaving ? "Verifying & Updating..." : "Update Password"}</span>

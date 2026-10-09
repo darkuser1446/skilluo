@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Trophy,
   Star,
@@ -482,135 +483,213 @@ export default function StudentDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* ── HERO BANNER: Candidate Overview & Qualification Status ── */}
-      <div className="rounded-2xl p-6 sm:p-7 bg-gradient-to-br from-[#111C35]/95 to-[#0D1527]/95 border border-slate-800/80 shadow-2xl shadow-black/40 relative overflow-hidden backdrop-blur-xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-brand-orange/10 blur-[100px] pointer-events-none rounded-full" />
+      {/* ── TOP PROFILE & STANDING HEADER (Physical Clip Badge & Oversized Metric Blocks) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        {/* Student Profile Card (Physical Clip Badge) */}
+        <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 flex flex-col justify-between relative">
+          <div className="absolute -top-3 right-6 bg-[#eeeeee] border-[2px] border-[#111111] px-2.5 py-0.5 text-[11px] font-mono font-bold uppercase shadow-[2px_2px_0px_#111111]">
+            IDENT: {isSelected ? "SUPER_60_SELECTED" : isOnTrack ? "QUALIFIED_CANDIDATE" : "ACTIVE_CANDIDATE"}
+          </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10">
-          {/* Left: Candidate Identity */}
-          <div className="lg:col-span-7 space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-orange/15 text-brand-orange border border-brand-orange/30 uppercase tracking-wider flex items-center gap-1">
-                <GraduationCap className="w-3 h-3" />
-                SUPER 60 CANDIDATE
-              </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-xs font-mono text-slate-400">
-                {user?.college || "Indian Institute of Information Technology"}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-3 h-3 bg-[#F07C27] border-[2px] border-[#111111] inline-block" />
+              <span className="font-mono text-xs font-bold text-slate-600 tracking-wider uppercase">
+                {myLab?.name || "LAB POD: DELTA-01 // CORE ACCELERATOR"}
               </span>
             </div>
 
-            <div>
-              <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
-                {user?.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1 flex items-center gap-2">
-                <span>Lab:</span>
-                <strong className="text-brand-orange font-mono bg-brand-orange/10 px-2 py-0.5 rounded border border-brand-orange/20">
-                  {myLab?.name || "Lab A — High-Performance Systems"}
-                </strong>
-              </p>
-            </div>
+            <h1 className="font-display font-black text-2xl sm:text-3xl uppercase text-[#111111] tracking-tight mb-2">
+              {user?.name || "CANDIDATE"}
+            </h1>
 
-            {/* Status Pill */}
-            <div className="flex items-center gap-2 pt-1">
-              <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold border shadow-sm ${
-                  isSelected
-                    ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-                    : isOnTrack
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                }`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    isSelected || isOnTrack ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
-                  }`}
-                />
-                {isSelected
-                  ? "OFFICIALLY SELECTED FOR SUPER 60"
-                  : isOnTrack
-                  ? "ON TRACK FOR SUPER 60 SELECTION"
-                  : "ACTION RECOMMENDED — COMPLETE DUE TASKS"}
+            <div className="flex flex-wrap items-center gap-2 font-mono text-xs mb-4">
+              <span className="bg-[#f4f3f3] px-2 py-0.5 border-[2px] border-[#111111] text-[#111111] font-bold">
+                ROLL: {user?.rollNumber || "S60-2026-IND"}
+              </span>
+              <span className="bg-[#f4f3f3] px-2 py-0.5 border-[2px] border-[#111111] text-[#111111] font-bold">
+                BATCH: {user?.enrollments?.[0]?.workshop?.year || "2026"}-C++
+              </span>
+              <span className="bg-[#f4f3f3] px-2 py-0.5 border-[2px] border-[#111111] text-[#111111] font-bold">
+                {user?.college || "IIIT / NIT"}
               </span>
             </div>
           </div>
 
-          {/* Right: Large Performance Gauge Card */}
-          <div className="lg:col-span-5 bg-[#070B14]/80 rounded-2xl p-5 border border-slate-800/80 shadow-inner flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block font-bold">
-                CANDIDATE SCORECARD
+          <div className="border-t-[3px] border-[#111111] pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#f4f3f3] -mx-6 -mb-6 px-6 py-3 mt-4">
+            <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#111111]">
+              <span className={`w-2 h-2 ${isSelected || isOnTrack ? "bg-emerald-500 animate-pulse" : "bg-amber-500"} border border-[#111111]`} />
+              <span className="uppercase">STATUS: {isSelected ? "OFFICIALLY SELECTED" : isOnTrack ? "ON TRACK (TIER 1)" : "IN REVIEW"}</span>
+            </div>
+            <div className="font-mono text-xs text-[#111111] font-bold">
+              TARGET: TOP 60
+            </div>
+          </div>
+        </div>
+
+        {/* Oversized Neo-Brutalist Metric Blocks */}
+        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Performance Score */}
+          <div className="bg-[#F07C27] border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-black uppercase text-[#111111]">
+                PERFORMANCE SCORE
               </span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display font-black text-4xl text-white tracking-tight">
-                  {overall}
-                </span>
-                <span className="text-brand-orange font-display font-bold text-xl">/100</span>
+              <Trophy className="w-5 h-5 text-[#111111]" />
+            </div>
+            <div className="my-2">
+              <div className="font-display font-black text-5xl text-[#111111] leading-none tracking-tight">
+                {overall}
               </div>
-              <div className="flex items-center gap-2 text-xs font-mono text-slate-400 pt-1">
-                <span>Rank:</span>
-                <strong className="text-brand-gold font-bold">
-                  #{performance?.rank ?? 1} in Workshop
-                </strong>
+              <div className="font-mono text-[11px] font-bold text-[#111111]/80 mt-1 uppercase">
+                TARGET SCALE: 100.0 MAX
               </div>
             </div>
+            <div className="bg-[#111111] text-white px-2 py-1 border-[2px] border-[#111111] font-mono text-xs font-bold text-center uppercase tracking-wider">
+              {overall >= 80 ? "TIER 1 ELIGIBLE" : overall >= 65 ? "TIER 2 CANDIDATE" : "EVALUATION PENDING"}
+            </div>
+          </div>
 
-            <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-tr from-brand-orange/20 to-brand-gold/10 border border-brand-orange/30 flex flex-col items-center justify-center text-center shadow-lg">
-              <Trophy className="w-8 h-8 text-brand-gold fill-brand-gold/20" />
-              <span className="text-[10px] font-mono font-bold text-slate-300 mt-1">
-                Rank #{performance?.rank ?? 1}
+          {/* Cohort Rank */}
+          <div className="bg-[#111111] text-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-slate-300">
+              <span className="font-mono text-xs font-bold uppercase text-white">
+                COHORT RANK
               </span>
+              <Award className="w-5 h-5 text-[#F07C27]" />
+            </div>
+            <div className="my-2">
+              <div className="font-mono font-black text-5xl text-white leading-none tracking-tight">
+                #{performance?.rank ?? 1}
+                <span className="text-lg text-slate-400 font-normal">/60</span>
+              </div>
+              <div className="font-mono text-[11px] font-bold text-slate-400 mt-1 uppercase">
+                IN ACTIVE COHORT
+              </div>
+            </div>
+            <div className="bg-white text-[#111111] px-2 py-1 border-[2px] border-[#111111] font-mono text-xs font-black text-center uppercase tracking-wider">
+              {(performance?.rank ?? 1) <= 10 ? "ALPHA BRACKET" : (performance?.rank ?? 1) <= 30 ? "DELTA BRACKET" : "ACTIVE RUNNER"}
+            </div>
+          </div>
+
+          {/* Attendance Log */}
+          <div className="bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-slate-600">
+              <span className="font-mono text-xs font-bold uppercase text-[#111111]">
+                ATTENDANCE LOG
+              </span>
+              <CalendarCheck className="w-5 h-5 text-[#111111]" />
+            </div>
+            <div className="my-2">
+              <div className="font-mono font-black text-4xl text-[#111111] leading-none">
+                {performance?.attendancePercentage ?? 100}%
+              </div>
+              <div className="font-mono text-[11px] font-bold text-slate-500 mt-1 uppercase">
+                {performance?.presentDays ?? 0} SESSIONS LOGGED
+              </div>
+            </div>
+            <div className="bg-[#FFF0E5] text-[#111111] border-[2px] border-[#111111] px-2 py-1 font-mono text-xs font-black uppercase text-center shadow-[3px_3px_0px_#111111]">
+              {(performance?.attendancePercentage ?? 100) >= 85 ? "BENCHMARK MET // ELIGIBLE" : "ACTION REQUIRED"}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── NAVIGATION TABS ── */}
-      <div className="flex items-center gap-1.5 border-b border-slate-800/80 pb-2 overflow-x-auto text-xs font-semibold scrollbar-none">
-        {[
-          { id: "overview", label: "Overview", icon: Trophy, count: null },
-          {
-            id: "assignments",
-            label: "Assignments & Submission",
-            icon: FileCode,
-            count: assignments.length,
-          },
-          { id: "exercises", label: "Exercises", icon: Code2, count: exercises.length },
-          { id: "notes", label: "Learning Materials", icon: BookOpen, count: notes.length },
-          { id: "attendance", label: "Attendance Record", icon: CalendarCheck, count: `${performance?.attendancePercentage ?? 100}%` },
-          { id: "assessments", label: "Assessments & Tests", icon: Award, count: assessments.length },
-          { id: "doubts", label: "Doubts Thread", icon: HelpCircle, count: doubts.length },
-          { id: "feedback", label: "Mentor Feedback", icon: MessageSquareHeart, count: null },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all whitespace-nowrap ${
-                isActive
-                  ? "bg-brand-orange/15 text-brand-orange border border-brand-orange/30 font-bold shadow-[0_0_15px_rgba(240,124,39,0.15)]"
-                  : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-              {tab.count !== null && (
-                <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                    isActive ? "bg-brand-orange text-white" : "bg-slate-800 text-slate-400"
-                  }`}
+      {/* ── TWO-COLUMN WORKSPACE: VERTICAL SIDEBAR + ACTIVE TAB WORKSPACE ── */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* ── LEFT VERTICAL SIDEBAR ── */}
+        <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 lg:sticky lg:top-[125px] z-20 space-y-4">
+          <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-3.5 space-y-3">
+            {/* Sidebar Telemetry Header */}
+            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-2.5">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#111111] flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-[#F07C27] border border-[#111111] animate-pulse" />
+                [ STUDENT // MODULES ]
+              </span>
+              <span className="text-[10px] font-mono font-bold bg-[#FFF0E5] px-1.5 py-0.5 border border-[#111111] text-[#111111]">
+                8 STATIONS
+              </span>
+            </div>
+
+            {/* Mobile Horizontal Carousel (< lg) / Desktop Vertical Stack (lg+) */}
+            <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0 scrollbar-none">
+              {[
+                { id: "overview", label: "OVERVIEW", icon: Trophy, count: null },
+                {
+                  id: "assignments",
+                  label: "ASSIGNMENTS",
+                  icon: FileCode,
+                  count: assignments.length,
+                },
+                { id: "exercises", label: "EXERCISES", icon: Code2, count: exercises.length },
+                { id: "notes", label: "LEARNING MATERIALS", icon: BookOpen, count: notes.length },
+                { id: "attendance", label: "ATTENDANCE RECORD", icon: CalendarCheck, count: `${performance?.attendancePercentage ?? 100}%` },
+                { id: "assessments", label: "ASSESSMENTS & TESTS", icon: Award, count: assessments.length },
+                { id: "doubts", label: "DOUBTS THREAD", icon: HelpCircle, count: doubts.length },
+                { id: "feedback", label: "MENTOR FEEDBACK", icon: MessageSquareHeart, count: null },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                    className={`flex items-center justify-between gap-2.5 px-3 py-2.5 border-[2px] border-[#111111] uppercase font-mono text-xs font-bold transition-all whitespace-nowrap cursor-pointer text-left ${
+                      isActive
+                        ? "bg-[#F07C27] text-white shadow-[4px_4px_0px_#111111] translate-x-1 font-black"
+                        : "bg-white text-[#111111] shadow-[2px_2px_0px_#111111] hover:bg-[#FFF0E5] hover:translate-x-0.5"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-white" : "text-[#111111]"}`} />
+                      <span className="truncate">{tab.label}</span>
+                    </div>
+                    {tab.count !== null && (
+                      <span
+                        className={`px-1.5 py-0.5 text-[10px] font-mono flex-shrink-0 border ${
+                          isActive
+                            ? "bg-[#111111] text-white border-white/40"
+                            : "bg-[#FFF0E5] text-[#111111] border-[#111111]"
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Quick Context Box at bottom of student sidebar */}
+            <div className="hidden lg:block pt-2 border-t-[2px] border-[#111111] text-[11px] font-mono space-y-1.5 bg-[#F9F9F9] -mx-3.5 -mb-3.5 p-3">
+              <div className="flex justify-between text-slate-600 font-bold">
+                <span>COHORT RANK:</span>
+                <span className="text-[#111111] font-black">#{performance?.rank ?? 1} / 60</span>
+              </div>
+              <div className="flex justify-between text-slate-600 font-bold">
+                <span>ATTENDANCE:</span>
+                <span className="text-emerald-700 font-black">{performance?.attendancePercentage ?? 100}%</span>
+              </div>
+              <div className="flex justify-between text-slate-600 font-bold">
+                <span>TOTAL SCORE:</span>
+                <span className="text-[#F07C27] font-black">{overall} / 100</span>
+              </div>
+              <div className="pt-2 border-t border-[#111111]/20">
+                <Link
+                  href="/curriculum"
+                  target="_blank"
+                  className="flex items-center justify-between text-[10px] font-mono font-bold text-[#111111] hover:text-[#F07C27] uppercase bg-white border border-[#111111] px-2 py-1 shadow-[1px_1px_0px_#111111] transition-all hover:translate-x-0.5"
                 >
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+                  <span>⚡ 6-DAY SYLLABUS</span>
+                  <ExternalLink className="w-3 h-3 text-[#F07C27]" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* ── RIGHT MAIN WORKSPACE CONTENT ── */}
+        <main className="flex-1 min-w-0 w-full space-y-6">
 
       {/* ══════════════════════════════════════════════════════════
           TAB 1: OVERVIEW & SCORE BREAKDOWN
@@ -619,13 +698,13 @@ export default function StudentDashboardPage() {
         <div className="space-y-6">
           {/* ── REGISTRATION STATUS (admin review flow) ── */}
           {user?.enrollments?.[0]?.status === "PENDING" && (
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="p-4 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-[#F07C27] flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-display font-bold text-amber-300 text-sm">
-                  Application under review
+                <h4 className="font-mono font-bold text-[#111111] text-sm uppercase">
+                  Application Under Review
                 </h4>
-                <p className="text-xs text-amber-200/70 mt-0.5">
+                <p className="text-xs text-slate-700 mt-0.5 font-mono">
                   Your registration is awaiting admin approval. You can explore the dashboard, but
                   lab allocation and selection happen after approval.
                 </p>
@@ -645,7 +724,7 @@ export default function StudentDashboardPage() {
                   label: a.title,
                   when: `due ${new Date(a.dueDate).toLocaleString()}`,
                   ts: new Date(a.dueDate).getTime(),
-                  color: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+                  color: "bg-[#F07C27] text-white border-[#111111]",
                   tab: "assignments",
                 })
               );
@@ -661,7 +740,7 @@ export default function StudentDashboardPage() {
                   label: as.title,
                   when: `starts ${new Date(as.startsAt).toLocaleString()}`,
                   ts: new Date(as.startsAt).getTime(),
-                  color: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+                  color: "bg-[#111111] text-white border-[#111111]",
                   tab: "assessments",
                 })
               );
@@ -673,7 +752,7 @@ export default function StudentDashboardPage() {
                   label: s.title,
                   when: `${new Date(s.date).toLocaleDateString()}${s.startTime ? ` · ${s.startTime}${s.endTime ? `–${s.endTime}` : ""}` : ""}`,
                   ts: new Date(s.date).getTime(),
-                  color: "bg-violet-500/15 text-violet-400 border-violet-500/30",
+                  color: "bg-[#FFF0E5] text-[#111111] border-[#111111]",
                   tab: "attendance",
                 })
               );
@@ -681,13 +760,13 @@ export default function StudentDashboardPage() {
             const upcoming = items.slice(0, 5);
             if (upcoming.length === 0) {
               return (
-                <div className="rounded-2xl p-4 bg-[#0F172A]/70 border border-slate-800/80 shadow-md flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                <div className="p-4 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center gap-3.5">
+                  <div className="w-10 h-10 bg-[#e6f4ea] border-[2px] border-[#111111] flex items-center justify-center text-emerald-700 flex-shrink-0">
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-display font-bold text-white text-xs">All Deadlines Met</h4>
-                    <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                    <h4 className="font-mono font-bold text-[#111111] text-xs uppercase tracking-wider">All Deadlines Met</h4>
+                    <p className="text-[11px] text-slate-600 font-mono mt-0.5">
                       No pending assignment deadlines or assessment schedules for this week.
                     </p>
                   </div>
@@ -695,25 +774,25 @@ export default function StudentDashboardPage() {
               );
             }
             return (
-              <div className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-3">
-                <h3 className="font-display font-bold text-white text-sm flex items-center gap-2 border-b border-slate-800 pb-2.5">
-                  <AlarmClock className="w-4 h-4 text-brand-orange" />
-                  Upcoming Deadlines
+              <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-3">
+                <h3 className="font-mono font-bold text-[#111111] text-sm uppercase flex items-center gap-2 border-b-[2px] border-[#111111] pb-2.5">
+                  <AlarmClock className="w-4 h-4 text-[#F07C27]" />
+                  Upcoming Deadlines & Schedule
                 </h3>
                 <div className="space-y-2">
                   {upcoming.map((it, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveTab(it.tab as any)}
-                      className="w-full flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-all text-left"
+                      className="w-full flex items-center justify-between gap-3 p-3 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] hover:translate-x-1 transition-all text-left"
                     >
                       <div className="min-w-0">
-                        <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border uppercase ${it.color}`}>
+                        <span className={`inline-block px-1.5 py-0.5 border text-[9px] font-mono font-bold uppercase ${it.color}`}>
                           {it.kind}
                         </span>
-                        <p className="text-xs text-slate-200 font-semibold truncate mt-1">{it.label}</p>
+                        <p className="text-xs text-[#111111] font-bold truncate mt-1">{it.label}</p>
                       </div>
-                      <span className="text-[10px] font-mono text-slate-500 whitespace-nowrap flex-shrink-0">
+                      <span className="text-[10px] font-mono text-slate-600 font-bold whitespace-nowrap flex-shrink-0">
                         {it.when}
                       </span>
                     </button>
@@ -725,78 +804,78 @@ export default function StudentDashboardPage() {
 
           {/* 4 Score Breakdown Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 shadow-md">
-              <div className="flex items-center justify-between text-slate-400 text-xs font-mono mb-2">
+            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+              <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
                 <span>ASSIGNMENTS (30%)</span>
-                <FileCode className="w-4 h-4 text-brand-orange" />
+                <FileCode className="w-4 h-4 text-[#F07C27]" />
               </div>
-              <div className="font-display font-black text-2xl text-white">
+              <div className="font-mono font-black text-3xl text-[#111111]">
                 {performance?.assignmentsScore ?? 0}%
               </div>
-              <div className="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-3">
+              <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
                 <div
-                  className="bg-brand-orange h-full rounded-full transition-all duration-500"
+                  className="bg-[#F07C27] h-full transition-all duration-500"
                   style={{ width: `${performance?.assignmentsScore ?? 0}%` }}
                 />
               </div>
-              <span className="text-[11px] font-mono text-emerald-400 mt-2 block">
+              <span className="text-[11px] font-mono text-emerald-700 font-bold mt-2 block">
                 {assignments.filter((a) => a.submissions?.[0]?.score !== undefined).length} / {assignments.length} Graded
               </span>
             </div>
 
-            <div className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 shadow-md">
-              <div className="flex items-center justify-between text-slate-400 text-xs font-mono mb-2">
+            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+              <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
                 <span>ASSESSMENTS (35%)</span>
-                <Award className="w-4 h-4 text-sky-400" />
+                <Award className="w-4 h-4 text-[#111111]" />
               </div>
-              <div className="font-display font-black text-2xl text-white">
+              <div className="font-mono font-black text-3xl text-[#111111]">
                 {performance?.assessmentsScore ?? 0}%
               </div>
-              <div className="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-3">
+              <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
                 <div
-                  className="bg-sky-400 h-full rounded-full transition-all duration-500"
+                  className="bg-[#111111] h-full transition-all duration-500"
                   style={{ width: `${performance?.assessmentsScore ?? 0}%` }}
                 />
               </div>
-              <span className="text-[11px] font-mono text-sky-400 mt-2 block">
+              <span className="text-[11px] font-mono text-slate-700 font-bold mt-2 block">
                 Benchmark Tests
               </span>
             </div>
 
-            <div className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 shadow-md">
-              <div className="flex items-center justify-between text-slate-400 text-xs font-mono mb-2">
+            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+              <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
                 <span>ATTENDANCE (15%)</span>
-                <CalendarCheck className="w-4 h-4 text-emerald-400" />
+                <CalendarCheck className="w-4 h-4 text-[#F07C27]" />
               </div>
-              <div className="font-display font-black text-2xl text-white">
+              <div className="font-mono font-black text-3xl text-[#111111]">
                 {performance?.attendancePercentage ?? 100}%
               </div>
-              <div className="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-3">
+              <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
                 <div
-                  className="bg-emerald-400 h-full rounded-full transition-all duration-500"
+                  className="bg-emerald-600 h-full transition-all duration-500"
                   style={{ width: `${performance?.attendancePercentage ?? 100}%` }}
                 />
               </div>
-              <span className="text-[11px] font-mono text-emerald-400 mt-2 block">
+              <span className="text-[11px] font-mono text-emerald-700 font-bold mt-2 block">
                 Threshold: 85% Met ✓
               </span>
             </div>
 
-            <div className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 shadow-md">
-              <div className="flex items-center justify-between text-slate-400 text-xs font-mono mb-2">
+            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+              <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
                 <span>PARTICIPATION (10%)</span>
-                <HelpCircle className="w-4 h-4 text-brand-gold" />
+                <HelpCircle className="w-4 h-4 text-[#111111]" />
               </div>
-              <div className="font-display font-black text-2xl text-white">
+              <div className="font-mono font-black text-3xl text-[#111111]">
                 {performance?.doubtsResolved ?? 0}
               </div>
-              <div className="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-3">
+              <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
                 <div
-                  className="bg-brand-gold h-full rounded-full transition-all duration-500"
+                  className="bg-[#F07C27] h-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (performance?.doubtsResolved ?? 0) * 50)}%` }}
                 />
               </div>
-              <span className="text-[11px] font-mono text-brand-gold mt-2 block">
+              <span className="text-[11px] font-mono text-slate-700 font-bold mt-2 block">
                 Doubts & Community
               </span>
             </div>
@@ -825,17 +904,17 @@ export default function StudentDashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             {/* Active Assignments */}
-            <div className="lg:col-span-7 rounded-2xl p-6 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-display font-bold text-white text-base flex items-center gap-2">
-                  <FileCode className="w-4 h-4 text-brand-orange" />
+            <div className="lg:col-span-7 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 space-y-4">
+              <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3">
+                <h3 className="font-mono font-bold text-[#111111] text-base uppercase flex items-center gap-2">
+                  <FileCode className="w-5 h-5 text-[#F07C27]" />
                   Active Assignments
                 </h3>
                 <button
                   onClick={() => setActiveTab("assignments")}
-                  className="text-xs font-mono text-brand-orange hover:underline flex items-center gap-1"
+                  className="text-xs font-mono font-bold text-[#111111] bg-[#FFF0E5] px-2.5 py-1 border-[2px] border-[#111111] hover:bg-[#F07C27] hover:text-white transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111]"
                 >
-                  View All ({assignments.length}) <ChevronRight className="w-3.5 h-3.5" />
+                  VIEW ALL ({assignments.length}) <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
 
@@ -852,11 +931,11 @@ export default function StudentDashboardPage() {
                   return (
                     <div
                       key={a.id}
-                      className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/70 hover:border-slate-700 transition-all flex items-center justify-between gap-4"
+                      className="p-4 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] hover:translate-x-0.5 transition-all flex items-center justify-between gap-4"
                     >
                       <div>
-                        <h4 className="text-sm font-bold text-white">{a.title}</h4>
-                        <div className="flex items-center gap-3 text-xs text-slate-400 font-mono mt-1">
+                        <h4 className="text-sm font-bold text-[#111111]">{a.title}</h4>
+                        <div className="flex items-center gap-3 text-xs text-slate-600 font-mono font-bold mt-1">
                           <span>Max: {a.maxScore} pts</span>
                           <span>•</span>
                           <span>Due: {new Date(a.dueDate).toLocaleDateString()}</span>
@@ -865,12 +944,12 @@ export default function StudentDashboardPage() {
 
                       <div className="flex-shrink-0">
                         {sub?.score !== undefined ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                            Score: {sub.score}/{a.maxScore}
+                          <span className="px-3 py-1 font-mono text-xs font-black bg-[#e6f4ea] text-emerald-800 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                            SCORE: {sub.score}/{a.maxScore}
                           </span>
                         ) : sub ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30">
-                            Under Review
+                          <span className="px-3 py-1 font-mono text-xs font-bold bg-[#e8f0fe] text-blue-800 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                            UNDER REVIEW
                           </span>
                         ) : (
                           <button
@@ -878,7 +957,7 @@ export default function StudentDashboardPage() {
                               setSelectedAssignment(a);
                               setActiveTab("assignments");
                             }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-brand-orange text-white hover:brightness-110 shadow-sm transition-all"
+                            className="px-3.5 py-1.5 font-mono text-xs font-bold uppercase tracking-wider bg-[#F07C27] text-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] hover:brightness-110 transition-all"
                           >
                             Submit Code →
                           </button>
@@ -891,51 +970,51 @@ export default function StudentDashboardPage() {
             </div>
 
             {/* Lab & Mentor Card */}
-            <div className="lg:col-span-5 rounded-2xl p-6 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-4">
-              <h3 className="font-display font-bold text-white text-base flex items-center gap-2 border-b border-slate-800 pb-3">
-                <Layers className="w-4 h-4 text-sky-400" />
+            <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 space-y-4">
+              <h3 className="font-mono font-bold text-[#111111] text-base uppercase flex items-center gap-2 border-b-[2px] border-[#111111] pb-3">
+                <Layers className="w-5 h-5 text-[#F07C27]" />
                 Lab Architecture & Schedule
               </h3>
 
               <div className="space-y-3 font-mono text-xs">
-                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <span className="text-slate-400 text-[10px] uppercase block mb-1">
+                <div className="p-3.5 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <span className="text-slate-600 text-[10px] uppercase font-bold block mb-1">
                     LAB SPECIALIZATION
                   </span>
-                  <span className="text-white font-bold text-sm block">
+                  <span className="text-[#111111] font-bold text-sm block">
                     {myLab?.name || "Lab A — High-Performance Systems"}
                   </span>
-                  <span className="text-slate-400 text-xs block mt-1">
+                  <span className="text-slate-600 text-xs block mt-1">
                     Schedule: {myLab?.schedule || "Mon/Wed/Fri 18:00 - 20:30 IST"}
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <span className="text-slate-400 text-[10px] uppercase block mb-1">
+                <div className="p-3.5 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <span className="text-slate-700 text-[10px] uppercase font-bold block mb-1">
                     SUPER 60 SELECTION CRITERIA
                   </span>
-                  <div className="space-y-1.5 pt-1 text-[11px] text-slate-300">
+                  <div className="space-y-1.5 pt-1 text-[11px] text-[#111111] font-bold">
                     <div className="flex justify-between">
                       <span>• Min. Attendance:</span>
-                      <strong className="text-emerald-400">85%</strong>
+                      <strong className="text-emerald-700">85% Required</strong>
                     </div>
                     <div className="flex justify-between">
                       <span>• Min. Overall Score:</span>
-                      <strong className="text-brand-orange">75.0 / 100</strong>
+                      <strong className="text-[#F07C27]">75.0 / 100 Benchmark</strong>
                     </div>
                     <div className="flex justify-between">
                       <span>• Target Intake:</span>
-                      <strong className="text-brand-gold">Top 60 Candidates</strong>
+                      <strong className="text-[#111111]">Top 60 Candidates</strong>
                     </div>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setActiveTab("doubts")}
-                  className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs font-semibold transition-all flex items-center justify-center gap-2 border border-slate-700"
+                  className="w-full py-2.5 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 border-[2px] border-[#111111] shadow-[3px_3px_0px_#F07C27]"
                 >
-                  <HelpCircle className="w-4 h-4 text-brand-orange" />
-                  Have a doubt? Ask your mentor
+                  <HelpCircle className="w-4 h-4" />
+                  Have a Doubt? Ask Your Mentor
                 </button>
               </div>
             </div>
@@ -943,22 +1022,22 @@ export default function StudentDashboardPage() {
 
           {/* Announcements Widget */}
           {announcements.length > 0 && (
-            <div className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-3">
-              <h3 className="font-display font-bold text-white text-sm flex items-center gap-2 border-b border-slate-800 pb-2.5">
-                <Sparkles className="w-4 h-4 text-brand-orange" />
+            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-3">
+              <h3 className="font-mono font-bold text-[#111111] text-sm uppercase flex items-center gap-2 border-b-[2px] border-[#111111] pb-2.5">
+                <Sparkles className="w-4 h-4 text-[#F07C27]" />
                 Latest Announcements
               </h3>
               <div className="space-y-3">
                 {announcements.slice(0, 3).map((a) => (
-                  <div key={a.id} className={`p-3.5 rounded-xl border ${a.pinned ? "border-brand-orange/30 bg-brand-orange/5" : "border-slate-800 bg-slate-900/50"}`}>
+                  <div key={a.id} className={`p-3.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] ${a.pinned ? "bg-[#FFF0E5]" : "bg-[#F9F9F9]"}`}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-xs text-white flex items-center gap-1.5">
-                        {a.pinned && <span className="text-brand-orange">📌</span>}
+                      <span className="font-bold text-xs text-[#111111] flex items-center gap-1.5 uppercase font-mono">
+                        {a.pinned && <span>📌</span>}
                         {a.title}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-500">{new Date(a.createdAt).toLocaleDateString()}</span>
+                      <span className="text-[10px] font-mono text-slate-600 font-bold">{new Date(a.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-xs text-slate-300 line-clamp-2">{a.body}</p>
+                    <p className="text-xs text-slate-700 line-clamp-2">{a.body}</p>
                   </div>
                 ))}
               </div>
@@ -976,7 +1055,7 @@ export default function StudentDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Assignment Selector List */}
           <div className="lg:col-span-5 space-y-3">
-            <h3 className="font-display font-bold text-white text-base mb-1">
+            <h3 className="font-mono font-bold text-[#111111] text-base uppercase tracking-wider mb-1">
               Workshop Assignments
             </h3>
             <div className="space-y-2.5">
@@ -997,30 +1076,30 @@ export default function StudentDashboardPage() {
                       setSelectedAssignment(a);
                       setSubmitMessage(null);
                     }}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                    className={`p-4 border-[2px] border-[#111111] cursor-pointer transition-all ${
                       isSelected
-                        ? "bg-brand-orange/10 border-brand-orange/40 shadow-lg shadow-brand-orange/5"
-                        : "bg-[#0F172A]/70 border-slate-800/80 hover:border-slate-700"
+                        ? "bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[5px_5px_0px_#111111] translate-x-1"
+                        : "bg-white shadow-[3px_3px_0px_#111111] hover:bg-[#F9F9F9]"
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <h4 className="font-bold text-sm text-white">{a.title}</h4>
+                      <h4 className="font-bold text-sm text-[#111111]">{a.title}</h4>
                       {sub?.score !== undefined ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400">
-                          {sub.score}/{a.maxScore}
+                        <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-black bg-[#e6f4ea] text-emerald-800">
+                          {sub.score}/{a.maxScore} PTS
                         </span>
                       ) : sub ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/20 text-sky-400">
-                          Submitted
+                        <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#e8f0fe] text-blue-800">
+                          SUBMITTED
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400">
-                          Pending
+                        <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#fff8e1] text-amber-900">
+                          PENDING
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 line-clamp-2">{a.description}</p>
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500 mt-2">
+                    <p className="text-xs text-slate-700 line-clamp-2">{a.description}</p>
+                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-600 font-bold mt-2">
                       <span>Due: {new Date(a.dueDate).toLocaleDateString()}</span>
                       <span>•</span>
                       <span>Max: {a.maxScore} pts</span>
@@ -1034,48 +1113,44 @@ export default function StudentDashboardPage() {
           {/* IDE Submission Workspace */}
           <div className="lg:col-span-7">
             {selectedAssignment ? (
-              <div className="rounded-2xl p-6 bg-[#0F172A]/80 border border-slate-800/80 shadow-xl space-y-4">
+              <div className="bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 space-y-4">
                 <div>
-                  <span className="text-[10px] font-mono text-brand-orange uppercase font-bold tracking-wider">
-                    SUBMISSION WORKSPACE
+                  <span className="text-[10px] font-mono text-[#F07C27] uppercase font-black tracking-wider block">
+                    SPECIFICATION // SUBMISSION WORKSPACE
                   </span>
-                  <h3 className="font-display font-bold text-xl text-white mt-0.5">
+                  <h3 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight mt-0.5">
                     {selectedAssignment.title}
                   </h3>
-                  <p className="text-xs text-slate-300 mt-1 whitespace-pre-line bg-slate-900/60 p-3 rounded-xl border border-slate-800 font-mono">
+                  <p className="text-xs text-slate-800 mt-2 whitespace-pre-line bg-[#F9F9F9] p-3.5 border-[2px] border-[#111111] font-mono">
                     {selectedAssignment.description}
                   </p>
                 </div>
 
                 {/* If already reviewed, show feedback card */}
                 {selectedAssignment.submissions?.[0]?.feedback && (
-                  <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs font-mono space-y-1">
-                    <div className="flex items-center justify-between text-emerald-400 font-bold">
+                  <div className="p-4 bg-[#e6f4ea] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-xs font-mono space-y-1">
+                    <div className="flex items-center justify-between text-emerald-900 font-bold">
                       <span>✓ MENTOR REVIEW COMPLETED</span>
                       <span className="text-sm">
                         Score: {selectedAssignment.submissions[0].score}/{selectedAssignment.maxScore}
                       </span>
                     </div>
-                    <p className="text-slate-300 text-xs font-sans italic mt-1">
+                    <p className="text-slate-800 text-xs font-sans italic mt-1">
                       &quot;{selectedAssignment.submissions[0].feedback}&quot;
                     </p>
                   </div>
                 )}
 
-                {/* macOS IDE styled submission window */}
+                {/* Neo-Brutalist C++ Studio submission window */}
                 <form onSubmit={handleAssignmentSubmit} className="space-y-3">
-                  <div className="rounded-xl border border-slate-800 overflow-hidden bg-[#070B14] shadow-inner">
-                    {/* IDE Header */}
-                    <div className="bg-[#0B1120] px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
+                  <div className="border-[3px] border-[#111111] overflow-hidden bg-[#111111] shadow-[4px_4px_0px_#111111]">
+                    {/* Studio Header */}
+                    <div className="bg-[#111111] px-4 py-2 border-b-[2px] border-[#333333] flex items-center justify-between text-xs font-mono text-white">
                       <div className="flex items-center gap-2">
-                        <div className="flex gap-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                        </div>
-                        <span className="ml-2 text-slate-300 font-bold">solution.cpp / github-link</span>
+                        <span className="w-2.5 h-2.5 bg-[#F07C27] border border-white" />
+                        <span className="text-white font-bold">solution.cpp // super-60</span>
                       </div>
-                      <span className="text-[10px] text-slate-500">C++ / Systems Implementation</span>
+                      <span className="text-[10px] text-slate-400 font-mono">[ C++20 / LLVM CLANG ]</span>
                     </div>
 
                     <textarea
@@ -1084,35 +1159,35 @@ export default function StudentDashboardPage() {
                       value={submissionCode}
                       onChange={(e) => setSubmissionCode(e.target.value)}
                       placeholder="// Paste your production code, GitHub PR link, or benchmark logs here...&#10;#include <iostream>&#10;&#10;int main() {&#10;    // Super 60 low-latency solution&#10;    return 0;&#10;}"
-                      className="w-full bg-transparent p-4 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none resize-y"
+                      className="w-full bg-[#181818] p-4 text-xs font-mono text-emerald-300 placeholder:text-slate-600 focus:outline-none resize-y"
                     />
                   </div>
 
                   {submitMessage && (
                     <div
-                      className={`p-3 rounded-xl text-xs font-mono flex items-center gap-2 ${
+                      className={`p-3 border-[2px] border-[#111111] text-xs font-mono flex items-center gap-2 shadow-[2px_2px_0px_#111111] ${
                         submitMessage.success
-                          ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                          : "bg-rose-500/15 text-rose-300 border border-rose-500/30"
+                          ? "bg-[#e6f4ea] text-emerald-900"
+                          : "bg-[#fde8e8] text-rose-900"
                       }`}
                     >
                       {submitMessage.success ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
                       ) : (
-                        <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                        <AlertCircle className="w-4 h-4 text-rose-700 flex-shrink-0" />
                       )}
                       <span>{submitMessage.text}</span>
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-[11px] text-slate-500 font-mono">
-                      Submissions are timestamped and verified by your lead mentor.
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                    <span className="text-[11px] text-slate-600 font-mono font-bold">
+                      Submissions are timestamped and logged for Super 60 audit.
                     </span>
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-5 py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orangeLight text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md hover:shadow-orange-glow flex items-center gap-2"
+                      className="px-6 py-2.5 bg-[#F07C27] hover:brightness-110 text-white font-mono text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center gap-2"
                     >
                       {submitting ? (
                         <>
@@ -1127,8 +1202,8 @@ export default function StudentDashboardPage() {
                 </form>
               </div>
             ) : (
-              <div className="rounded-2xl p-12 bg-[#0F172A]/70 border border-slate-800 text-center text-slate-500 font-mono text-xs">
-                Select an assignment to inspect instructions and submit code.
+              <div className="p-12 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] text-center text-slate-600 font-mono text-xs">
+                Select an assignment from the roster to inspect instructions and submit code.
               </div>
             )}
           </div>
@@ -1142,6 +1217,9 @@ export default function StudentDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Exercise List */}
           <div className="lg:col-span-5 space-y-3">
+            <h3 className="font-mono font-bold text-[#111111] text-base uppercase tracking-wider mb-1">
+              Practice Challenges
+            </h3>
             {exercises.length === 0 && (
               <EmptyState
                 icon={Code2}
@@ -1157,23 +1235,27 @@ export default function StudentDashboardPage() {
                   <div
                     key={ex.id}
                     onClick={() => { setSelectedExercise(ex); setExerciseSubmitMsg(null); if (!mySub) setExerciseCode("// Write your C++ solution here\n#include <iostream>\nusing namespace std;\n\nint main() {\n    // your code here\n    return 0;\n}\n"); }}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${isActive ? "bg-emerald-500/10 border-emerald-500/40 shadow-lg" : "bg-[#0F172A]/70 border-slate-800/80 hover:border-slate-700"}`}
+                    className={`p-4 border-[2px] border-[#111111] cursor-pointer transition-all ${
+                      isActive
+                        ? "bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[5px_5px_0px_#111111] translate-x-1"
+                        : "bg-white shadow-[3px_3px_0px_#111111] hover:bg-[#F9F9F9]"
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-bold text-sm text-white">{ex.title}</h4>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${ex.difficulty === "EASY" ? "bg-emerald-500/20 text-emerald-400" : ex.difficulty === "HARD" ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400"}`}>{ex.difficulty}</span>
+                        <h4 className="font-bold text-sm text-[#111111]">{ex.title}</h4>
+                        <span className={`px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold ${ex.difficulty === "EASY" ? "bg-[#e6f4ea] text-emerald-800" : ex.difficulty === "HARD" ? "bg-[#fde8e8] text-rose-800" : "bg-[#fff8e1] text-amber-900"}`}>{ex.difficulty}</span>
                       </div>
                       {mySub?.score !== undefined ? (
-                        <span className="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400">{mySub.score}/{ex.maxScore}</span>
+                        <span className="flex-shrink-0 px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#e6f4ea] text-emerald-800">{mySub.score}/{ex.maxScore} PTS</span>
                       ) : mySub ? (
-                        <span className="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/20 text-sky-400">Submitted</span>
+                        <span className="flex-shrink-0 px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#e8f0fe] text-blue-800">Submitted</span>
                       ) : (
-                        <span className="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-700 text-slate-400">Not Started</span>
+                        <span className="flex-shrink-0 px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#f4f3f3] text-slate-600">Pending</span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 line-clamp-1">{ex.description}</p>
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500 mt-2">
+                    <p className="text-xs text-slate-700 line-clamp-1">{ex.description}</p>
+                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-600 font-bold mt-2">
                       <span>Topic: {ex.topic || "General"}</span>
                       {ex.dueDate && <><span>•</span><span>Due: {new Date(ex.dueDate).toLocaleDateString()}</span></>}
                     </div>
@@ -1186,21 +1268,21 @@ export default function StudentDashboardPage() {
           {/* Exercise Workspace */}
           <div className="lg:col-span-7">
             {selectedExercise ? (
-              <div className="rounded-2xl p-6 bg-[#0F172A]/80 border border-slate-800/80 shadow-xl space-y-4">
-                <div className="border-b border-slate-800 pb-3">
+              <div className="bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 space-y-4">
+                <div className="border-b-[2px] border-[#111111] pb-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold tracking-wider">EXERCISE</span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${selectedExercise.difficulty === "EASY" ? "bg-emerald-500/20 text-emerald-400" : selectedExercise.difficulty === "HARD" ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400"}`}>{selectedExercise.difficulty}</span>
-                    {selectedExercise.topic && <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400">{selectedExercise.topic}</span>}
+                    <span className="text-[10px] font-mono text-white bg-[#111111] px-2 py-0.5 border border-[#111111] uppercase font-bold tracking-wider">CHALLENGE</span>
+                    <span className={`px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold ${selectedExercise.difficulty === "EASY" ? "bg-[#e6f4ea] text-emerald-800" : selectedExercise.difficulty === "HARD" ? "bg-[#fde8e8] text-rose-800" : "bg-[#fff8e1] text-amber-900"}`}>{selectedExercise.difficulty}</span>
+                    {selectedExercise.topic && <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono bg-[#f4f3f3] text-slate-700 font-bold">{selectedExercise.topic}</span>}
                   </div>
-                  <h3 className="font-display font-bold text-xl text-white">{selectedExercise.title}</h3>
-                  <p className="text-xs text-slate-400 mt-1">{selectedExercise.description}</p>
+                  <h3 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">{selectedExercise.title}</h3>
+                  <p className="text-xs text-slate-700 mt-1">{selectedExercise.description}</p>
                 </div>
 
                 {/* Problem Statement */}
                 <div>
-                  <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1.5">Problem Statement</label>
-                  <div className="rounded-xl bg-slate-900/60 border border-slate-800 p-4 text-xs text-slate-200 font-sans whitespace-pre-wrap leading-relaxed">{selectedExercise.problemStatement}</div>
+                  <label className="block text-[11px] font-mono text-slate-600 uppercase font-bold mb-1.5">Problem Statement</label>
+                  <div className="bg-[#F9F9F9] border-[2px] border-[#111111] p-4 text-xs text-[#111111] font-mono whitespace-pre-wrap leading-relaxed shadow-[2px_2px_0px_#111111]">{selectedExercise.problemStatement}</div>
                 </div>
 
                 {/* Sample I/O */}
@@ -1208,14 +1290,14 @@ export default function StudentDashboardPage() {
                   <div className="grid grid-cols-2 gap-3">
                     {selectedExercise.sampleInput && (
                       <div>
-                        <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">Sample Input</label>
-                        <pre className="rounded-lg bg-[#070B14] border border-slate-800 p-3 text-xs text-slate-300 font-mono overflow-x-auto">{selectedExercise.sampleInput}</pre>
+                        <label className="block text-[10px] font-mono text-slate-600 uppercase font-bold mb-1">Sample Input</label>
+                        <pre className="bg-[#f4f3f3] border-[2px] border-[#111111] p-3 text-xs text-[#111111] font-mono overflow-x-auto shadow-[2px_2px_0px_#111111]">{selectedExercise.sampleInput}</pre>
                       </div>
                     )}
                     {selectedExercise.sampleOutput && (
                       <div>
-                        <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">Expected Output</label>
-                        <pre className="rounded-lg bg-[#070B14] border border-slate-800 p-3 text-xs text-slate-300 font-mono overflow-x-auto">{selectedExercise.sampleOutput}</pre>
+                        <label className="block text-[10px] font-mono text-slate-600 uppercase font-bold mb-1">Expected Output</label>
+                        <pre className="bg-[#f4f3f3] border-[2px] border-[#111111] p-3 text-xs text-[#111111] font-mono overflow-x-auto shadow-[2px_2px_0px_#111111]">{selectedExercise.sampleOutput}</pre>
                       </div>
                     )}
                   </div>
@@ -1223,9 +1305,9 @@ export default function StudentDashboardPage() {
 
                 {/* Existing Submission */}
                 {selectedExercise.mySubmission && (
-                  <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 text-xs font-mono">
-                    <span className="text-sky-400 font-bold block mb-1">✓ Solution already submitted</span>
-                    <span className="text-slate-400">Status: {selectedExercise.mySubmission.status} {selectedExercise.mySubmission.score !== undefined ? `| Score: ${selectedExercise.mySubmission.score}/${selectedExercise.maxScore}` : ""}</span>
+                  <div className="p-3 bg-[#e8f0fe] border-[2px] border-[#111111] text-xs font-mono shadow-[2px_2px_0px_#111111]">
+                    <span className="text-blue-900 font-bold block mb-1">✓ Solution already submitted</span>
+                    <span className="text-slate-700 font-bold">Status: {selectedExercise.mySubmission.status} {selectedExercise.mySubmission.score !== undefined ? `| Score: ${selectedExercise.mySubmission.score}/${selectedExercise.maxScore}` : ""}</span>
                   </div>
                 )}
 
@@ -1252,37 +1334,38 @@ export default function StudentDashboardPage() {
                   } finally { setSubmittingExercise(false); }
                 }} className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="block text-[11px] font-mono text-slate-400 uppercase">Your Solution</label>
-                    <select value={exerciseLang} onChange={(e) => setExerciseLang(e.target.value)} className="bg-[#070B14] border border-slate-800 rounded-lg px-2 py-1 text-[11px] font-mono text-white">
+                    <label className="block text-[11px] font-mono text-slate-600 uppercase font-bold">Your Solution</label>
+                    <select value={exerciseLang} onChange={(e) => setExerciseLang(e.target.value)} className="bg-white border-[2px] border-[#111111] px-2.5 py-1 text-[11px] font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111]">
                       <option value="cpp">C++</option>
                       <option value="c">C</option>
                       <option value="python">Python</option>
                     </select>
                   </div>
 
-                  {/* macOS window chrome */}
-                  <div className="rounded-xl overflow-hidden border border-slate-800 shadow-xl">
-                    <div className="bg-slate-900 px-4 py-2.5 flex items-center gap-2 border-b border-slate-800">
-                      <div className="w-3 h-3 rounded-full bg-rose-500/70" />
-                      <div className="w-3 h-3 rounded-full bg-amber-500/70" />
-                      <div className="w-3 h-3 rounded-full bg-emerald-500/70" />
-                      <span className="ml-2 text-[10px] font-mono text-slate-500">solution.{exerciseLang}</span>
+                  {/* Mechanical Terminal Window */}
+                  <div className="border-[3px] border-[#111111] overflow-hidden shadow-[4px_4px_0px_#111111] bg-[#111111]">
+                    <div className="bg-[#111111] px-4 py-2 flex items-center justify-between border-b-[2px] border-[#333333]">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 bg-[#F07C27] border border-white" />
+                        <span className="text-[11px] font-mono text-white font-bold">solution.{exerciseLang}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-400">[ LIVE BUFFER ]</span>
                     </div>
                     <textarea
                       rows={10}
                       value={exerciseCode}
                       onChange={(e) => setExerciseCode(e.target.value)}
                       spellCheck={false}
-                      className="w-full bg-[#070B14] p-4 text-xs text-emerald-200 font-mono resize-none focus:outline-none"
+                      className="w-full bg-[#181818] p-4 text-xs text-emerald-300 font-mono resize-none focus:outline-none"
                     />
                   </div>
 
                   {testbenchResult && (
                     <div
-                      className={`p-3.5 rounded-xl border text-xs font-mono space-y-2 ${
+                      className={`p-3.5 border-[2px] border-[#111111] text-xs font-mono space-y-2 shadow-[3px_3px_0px_#111111] ${
                         testbenchResult.status === "PASS"
-                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                          : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                          ? "bg-[#e6f4ea] text-emerald-900"
+                          : "bg-[#fde8e8] text-rose-900"
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -1291,21 +1374,21 @@ export default function StudentDashboardPage() {
                           Testbench Simulation: {testbenchResult.status}
                         </span>
                         {testbenchResult.status === "PASS" && (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-600 font-bold">
                             Time: {testbenchResult.executionTimeMs}ms • Memory: {testbenchResult.memoryUsedMb}MB
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-300">{testbenchResult.message}</p>
+                      <p className="text-[11px] font-mono">{testbenchResult.message}</p>
                       {testbenchResult.actualOutput && (
                         <div className="grid grid-cols-2 gap-2 pt-1 text-[10px]">
-                          <div className="p-2 rounded bg-black/40 border border-slate-800">
-                            <span className="text-slate-500 block uppercase">Expected</span>
-                            <span className="text-slate-300 font-mono">{testbenchResult.expectedOutput}</span>
+                          <div className="p-2 bg-white border border-[#111111]">
+                            <span className="text-slate-600 block uppercase font-bold">Expected</span>
+                            <span className="text-[#111111] font-mono">{testbenchResult.expectedOutput}</span>
                           </div>
-                          <div className="p-2 rounded bg-black/40 border border-slate-800">
-                            <span className="text-slate-500 block uppercase">Actual</span>
-                            <span className="text-emerald-400 font-mono">{testbenchResult.actualOutput}</span>
+                          <div className="p-2 bg-white border border-[#111111]">
+                            <span className="text-slate-600 block uppercase font-bold">Actual</span>
+                            <span className="text-emerald-700 font-mono font-bold">{testbenchResult.actualOutput}</span>
                           </div>
                         </div>
                       )}
@@ -1313,7 +1396,7 @@ export default function StudentDashboardPage() {
                   )}
 
                   {exerciseSubmitMsg && (
-                    <div className={`p-3 rounded-xl text-xs font-mono flex items-center gap-2 ${exerciseSubmitMsg.success ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300" : "bg-rose-500/15 border border-rose-500/30 text-rose-300"}`}>
+                    <div className={`p-3 border-[2px] border-[#111111] text-xs font-mono flex items-center gap-2 shadow-[2px_2px_0px_#111111] ${exerciseSubmitMsg.success ? "bg-[#e6f4ea] text-emerald-900" : "bg-[#fde8e8] text-rose-900"}`}>
                       {exerciseSubmitMsg.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertCircle className="w-4 h-4 flex-shrink-0" />}
                       {exerciseSubmitMsg.text}
                     </div>
@@ -1324,16 +1407,16 @@ export default function StudentDashboardPage() {
                       type="button"
                       onClick={handleRunTestbench}
                       disabled={runningTestbench || !exerciseCode.trim()}
-                      className="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 border border-slate-700 flex items-center justify-center gap-2 shadow-sm"
+                      className="py-2.5 bg-[#111111] hover:bg-[#222222] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 border-[2px] border-[#111111] shadow-[3px_3px_0px_#F07C27] flex items-center justify-center gap-2"
                     >
                       {runningTestbench ? (
                         <>
-                          <span className="w-3.5 h-3.5 border-2 border-brand-orange/30 border-t-brand-orange rounded-full animate-spin" />
+                          <span className="w-3.5 h-3.5 border-2 border-[#F07C27]/30 border-t-[#F07C27] rounded-full animate-spin" />
                           <span>Running Testbench...</span>
                         </>
                       ) : (
                         <>
-                          <Play className="w-3.5 h-3.5 text-brand-orange" />
+                          <Play className="w-3.5 h-3.5 text-[#F07C27]" />
                           <span>Run Testbench (Sample)</span>
                         </>
                       )}
@@ -1342,7 +1425,7 @@ export default function StudentDashboardPage() {
                     <button
                       type="submit"
                       disabled={submittingExercise}
-                      className="py-2.5 rounded-xl bg-emerald-600 hover:brightness-110 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
+                      className="py-2.5 bg-[#F07C27] hover:brightness-110 text-white font-mono text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center gap-2"
                     >
                       {submittingExercise ? (
                         <>
@@ -1360,8 +1443,8 @@ export default function StudentDashboardPage() {
                 </form>
               </div>
             ) : (
-              <div className="rounded-2xl p-12 bg-[#0F172A]/70 border border-slate-800 text-center text-slate-500 font-mono text-xs">
-                Select an exercise to view its problem statement and submit your solution.
+              <div className="p-12 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] text-center text-slate-600 font-mono text-xs">
+                Select an exercise from the panel to view its problem statement and submit your solution.
               </div>
             )}
           </div>
@@ -1372,42 +1455,41 @@ export default function StudentDashboardPage() {
           TAB 3: LEARNING MATERIALS & NOTES REPOSITORY
       ══════════════════════════════════════════════════════════ */}
       {activeTab === "notes" && (
-
         <div className="space-y-5">
           {/* Header & Filter Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="font-display font-bold text-white text-base">
+              <h3 className="font-mono font-bold text-[#111111] text-base uppercase tracking-wider">
                 Learning Materials & Kernel Notes
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 font-mono mt-0.5">
                 Official lecture slides, architecture diagrams, code samples, and reference specs
               </p>
             </div>
 
             {/* Search Bar */}
             <div className="relative w-full sm:w-64">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search notes, tags, topics..."
                 value={noteSearch}
                 onChange={(e) => setNoteSearch(e.target.value)}
-                className="w-full bg-[#0F172A] border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-orange"
+                className="w-full bg-white border-[2px] border-[#111111] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-[#FFF0E5]"
               />
             </div>
           </div>
 
-          {/* Category Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-mono">
+          {/* Category Filter Buttons */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-mono font-bold">
             {["ALL", "NOTES", "CODE", "PDF", "RESOURCE"].map((cat) => (
               <button
                 key={cat}
                 onClick={() => setNoteCategoryFilter(cat)}
-                className={`px-3 py-1 rounded-lg transition-all ${
+                className={`px-3 py-1 border-[2px] border-[#111111] uppercase tracking-wider transition-all ${
                   noteCategoryFilter === cat
-                    ? "bg-brand-orange text-white font-bold"
-                    : "bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800"
+                    ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111] translate-x-[1px]"
+                    : "bg-white text-[#111111] hover:bg-[#FFF0E5] shadow-[2px_2px_0px_#111111]"
                 }`}
               >
                 {cat}
@@ -1429,42 +1511,42 @@ export default function StudentDashboardPage() {
             {filteredNotes.map((n) => (
               <div
                 key={n.id}
-                className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 hover:border-slate-700 transition-all space-y-3 flex flex-col justify-between"
+                className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] hover:translate-x-0.5 transition-all space-y-3 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                      className={`px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold uppercase ${
                         n.category === "CODE"
-                          ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
+                          ? "bg-[#e8f0fe] text-blue-900"
                           : n.category === "PDF"
-                          ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                          : "bg-brand-orange/15 text-brand-orange border border-brand-orange/30"
+                          ? "bg-[#fde8e8] text-rose-900"
+                          : "bg-[#FFF0E5] text-[#111111]"
                       }`}
                     >
                       {n.category}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-500">
+                    <span className="text-[10px] font-mono text-slate-500 font-bold">
                       {new Date(n.createdAt).toLocaleDateString()}
                     </span>
                   </div>
 
-                  <h4 className="font-bold text-white text-sm">{n.title}</h4>
+                  <h4 className="font-bold text-[#111111] text-sm">{n.title}</h4>
                   {n.description && (
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">{n.description}</p>
+                    <p className="text-xs text-slate-600 mt-1 line-clamp-2">{n.description}</p>
                   )}
                 </div>
 
                 {/* Content preview or code */}
                 {n.content && (
-                  <div className="p-3 rounded-xl bg-[#070B14] border border-slate-800 font-mono text-[11px] text-slate-300 relative group overflow-hidden">
+                  <div className="p-3 bg-[#F9F9F9] border-[2px] border-[#111111] font-mono text-[11px] text-[#111111] relative group overflow-hidden shadow-[2px_2px_0px_#111111]">
                     <pre className="line-clamp-3 whitespace-pre-wrap">{n.content}</pre>
                     <button
                       onClick={() => copyToClipboard(n.content, n.id)}
-                      className="absolute right-2 top-2 p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute right-2 top-2 p-1.5 bg-white border border-[#111111] text-[#111111] opacity-0 group-hover:opacity-100 transition-opacity shadow-[1px_1px_0px_#111111]"
                     >
                       {copiedId === n.id ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <Check className="w-3.5 h-3.5 text-emerald-700" />
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
                       )}
@@ -1473,12 +1555,12 @@ export default function StudentDashboardPage() {
                 )}
 
                 {/* Tags & Action */}
-                <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">
+                <div className="pt-2 border-t-[2px] border-[#111111] flex items-center justify-between">
                   <div className="flex flex-wrap gap-1">
                     {n.tags?.map((t: string) => (
                       <span
                         key={t}
-                        className="text-[9px] font-mono text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800"
+                        className="text-[9px] font-mono text-[#111111] bg-[#f4f3f3] px-1.5 py-0.5 border border-[#111111] font-bold"
                       >
                         #{t}
                       </span>
@@ -1489,7 +1571,7 @@ export default function StudentDashboardPage() {
                       href={n.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs font-mono text-brand-orange hover:underline flex items-center gap-1"
+                      className="text-xs font-mono font-bold text-[#F07C27] hover:underline flex items-center gap-1"
                     >
                       Resource <ExternalLink className="w-3 h-3" />
                     </a>
@@ -1507,50 +1589,50 @@ export default function StudentDashboardPage() {
       {activeTab === "attendance" && (
         <div className="space-y-5">
           {/* Attendance KPI Card */}
-          <div className="rounded-2xl p-6 bg-gradient-to-r from-[#111C35] to-[#0D1527] border border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-6 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <span className="text-[10px] font-mono text-brand-orange uppercase font-bold tracking-wider">
-                ATTENDANCE COMPLIANCE
+              <span className="text-[10px] font-mono text-[#F07C27] uppercase font-black tracking-wider block">
+                ATTENDANCE COMPLIANCE // COHORT MANDATE
               </span>
-              <h3 className="font-display font-bold text-2xl text-white mt-0.5">
+              <h3 className="font-display font-black text-2xl uppercase text-[#111111] mt-0.5">
                 {performance?.attendancePercentage ?? 100}% Attendance Verified
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-700 mt-1 font-mono">
                 Minimum 85% attendance required across all laboratory sessions for Super 60 induction.
               </p>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <span className="text-[10px] font-mono text-slate-400 uppercase block">
+                <span className="text-[10px] font-mono text-slate-600 uppercase font-bold block">
                   ELIGIBILITY STATUS
                 </span>
-                <span className="font-display font-bold text-emerald-400 text-sm">
+                <span className="font-mono font-bold text-emerald-800 text-sm">
                   Qualified (≥ 85%)
                 </span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+              <div className="w-10 h-10 bg-[#e6f4ea] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center text-emerald-800">
                 <CheckCircle className="w-5 h-5" />
               </div>
             </div>
           </div>
 
           {/* Sessions Table */}
-          <div className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 overflow-hidden shadow-md">
-            <div className="p-4 border-b border-slate-800 font-display font-bold text-white text-sm">
-              Session Attendance Log
+          <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] overflow-hidden">
+            <div className="p-4 border-b-[2px] border-[#111111] bg-[#F9F9F9] font-mono font-bold text-[#111111] text-sm uppercase">
+              Laboratory Session Attendance Log
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider text-[10px]">
+                  <tr className="bg-[#111111] text-white font-mono uppercase tracking-wider text-[10px]">
                     <th className="py-3 px-4">Session Title</th>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Topic Covered</th>
                     <th className="py-3 px-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y-[2px] divide-[#111111] font-mono">
                   {sessions.length === 0 && (
                     <tr>
                       <td colSpan={4} className="py-8 text-center text-slate-500 text-xs">
@@ -1562,22 +1644,22 @@ export default function StudentDashboardPage() {
                     const record = s.attendanceRecords?.[0];
                     const status = record?.status || "PRESENT";
                     return (
-                      <tr key={s.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3 px-4 font-sans font-bold text-white text-sm">
+                      <tr key={s.id} className="hover:bg-[#FFF0E5]/30 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-[#111111] text-sm">
                           {s.title}
                         </td>
-                        <td className="py-3 px-4 text-slate-300">
+                        <td className="py-3.5 px-4 text-slate-700 font-bold">
                           {new Date(s.date).toLocaleDateString()}
                         </td>
-                        <td className="py-3 px-4 text-slate-400">{s.topic || "Core Systems Lab"}</td>
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-4 text-slate-600">{s.topic || "Core Systems Lab"}</td>
+                        <td className="py-3.5 px-4">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            className={`px-2.5 py-0.5 border border-[#111111] text-[10px] font-bold ${
                               status === "PRESENT"
-                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                ? "bg-[#e6f4ea] text-emerald-800"
                                 : status === "LATE"
-                                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                                : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                                ? "bg-[#fff8e1] text-amber-900"
+                                : "bg-[#fde8e8] text-rose-900"
                             }`}
                           >
                             {status}
@@ -1599,14 +1681,14 @@ export default function StudentDashboardPage() {
       {activeTab === "assessments" && !activeAssessment && (
         <div className="space-y-6">
           <div>
-            <h3 className="font-display font-bold text-white text-base">Assessments & Online Tests</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Tests account for <strong className="text-brand-orange">35%</strong> of your Super 60 evaluation score</p>
+            <h3 className="font-mono font-bold text-[#111111] text-base uppercase tracking-wider">Assessments & Benchmark Tests</h3>
+            <p className="text-xs text-slate-600 font-mono mt-0.5">Tests account for <strong className="text-[#F07C27]">35%</strong> of your Super 60 evaluation scorecard</p>
           </div>
 
           {assessments.length === 0 && (
-            <div className="py-16 rounded-2xl bg-[#0F172A]/50 border border-slate-800 text-center">
-              <Award className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 text-sm font-display font-bold">No assessments published yet</p>
+            <div className="py-16 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] text-center">
+              <Award className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+              <p className="text-[#111111] text-sm font-mono font-bold uppercase">No assessments published yet</p>
               <p className="text-slate-500 text-xs font-mono mt-1">Your mentor will publish tests here soon</p>
             </div>
           )}
@@ -1621,33 +1703,32 @@ export default function StudentDashboardPage() {
               const isUpcoming = now < starts;
               const isExpired = now > ends;
               const totalQs = as.questions?.length || 0;
-              const answered = res ? totalQs : 0;
 
               return (
-                <div key={as.id} className={`rounded-2xl p-5 border flex flex-col justify-between space-y-4 transition-all ${
-                  isLive && !res ? "bg-brand-orange/5 border-brand-orange/30 shadow-[0_0_20px_rgba(240,124,39,0.08)]" : "bg-[#0F172A]/70 border-slate-800/80 hover:border-slate-700"
+                <div key={as.id} className={`p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] flex flex-col justify-between space-y-4 transition-all ${
+                  isLive && !res ? "bg-[#FFF0E5]" : ""
                 }`}>
                   <div className="space-y-3">
                     {/* Header row */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase">{as.type}</span>
-                        {isLive && !res && <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">● LIVE</span>}
-                        {isUpcoming && <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-700 text-slate-400">Upcoming</span>}
-                        {isExpired && !res && <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/15 text-rose-400">Expired</span>}
+                        <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#e8f0fe] text-blue-900 uppercase">{as.type}</span>
+                        {isLive && !res && <span className="flex items-center gap-1 px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#e6f4ea] text-emerald-800 animate-pulse">● LIVE</span>}
+                        {isUpcoming && <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#f4f3f3] text-slate-700">Upcoming</span>}
+                        {isExpired && !res && <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#fde8e8] text-rose-800">Expired</span>}
                       </div>
                       {res && (
-                        <span className="flex-shrink-0 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                          {res.score}/{as.totalMarks} pts
+                        <span className="flex-shrink-0 px-2.5 py-0.5 border border-[#111111] text-xs font-mono font-black bg-[#e6f4ea] text-emerald-800 shadow-[2px_2px_0px_#111111]">
+                          {res.score}/{as.totalMarks} PTS
                         </span>
                       )}
                     </div>
 
-                    <h4 className="font-display font-bold text-white text-base leading-tight">{as.title}</h4>
+                    <h4 className="font-display font-black text-[#111111] text-lg uppercase leading-tight">{as.title}</h4>
 
                     {/* Stats row */}
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400 flex-wrap">
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{totalQs} questions</span>
+                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-600 font-bold flex-wrap">
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#F07C27]" />{totalQs} questions</span>
                       <span>•</span>
                       <span>{as.totalMarks} marks</span>
                       <span>•</span>
@@ -1657,19 +1738,19 @@ export default function StudentDashboardPage() {
                     {/* Result progress bar */}
                     {res && (
                       <div className="space-y-1">
-                        <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                          <span>Score</span>
-                          <span className="text-emerald-400 font-bold">{Math.round((res.score / as.totalMarks) * 100)}%</span>
+                        <div className="flex justify-between text-[10px] font-mono font-bold text-slate-700">
+                          <span>SCORE CONVERSION</span>
+                          <span className="text-emerald-800 font-bold">{Math.round((res.score / as.totalMarks) * 100)}%</span>
                         </div>
-                        <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                          <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${Math.min(100, (res.score / as.totalMarks) * 100)}%` }} />
+                        <div className="w-full h-2.5 bg-[#f4f3f3] border-[2px] border-[#111111] overflow-hidden">
+                          <div className="h-full bg-emerald-600 transition-all" style={{ width: `${Math.min(100, (res.score / as.totalMarks) * 100)}%` }} />
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-slate-500">
+                  <div className="pt-3 border-t-[2px] border-[#111111] flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-slate-600 font-bold">
                       {res ? `Submitted ${new Date(res.submittedAt).toLocaleDateString()}` : `Opens ${new Date(as.startsAt).toLocaleDateString()}`}
                     </span>
                     <button
@@ -1677,7 +1758,6 @@ export default function StudentDashboardPage() {
                       onClick={() => {
                         setActiveAssessment(as);
                         if (res) {
-                          // View stored result — never re-open the test engine
                           setQuizResult({
                             score: res.score,
                             totalMarks: as.totalMarks,
@@ -1696,10 +1776,10 @@ export default function StudentDashboardPage() {
                           setQuizStartedAt(Date.now());
                         }
                       }}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                        res ? "bg-slate-800 text-slate-300 hover:bg-slate-700" :
-                        isLive ? "bg-brand-orange text-white hover:brightness-110 shadow-md shadow-brand-orange/20" :
-                        "bg-slate-800 text-slate-500 cursor-not-allowed opacity-50"
+                      className={`px-4 py-1.5 border-[2px] border-[#111111] text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-[2px_2px_0px_#111111] ${
+                        res ? "bg-white text-[#111111] hover:bg-[#f4f3f3]" :
+                        isLive ? "bg-[#F07C27] text-white hover:brightness-110" :
+                        "bg-[#f4f3f3] text-slate-400 cursor-not-allowed opacity-50"
                       }`}
                     >
                       {res ? "📋 View Result" : isLive ? "🚀 Start Test" : isUpcoming ? "⏳ Not Started" : "Expired"}
@@ -1716,8 +1796,8 @@ export default function StudentDashboardPage() {
       {activeTab === "assessments" && activeAssessment && !quizResult && (
         <div className="space-y-4">
           {quizError && (
-            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <div className="p-3.5 bg-[#fde8e8] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] text-rose-900 text-xs font-mono flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-700 flex-shrink-0" />
               {quizError}
             </div>
           )}
@@ -1735,39 +1815,39 @@ export default function StudentDashboardPage() {
       {/* ══ TEST RESULT SCREEN ══ */}
       {activeTab === "assessments" && activeAssessment && quizResult && (
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className={`rounded-2xl p-8 bg-[#0F172A] border shadow-2xl text-center space-y-4 ${
+          <div className={`p-8 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] text-center space-y-4 ${
             quizResult.status === "DISQUALIFIED" || quizResult.disqualified
-              ? "border-rose-500/40 shadow-rose-950/30"
-              : "border-emerald-500/30"
+              ? "border-rose-600 bg-rose-50/40"
+              : ""
           }`}>
             {quizResult.status === "DISQUALIFIED" || quizResult.disqualified ? (
-              <div className="w-16 h-16 rounded-full bg-rose-500/15 border-2 border-rose-500/40 flex items-center justify-center mx-auto">
-                <AlertTriangle className="w-8 h-8 text-rose-400" />
+              <div className="w-16 h-16 bg-rose-100 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-8 h-8 text-rose-600" />
               </div>
             ) : (
-              <div className="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              <div className="w-16 h-16 bg-[#e6f4ea] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8 text-emerald-700" />
               </div>
             )}
-            <h3 className="font-display font-extrabold text-2xl text-white">
+            <h3 className="font-display font-black text-2xl uppercase text-[#111111]">
               {quizResult.status === "DISQUALIFIED" || quizResult.disqualified
-                ? "Test Terminated — Disqualified"
+                ? "Assessment Terminated — Disqualified"
                 : quizResult.history
-                ? "Your Result"
-                : "Test Submitted!"}
+                ? "Assessment Result Dossier"
+                : "Benchmark Assessment Submitted!"}
             </h3>
             <div className="space-y-1">
               <div className={`font-display font-black text-5xl ${
                 quizResult.status === "DISQUALIFIED" || quizResult.disqualified
-                  ? "text-rose-400"
-                  : "text-brand-orange"
+                  ? "text-rose-600"
+                  : "text-[#F07C27]"
               }`}>
-                {quizResult.score}<span className="text-2xl text-slate-400">/{quizResult.totalMarks}</span>
+                {quizResult.score}<span className="text-2xl text-slate-500">/{quizResult.totalMarks}</span>
               </div>
               {(() => {
                 if (quizResult.status === "DISQUALIFIED" || quizResult.disqualified) {
                   return (
-                    <div className="mt-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
+                    <div className="mt-2 p-3 bg-rose-100 border-[2px] border-[#111111] text-rose-900 text-xs font-mono font-bold shadow-[2px_2px_0px_#111111]">
                       🚨 <strong>Disqualified for Proctoring Violations</strong>: You exceeded the limit of tab switches or window blurs during this test. A disciplinary report was automatically dispatched to your mentors and administrators.
                     </div>
                   );
@@ -1776,24 +1856,24 @@ export default function StudentDashboardPage() {
                 const passed = quizResult.score >= passMark;
                 const pending = quizResult.status === "PENDING_REVIEW";
                 return (
-                  <p className="text-slate-400 text-sm font-mono">
+                  <p className="text-slate-700 text-sm font-mono font-bold">
                     {Math.round((quizResult.score / quizResult.totalMarks) * 100)}% —{" "}
                     {pending ? "⏳ Awaiting mentor review" : passed ? "✅ Passed" : "❌ Below passing threshold"}{" "}
-                    <span className="text-slate-600">(pass mark {passMark})</span>
+                    <span className="text-slate-500">(pass mark {passMark})</span>
                   </p>
                 );
               })()}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
               {[
-                { label: "Score", val: `${quizResult.score} pts`, color: "text-brand-orange" },
-                { label: "Total Marks", val: `${quizResult.totalMarks} pts`, color: "text-white" },
-                { label: "Percentage", val: `${Math.round((quizResult.score / quizResult.totalMarks) * 100)}%`, color: "text-emerald-400" },
+                { label: "Score", val: `${quizResult.score} pts`, color: "text-[#F07C27]" },
+                { label: "Total Marks", val: `${quizResult.totalMarks} pts`, color: "text-[#111111]" },
+                { label: "Percentage", val: `${Math.round((quizResult.score / quizResult.totalMarks) * 100)}%`, color: "text-emerald-800" },
                 ...(quizResult.correctCount != null
                   ? [
-                      { label: "Correct", val: String(quizResult.correctCount), color: "text-emerald-400" },
-                      { label: "Incorrect", val: String(quizResult.incorrectCount ?? 0), color: "text-rose-400" },
-                      { label: "Unanswered", val: String(quizResult.unansweredCount ?? 0), color: "text-amber-400" },
+                      { label: "Correct", val: String(quizResult.correctCount), color: "text-emerald-800" },
+                      { label: "Incorrect", val: String(quizResult.incorrectCount ?? 0), color: "text-rose-800" },
+                      { label: "Unanswered", val: String(quizResult.unansweredCount ?? 0), color: "text-amber-800" },
                     ]
                   : []),
                 ...(quizResult.durationSec
@@ -1801,25 +1881,25 @@ export default function StudentDashboardPage() {
                       {
                         label: "Time Taken",
                         val: `${Math.floor(quizResult.durationSec / 60)}m ${quizResult.durationSec % 60}s`,
-                        color: "text-sky-400",
+                        color: "text-blue-900",
                       },
                     ]
                   : []),
               ].map((s) => (
-                <div key={s.label} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase block">{s.label}</span>
-                  <span className={`font-display font-black text-lg ${s.color}`}>{s.val}</span>
+                <div key={s.label} className="p-3 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <span className="text-[10px] font-mono text-slate-600 uppercase font-bold block">{s.label}</span>
+                  <span className={`font-mono font-black text-lg ${s.color}`}>{s.val}</span>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-slate-500 font-mono">
+            <p className="text-xs text-slate-600 font-mono">
               {quizResult.status === "PENDING_REVIEW"
                 ? "Your written/code answers are queued for mentor review — the final score updates after grading."
                 : "Your result has been saved and is reflected in your scorecard."}
             </p>
             <button
               onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
-              className="px-6 py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase hover:brightness-110 shadow-md"
+              className="px-6 py-2.5 bg-[#F07C27] text-white font-mono text-xs font-black uppercase hover:brightness-110 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111]"
             >
               ← Back to All Tests
             </button>
@@ -1834,9 +1914,9 @@ export default function StudentDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Doubts List & New Doubt Form */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 space-y-3">
-              <h4 className="font-display font-bold text-white text-sm flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-brand-orange" />
+            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-3">
+              <h4 className="font-mono font-bold text-[#111111] text-sm uppercase flex items-center gap-2 border-b-[2px] border-[#111111] pb-2">
+                <HelpCircle className="w-4 h-4 text-[#F07C27]" />
                 Ask a Technical Doubt
               </h4>
               <form onSubmit={handleCreateDoubt} className="space-y-2.5">
@@ -1846,7 +1926,7 @@ export default function StudentDashboardPage() {
                   placeholder="Summary (e.g. Cache alignment in allocator)"
                   value={doubtTitle}
                   onChange={(e) => setDoubtTitle(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-orange font-mono"
+                  className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono focus:outline-none focus:bg-[#FFF0E5] shadow-[2px_2px_0px_#111111]"
                 />
                 <textarea
                   required
@@ -1854,12 +1934,12 @@ export default function StudentDashboardPage() {
                   placeholder="Detail your question or bug trace..."
                   value={doubtDesc}
                   onChange={(e) => setDoubtDesc(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-orange font-mono resize-none"
+                  className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono resize-none focus:outline-none focus:bg-[#FFF0E5] shadow-[2px_2px_0px_#111111]"
                 />
                 <button
                   type="submit"
                   disabled={creatingDoubt}
-                  className="w-full py-2 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-2 bg-[#F07C27] text-white font-mono text-xs font-black uppercase hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-2 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111]"
                 >
                   {creatingDoubt ? (
                     <>
@@ -1867,7 +1947,7 @@ export default function StudentDashboardPage() {
                       <span>Posting...</span>
                     </>
                   ) : (
-                    "Post to Mentor"
+                    "Post to Mentor →"
                   )}
                 </button>
               </form>
@@ -1875,7 +1955,7 @@ export default function StudentDashboardPage() {
 
             {/* List of Previous Doubts */}
             <div className="space-y-2">
-              <h4 className="font-mono text-xs text-slate-400 font-bold uppercase tracking-wider">
+              <h4 className="font-mono text-xs text-slate-700 font-bold uppercase tracking-wider">
                 My Doubt Threads ({doubts.length})
               </h4>
               {doubts.length === 0 && (
@@ -1889,27 +1969,27 @@ export default function StudentDashboardPage() {
                 <div
                   key={d.id}
                   onClick={() => setSelectedDoubt(d)}
-                  className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                  className={`p-3.5 border-[2px] border-[#111111] cursor-pointer transition-all ${
                     selectedDoubt?.id === d.id
-                      ? "bg-brand-orange/10 border-brand-orange/40"
-                      : "bg-[#0F172A]/70 border-slate-800/80 hover:border-slate-700"
+                      ? "bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] translate-x-1"
+                      : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-[#F9F9F9]"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-xs text-white truncate max-w-[200px]">
+                    <span className="font-bold text-xs text-[#111111] truncate max-w-[200px]">
                       {d.title}
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold ${
+                      className={`px-2 py-0.5 border border-[#111111] text-[9px] font-mono font-bold ${
                         d.status === "RESOLVED"
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-amber-500/20 text-amber-400"
+                          ? "bg-[#e6f4ea] text-emerald-800"
+                          : "bg-[#fff8e1] text-amber-900"
                       }`}
                     >
                       {d.status}
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-500">
+                  <span className="text-[10px] font-mono text-slate-600 font-bold">
                     {d.messages?.length || 1} messages • {new Date(d.createdAt).toLocaleDateString()}
                   </span>
                 </div>
@@ -1920,18 +2000,18 @@ export default function StudentDashboardPage() {
           {/* Right Column: Active Thread Discussion */}
           <div className="lg:col-span-7">
             {selectedDoubt ? (
-              <div className="rounded-2xl p-5 bg-[#0F172A]/80 border border-slate-800/80 shadow-xl flex flex-col h-[520px]">
+              <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] flex flex-col h-[520px]">
                 {/* Thread Header */}
-                <div className="border-b border-slate-800 pb-3 mb-3">
+                <div className="border-b-[2px] border-[#111111] pb-3 mb-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display font-bold text-white text-base">
+                    <h3 className="font-display font-black text-[#111111] text-base uppercase">
                       {selectedDoubt.title}
                     </h3>
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      className={`px-2.5 py-0.5 border border-[#111111] text-[10px] font-mono font-bold ${
                         selectedDoubt.status === "RESOLVED"
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-amber-500/20 text-amber-400"
+                          ? "bg-[#e6f4ea] text-emerald-800"
+                          : "bg-[#fff8e1] text-amber-900"
                       }`}
                     >
                       {selectedDoubt.status}
@@ -1946,14 +2026,14 @@ export default function StudentDashboardPage() {
                     return (
                       <div
                         key={m.id}
-                        className={`p-3.5 rounded-xl text-xs space-y-1 ${
+                        className={`p-3.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] text-xs space-y-1 ${
                           isMentor
-                            ? "bg-sky-950/30 border border-sky-500/30 ml-4"
-                            : "bg-slate-900 border border-slate-800 mr-4"
+                            ? "bg-[#FFF0E5] ml-4"
+                            : "bg-[#F9F9F9] mr-4"
                         }`}
                       >
                         <div className="flex items-center justify-between text-[10px] font-mono">
-                          <strong className={isMentor ? "text-sky-400" : "text-brand-orange"}>
+                          <strong className={isMentor ? "text-[#F07C27] font-black" : "text-[#111111] font-bold"}>
                             {m.sender?.name || (isMentor ? "Mentor" : "You")}
                             {isMentor && " (Lead Mentor)"}
                           </strong>
@@ -1964,26 +2044,26 @@ export default function StudentDashboardPage() {
                             })}
                           </span>
                         </div>
-                        <p className="text-slate-200 whitespace-pre-wrap font-sans">{m.body}</p>
+                        <p className="text-[#111111] whitespace-pre-wrap font-sans">{m.body}</p>
                       </div>
                     );
                   })}
                 </div>
 
                 {/* Reply Form */}
-                <form onSubmit={handleSendDoubtReply} className="pt-3 border-t border-slate-800 flex gap-2">
+                <form onSubmit={handleSendDoubtReply} className="pt-3 border-t-[2px] border-[#111111] flex gap-2">
                   <input
                     type="text"
                     required
                     placeholder="Type follow-up response to mentor..."
                     value={doubtReply}
                     onChange={(e) => setDoubtReply(e.target.value)}
-                    className="flex-1 bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-orange font-mono"
+                    className="flex-1 bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-[#FFF0E5]"
                   />
                   <button
                     type="submit"
                     disabled={sendingReply}
-                    className="px-4 py-2 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 flex items-center gap-1.5"
+                    className="px-4 py-2 bg-[#F07C27] text-white font-mono text-xs font-black uppercase hover:brightness-110 disabled:opacity-50 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center gap-1.5"
                   >
                     {sendingReply ? (
                       <>
@@ -2000,7 +2080,7 @@ export default function StudentDashboardPage() {
                 </form>
               </div>
             ) : (
-              <div className="rounded-2xl p-12 bg-[#0F172A]/70 border border-slate-800 text-center text-slate-500 font-mono text-xs">
+              <div className="p-12 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] text-center text-slate-600 font-mono text-xs">
                 Select a doubt thread or ask a new question.
               </div>
             )}
@@ -2012,15 +2092,15 @@ export default function StudentDashboardPage() {
           TAB 7: MENTOR FEEDBACK (5-STAR GLOW REVIEW)
       ══════════════════════════════════════════════════════════ */}
       {activeTab === "feedback" && (
-        <div className="max-w-2xl mx-auto rounded-2xl p-6 sm:p-8 bg-[#0F172A]/80 border border-slate-800/80 shadow-xl space-y-6">
+        <div className="max-w-2xl mx-auto p-6 sm:p-8 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] space-y-6">
           <div className="text-center space-y-1">
-            <span className="text-[10px] font-mono text-brand-orange uppercase font-bold tracking-wider">
+            <span className="text-[10px] font-mono text-[#F07C27] uppercase font-black tracking-wider block">
               SUPER 60 FACULTY APPRAISAL
             </span>
-            <h3 className="font-display font-bold text-2xl text-white">
+            <h3 className="font-display font-black text-2xl uppercase text-[#111111]">
               Evaluate Your Lead Mentor
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-600 font-mono">
               Your feedback shapes instructor evaluations and curriculum refinements. Confidential.
             </p>
           </div>
@@ -2028,7 +2108,7 @@ export default function StudentDashboardPage() {
           <form onSubmit={handleFeedbackSubmit} className="space-y-5">
             {/* Interactive Star Rating */}
             <div className="flex flex-col items-center gap-2 py-2">
-              <span className="text-xs font-mono text-slate-400">Rating (1 to 5 Stars)</span>
+              <span className="text-xs font-mono text-slate-600 font-bold uppercase">Rating (1 to 5 Stars)</span>
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -2042,14 +2122,14 @@ export default function StudentDashboardPage() {
                     <Star
                       className={`w-7 h-7 transition-colors ${
                         (hoverRating || rating) >= star
-                          ? "text-brand-gold fill-brand-gold drop-shadow-[0_0_8px_rgba(255,184,0,0.5)]"
-                          : "text-slate-700"
+                          ? "text-[#F07C27] fill-[#F07C27]"
+                          : "text-slate-300"
                       }`}
                     />
                   </button>
                 ))}
               </div>
-              <span className="text-xs font-mono text-brand-gold font-bold">
+              <span className="text-xs font-mono text-[#F07C27] font-black uppercase">
                 {rating === 5
                   ? "5 / 5 — World Class Mentorship"
                   : rating === 4
@@ -2062,13 +2142,13 @@ export default function StudentDashboardPage() {
 
             {/* Category Dropdown */}
             <div>
-              <label className="block text-xs font-mono text-slate-400 uppercase mb-1">
+              <label className="block text-xs font-mono text-slate-700 uppercase font-bold mb-1">
                 Appraisal Category
               </label>
               <select
                 value={feedbackCategory}
                 onChange={(e) => setFeedbackCategory(e.target.value)}
-                className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-brand-orange"
+                className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-[#111111] font-bold focus:outline-none focus:bg-[#FFF0E5] shadow-[2px_2px_0px_#111111]"
               >
                 <option value="MENTORSHIP">Technical Mentorship & Depth</option>
                 <option value="CODE_REVIEW">Code Review Quality & Speed</option>
@@ -2079,7 +2159,7 @@ export default function StudentDashboardPage() {
 
             {/* Comment Area */}
             <div>
-              <label className="block text-xs font-mono text-slate-400 uppercase mb-1">
+              <label className="block text-xs font-mono text-slate-700 uppercase font-bold mb-1">
                 Written Feedback
               </label>
               <textarea
@@ -2088,15 +2168,15 @@ export default function StudentDashboardPage() {
                 value={feedbackComment}
                 onChange={(e) => setFeedbackComment(e.target.value)}
                 placeholder="Share specific examples of mentor code review feedback, guidance on memory concurrency, or areas of improvement..."
-                className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono resize-none"
+                className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-500 focus:outline-none focus:bg-[#FFF0E5] font-mono resize-none shadow-[2px_2px_0px_#111111]"
               />
             </div>
 
             {/* Anonymous Toggle */}
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
+            <div className="flex items-center justify-between p-3.5 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
               <div>
-                <span className="text-xs font-bold text-white block">Submit Anonymously</span>
-                <span className="text-[10px] text-slate-400 font-mono">
+                <span className="text-xs font-bold text-[#111111] block uppercase font-mono">Submit Anonymously</span>
+                <span className="text-[10px] text-slate-600 font-mono">
                   Your identity will not be visible to your mentor.
                 </span>
               </div>
@@ -2104,13 +2184,13 @@ export default function StudentDashboardPage() {
                 type="checkbox"
                 checked={isAnonymous}
                 onChange={(e) => setIsAnonymous(e.target.checked)}
-                className="w-4 h-4 accent-brand-orange rounded cursor-pointer"
+                className="w-5 h-5 accent-[#F07C27] rounded-none cursor-pointer border-[2px] border-[#111111]"
               />
             </div>
 
             {feedbackSuccess && (
-              <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <div className="p-3.5 bg-[#e6f4ea] border-[2px] border-[#111111] text-emerald-900 font-mono text-xs flex items-center gap-2 shadow-[2px_2px_0px_#111111]">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                 <span>Feedback recorded successfully! Thank you for helping elevate Super 60.</span>
               </div>
             )}
@@ -2118,7 +2198,7 @@ export default function StudentDashboardPage() {
             <button
               type="submit"
               disabled={submittingFeedback}
-              className="w-full py-3 rounded-xl bg-brand-orange hover:bg-brand-orangeLight text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md hover:shadow-orange-glow flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[#F07C27] hover:brightness-110 text-white font-mono text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 border-[2px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center gap-2"
             >
               {submittingFeedback ? (
                 <>
@@ -2132,6 +2212,8 @@ export default function StudentDashboardPage() {
           </form>
         </div>
       )}
+        </main>
+      </div>
     </div>
   );
 }

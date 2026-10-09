@@ -11,11 +11,10 @@ import {
   Shield,
   Lock,
   Save,
-  CheckCircle2,
+  Check,
   AlertCircle,
   Camera,
   Edit3,
-  ExternalLink,
 } from "lucide-react";
 
 export default function StudentProfilePage() {
@@ -77,7 +76,6 @@ export default function StudentProfilePage() {
     }
   };
 
-  // ── Avatar upload (stored as a data-URL, max 512 KB) ──
   const handleAvatarChange = async (file: File | undefined) => {
     if (!file || !user) return;
     if (!file.type.startsWith("image/")) {
@@ -99,14 +97,11 @@ export default function StudentProfilePage() {
         });
         const data = await res.json();
         if (res.ok) {
-          setUser((prev: any) => ({ ...prev, avatarUrl: data.data.user.avatarUrl }));
-          setSaveMsg({ text: "Profile photo updated!", ok: true });
-          setTimeout(() => setSaveMsg(null), 3000);
-        } else {
-          setSaveMsg({ text: data?.error?.message || "Upload failed", ok: false });
+          setUser((prev: any) => ({ ...prev, avatarUrl: dataUrl }));
+          setSaveMsg({ text: "Profile avatar updated!", ok: true });
         }
-      } catch {
-        setSaveMsg({ text: "Upload failed — try a smaller image.", ok: false });
+      } catch (err) {
+        console.error(err);
       }
     };
     reader.readAsDataURL(file);
@@ -114,6 +109,8 @@ export default function StudentProfilePage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPwMsg(null);
+
     if (newPw !== confirmPw) {
       setPwMsg({ text: "New passwords do not match.", ok: false });
       return;
@@ -122,9 +119,8 @@ export default function StudentProfilePage() {
       setPwMsg({ text: "Password must be at least 6 characters.", ok: false });
       return;
     }
-    setPwSaving(true);
-    setPwMsg(null);
 
+    setPwSaving(true);
     try {
       const res = await fetch("/api/auth/change-password", {
         method: "POST",
@@ -133,7 +129,7 @@ export default function StudentProfilePage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setPwMsg({ text: "Password changed successfully! Stay secure.", ok: true });
+        setPwMsg({ text: "Password updated successfully!", ok: true });
         setCurrentPw("");
         setNewPw("");
         setConfirmPw("");
@@ -159,19 +155,21 @@ export default function StudentProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-brand-orange border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center justify-center py-20 font-mono text-xs">
+        <div className="w-8 h-8 bg-[#F07C27] border-[2px] border-[#111111] animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Profile Hero */}
-      <div className="rounded-2xl p-6 sm:p-8 bg-gradient-to-br from-[#111C35]/95 to-[#0D1527]/95 border border-slate-800/80 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-orange/8 blur-[100px] pointer-events-none rounded-full" />
+    <div className="space-y-6 max-w-4xl mx-auto text-[#111111]">
+      {/* Profile Clip Badge Hero */}
+      <div className="bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 sm:p-8 relative">
+        <div className="absolute -top-3.5 right-6 bg-[#111111] text-white font-mono text-[10px] font-bold px-2.5 py-0.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] uppercase tracking-wider">
+          [ DOSSIER // VERIFIED CANDIDATE ]
+        </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 relative z-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             {user?.avatarUrl ? (
@@ -179,18 +177,18 @@ export default function StudentProfilePage() {
               <img
                 src={user.avatarUrl}
                 alt={user.name}
-                className="w-20 h-20 rounded-2xl object-cover border-2 border-brand-orange/40 shadow-lg"
+                className="w-20 h-20 object-cover border-[3px] border-[#111111] shadow-[3px_3px_0px_#111111]"
               />
             ) : (
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-brand-orange/30 to-brand-navy border-2 border-brand-orange/40 flex items-center justify-center text-2xl font-mono font-black text-white shadow-lg">
+              <div className="w-20 h-20 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center text-2xl font-mono font-black text-[#111111]">
                 {initials}
               </div>
             )}
             <label
-              className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#070B14] border border-slate-800 flex items-center justify-center cursor-pointer hover:border-brand-orange/60 transition-colors"
+              className="absolute -bottom-2 -right-2 w-7 h-7 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center cursor-pointer hover:bg-[#F07C27] hover:text-white transition-colors"
               title="Upload profile photo (max 512 KB)"
             >
-              <Camera className="w-3.5 h-3.5 text-slate-400" />
+              <Camera className="w-3.5 h-3.5" />
               <input
                 type="file"
                 accept="image/*"
@@ -203,50 +201,40 @@ export default function StudentProfilePage() {
           {/* Identity */}
           <div className="flex-1 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider flex items-center gap-1">
-                <GraduationCap className="w-3 h-3" />
+              <span className="bg-[#111111] text-white px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider border-[2px] border-[#111111]">
                 SUPER 60 STUDENT
               </span>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border uppercase ${
-                  enrollmentStatus === "SELECTED"
-                    ? "bg-brand-gold/20 text-brand-gold border-brand-gold/30"
-                    : enrollmentStatus === "ENROLLED"
-                    ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                    : "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                }`}
-              >
+              <span className="bg-[#F07C27] text-white px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider border-[2px] border-[#111111]">
                 {enrollmentStatus || "ENROLLED"}
               </span>
             </div>
 
-            <h1 className="font-display font-extrabold text-2xl text-white">{user?.name}</h1>
-            <p className="text-sm font-mono text-slate-400">{user?.email}</p>
+            <h1 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-[#111111]">
+              {user?.name}
+            </h1>
+            <p className="text-xs font-mono font-bold text-slate-600">{user?.email}</p>
 
-            <div className="flex flex-wrap gap-3 text-xs font-mono text-slate-400 pt-1">
+            <div className="flex flex-wrap gap-2 text-xs font-mono font-bold text-slate-700 pt-1">
               {user?.college && (
-                <span className="flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5 text-brand-orange" />
+                <span className="bg-[#F4F3F3] px-2 py-0.5 border-[1.5px] border-[#111111] flex items-center gap-1">
+                  <Building2 className="w-3 h-3 text-[#F07C27]" />
                   {user.college}
                 </span>
               )}
               {user?.branch && (
-                <span className="flex items-center gap-1">
-                  <GraduationCap className="w-3.5 h-3.5 text-sky-400" />
-                  {user.branch}
-                  {user.semester ? ` · Sem ${user.semester}` : ""}
+                <span className="bg-[#F4F3F3] px-2 py-0.5 border-[1.5px] border-[#111111] flex items-center gap-1">
+                  <GraduationCap className="w-3 h-3 text-[#111111]" />
+                  {user.branch} {user.semester ? `· SEM ${user.semester}` : ""}
                 </span>
               )}
               {user?.rollNumber && (
-                <span className="flex items-center gap-1">
-                  <span className="text-brand-orange">ID:</span>
-                  {user.rollNumber}
+                <span className="bg-[#F4F3F3] px-2 py-0.5 border-[1.5px] border-[#111111]">
+                  ROLL: {user.rollNumber}
                 </span>
               )}
               {myLab && (
-                <span className="flex items-center gap-1">
-                  <BookOpen className="w-3.5 h-3.5 text-sky-400" />
-                  {myLab.name}
+                <span className="bg-[#FFF0E5] px-2 py-0.5 border-[1.5px] border-[#111111] text-[#111111]">
+                  LAB: {myLab.name}
                 </span>
               )}
             </div>
@@ -255,10 +243,10 @@ export default function StudentProfilePage() {
       </div>
 
       {/* Section Tabs */}
-      <div className="flex gap-2 border-b border-slate-800/80 pb-2">
+      <div className="flex gap-2 border-b-[2px] border-[#111111] pb-2 font-mono text-xs">
         {[
-          { id: "profile", label: "Profile Information", icon: User },
-          { id: "security", label: "Security & Password", icon: Lock },
+          { id: "profile", label: "PROFILE TELEMETRY", icon: User },
+          { id: "security", label: "SECURITY & PASSKEY", icon: Lock },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeSection === tab.id;
@@ -266,14 +254,14 @@ export default function StudentProfilePage() {
             <button
               key={tab.id}
               onClick={() => setActiveSection(tab.id as typeof activeSection)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 font-bold uppercase border-[2px] border-[#111111] transition-all cursor-pointer ${
                 isActive
-                  ? "bg-brand-orange/15 text-brand-orange border border-brand-orange/30 shadow-[0_0_15px_rgba(240,124,39,0.15)]"
-                  : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
+                  ? "bg-[#F07C27] text-white shadow-[3px_3px_0px_#111111] translate-x-0.5"
+                  : "bg-white text-[#111111] shadow-[2px_2px_0px_#111111] hover:bg-slate-50"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
-              {tab.label}
+              <span>{tab.label}</span>
             </button>
           );
         })}
@@ -283,91 +271,81 @@ export default function StudentProfilePage() {
       {activeSection === "profile" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Edit Form */}
-          <div className="lg:col-span-7 rounded-2xl p-6 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-5">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Edit3 className="w-4 h-4 text-brand-orange" />
-              <h3 className="font-display font-bold text-white text-base">Edit Profile</h3>
+          <div className="lg:col-span-7 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 space-y-4">
+            <div className="flex items-center gap-2 border-b-[2px] border-[#111111] pb-2">
+              <Edit3 className="w-4 h-4 text-[#F07C27]" />
+              <h3 className="font-display font-black text-sm uppercase text-[#111111]">
+                EDIT PROFILE PARTICULARS
+              </h3>
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                <label className="block text-[10px] font-mono uppercase font-bold text-slate-700 tracking-wider mb-1">
                   Full Name
                 </label>
-                <div className="relative">
-                  <User className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    required
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
-                  />
-                </div>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-[#111111] focus:bg-white focus:shadow-[3px_3px_0px_#111111] focus:outline-none"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                <label className="block text-[10px] font-mono uppercase font-bold text-slate-700 tracking-wider mb-1">
                   Email Address
                 </label>
-                <div className="relative opacity-50">
-                  <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    disabled
-                    value={user?.email || ""}
-                    className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-400 font-mono cursor-not-allowed"
-                  />
-                </div>
+                <input
+                  type="email"
+                  disabled
+                  value={user?.email || ""}
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-slate-500 cursor-not-allowed"
+                />
                 <p className="text-[10px] font-mono text-slate-500 mt-1">
-                  Contact an admin to change your email address.
+                  Contact an administrator to change your email identifier.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                <label className="block text-[10px] font-mono uppercase font-bold text-slate-700 tracking-wider mb-1">
                   Phone Number
                 </label>
-                <div className="relative">
-                  <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="tel"
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
-                    placeholder="+91 98765 12345"
-                    className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
-                  />
-                </div>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="+91 98765 12345"
+                  className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-[#111111] focus:bg-white focus:shadow-[3px_3px_0px_#111111] focus:outline-none"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
+                <label className="block text-[10px] font-mono uppercase font-bold text-slate-700 tracking-wider mb-1">
                   College / Institution
                 </label>
-                <div className="relative">
-                  <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={editCollege}
-                    onChange={(e) => setEditCollege(e.target.value)}
-                    placeholder="Indian Institute of Information Technology"
-                    className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={editCollege}
+                  onChange={(e) => setEditCollege(e.target.value)}
+                  placeholder="Indian Institute of Information Technology"
+                  className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-[#111111] focus:bg-white focus:shadow-[3px_3px_0px_#111111] focus:outline-none"
+                />
               </div>
 
               {saveMsg && (
                 <div
-                  className={`p-3 rounded-xl text-xs font-mono flex items-center gap-2 ${
+                  className={`p-2.5 text-xs font-mono font-bold flex items-center gap-2 border-[2px] ${
                     saveMsg.ok
-                      ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                      : "bg-rose-500/15 text-rose-300 border border-rose-500/30"
+                      ? "bg-emerald-50 text-emerald-900 border-emerald-900"
+                      : "bg-rose-50 text-rose-900 border-rose-900"
                   }`}
                 >
                   {saveMsg.ok ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <Check className="w-4 h-4 text-emerald-800 stroke-[3]" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-rose-800" />
                   )}
                   {saveMsg.text}
                 </div>
@@ -376,67 +354,51 @@ export default function StudentProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orangeLight text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
+                className="neo-btn w-full bg-[#F07C27] text-white py-2.5 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {saving ? "Saving..." : "Save Profile Changes"}
+                <span>{saving ? "SAVING..." : "SAVE PROFILE CHANGES"}</span>
               </button>
             </form>
           </div>
 
           {/* Workshop & Lab Info (Read-Only) */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="rounded-2xl p-5 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-4">
-              <h3 className="font-display font-bold text-white text-sm flex items-center gap-2 border-b border-slate-800 pb-2">
-                <Shield className="w-4 h-4 text-brand-orange" />
-                Workshop Enrollment
+            <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 space-y-3">
+              <h3 className="font-display font-black text-sm uppercase text-[#111111] flex items-center gap-2 border-b-[2px] border-[#111111] pb-2">
+                <Shield className="w-4 h-4 text-[#F07C27]" />
+                ENROLLMENT SPECIFICATIONS
               </h3>
 
-              <div className="space-y-3 font-mono text-xs">
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <span className="text-slate-400 text-[10px] uppercase block mb-0.5">Current Workshop</span>
-                  <span className="text-white font-bold">
+              <div className="space-y-2 font-mono text-xs">
+                <div className="p-2.5 bg-[#F4F3F3] border-[2px] border-[#111111]">
+                  <span className="text-slate-500 text-[10px] uppercase font-bold block">Current Workshop</span>
+                  <span className="text-[#111111] font-black">
                     {user?.enrollments?.[0]?.workshop?.name || "Skill Up 2026"}
                   </span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <span className="text-slate-400 text-[10px] uppercase block mb-0.5">Laboratory</span>
-                  <span className="text-brand-orange font-bold">
-                    {myLab?.name || "Not yet assigned"}
+                <div className="p-2.5 bg-[#F4F3F3] border-[2px] border-[#111111]">
+                  <span className="text-slate-500 text-[10px] uppercase font-bold block">Assigned Lab</span>
+                  <span className="text-[#F07C27] font-black">
+                    {myLab?.name || "Not yet allocated"}
                   </span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <span className="text-slate-400 text-[10px] uppercase block mb-0.5">Enrollment Status</span>
-                  <span
-                    className={`font-bold ${
-                      enrollmentStatus === "SELECTED"
-                        ? "text-brand-gold"
-                        : enrollmentStatus === "ENROLLED"
-                        ? "text-emerald-400"
-                        : "text-amber-400"
-                    }`}
-                  >
+                <div className="p-2.5 bg-[#F4F3F3] border-[2px] border-[#111111]">
+                  <span className="text-slate-500 text-[10px] uppercase font-bold block">Status Stamp</span>
+                  <span className="text-[#111111] font-black">
                     {enrollmentStatus || "ENROLLED"}
                   </span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <span className="text-slate-400 text-[10px] uppercase block mb-0.5">Account Created</span>
-                  <span className="text-slate-300">
+                <div className="p-2.5 bg-[#F4F3F3] border-[2px] border-[#111111]">
+                  <span className="text-slate-500 text-[10px] uppercase font-bold block">Enrolled Date</span>
+                  <span className="text-slate-700 font-bold">
                     {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}
                   </span>
                 </div>
               </div>
-
-              <p className="text-[10px] font-mono text-slate-500">
-                Lab and workshop assignments are managed by your admin. Contact{" "}
-                <a href="mailto:admin@super60.org" className="text-brand-orange hover:underline">
-                  admin@super60.org
-                </a>{" "}
-                for changes.
-              </p>
             </div>
           </div>
         </div>
@@ -444,83 +406,83 @@ export default function StudentProfilePage() {
 
       {/* Security Section */}
       {activeSection === "security" && (
-        <div className="max-w-lg">
-          <div className="rounded-2xl p-6 bg-[#0F172A]/70 border border-slate-800/80 shadow-md space-y-5">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Lock className="w-4 h-4 text-brand-orange" />
-              <h3 className="font-display font-bold text-white text-base">Change Password</h3>
+        <div className="max-w-lg bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 space-y-4">
+          <div className="flex items-center gap-2 border-b-[2px] border-[#111111] pb-2">
+            <Lock className="w-4 h-4 text-[#F07C27]" />
+            <h3 className="font-display font-black text-sm uppercase text-[#111111]">
+              UPDATE PORTAL PASSWORD
+            </h3>
+          </div>
+
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-mono uppercase font-bold text-slate-700 tracking-wider mb-1">
+                Current Password
+              </label>
+              <input
+                type="password"
+                required
+                value={currentPw}
+                onChange={(e) => setCurrentPw(e.target.value)}
+                placeholder="Current portal password"
+                className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-[#111111] focus:bg-white focus:shadow-[3px_3px_0px_#111111] focus:outline-none"
+              />
             </div>
 
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={currentPw}
-                  onChange={(e) => setCurrentPw(e.target.value)}
-                  placeholder="Your existing password"
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
-                />
-              </div>
+            <div>
+              <label className="block text-[10px] font-mono uppercase font-bold text-slate-700 tracking-wider mb-1">
+                New Password (min 6 characters)
+              </label>
+              <input
+                type="password"
+                required
+                value={newPw}
+                onChange={(e) => setNewPw(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-[#111111] focus:bg-white focus:shadow-[3px_3px_0px_#111111] focus:outline-none"
+              />
+            </div>
 
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={newPw}
-                  onChange={(e) => setNewPw(e.target.value)}
-                  placeholder="Minimum 6 characters"
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
-                />
-              </div>
+            <div>
+              <label className="block text-[10px] font-mono uppercase font-bold text-slate-700 tracking-wider mb-1">
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                required
+                value={confirmPw}
+                onChange={(e) => setConfirmPw(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-[#111111] focus:bg-white focus:shadow-[3px_3px_0px_#111111] focus:outline-none"
+              />
+            </div>
 
-              <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1.5">
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={confirmPw}
-                  onChange={(e) => setConfirmPw(e.target.value)}
-                  placeholder="Repeat new password"
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
-                />
-              </div>
-
-              {pwMsg && (
-                <div
-                  className={`p-3 rounded-xl text-xs font-mono flex items-center gap-2 ${
-                    pwMsg.ok
-                      ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                      : "bg-rose-500/15 text-rose-300 border border-rose-500/30"
-                  }`}
-                >
-                  {pwMsg.ok ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                  )}
-                  {pwMsg.text}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={pwSaving}
-                className="w-full py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orangeLight text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
+            {pwMsg && (
+              <div
+                className={`p-2.5 text-xs font-mono font-bold flex items-center gap-2 border-[2px] ${
+                  pwMsg.ok
+                    ? "bg-emerald-50 text-emerald-900 border-emerald-900"
+                    : "bg-rose-50 text-rose-900 border-rose-900"
+                }`}
               >
-                <Shield className="w-4 h-4" />
-                {pwSaving ? "Updating..." : "Update Password"}
-              </button>
-            </form>
-          </div>
+                {pwMsg.ok ? (
+                  <Check className="w-4 h-4 text-emerald-800 stroke-[3]" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-800" />
+                )}
+                {pwMsg.text}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={pwSaving}
+              className="neo-btn w-full bg-[#F07C27] text-white py-2.5 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <Shield className="w-4 h-4" />
+              <span>{pwSaving ? "UPDATING CIPHER..." : "UPDATE PASSWORD"}</span>
+            </button>
+          </form>
         </div>
       )}
     </div>

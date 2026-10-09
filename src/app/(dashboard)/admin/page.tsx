@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Trophy,
   Users,
@@ -574,13 +575,13 @@ export default function AdminDashboardPage() {
     return (
       <div className="space-y-6 animate-pulse">
         {/* Hero banner skeleton */}
-        <div className="rounded-2xl p-6 sm:p-7 bg-[#0F172A]/80 border border-slate-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="p-6 sm:p-7 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-3 max-w-md w-full">
-            <div className="h-4 w-36 bg-slate-800/80 rounded" />
-            <div className="h-8 w-64 bg-slate-800/80 rounded" />
-            <div className="h-4 w-full bg-slate-800/80 rounded" />
+            <div className="h-4 w-36 bg-[#F4F3F3] border border-[#111111]" />
+            <div className="h-8 w-64 bg-[#F4F3F3] border border-[#111111]" />
+            <div className="h-4 w-full bg-[#F4F3F3] border border-[#111111]" />
           </div>
-          <div className="h-24 w-60 bg-slate-800/80 rounded-2xl" />
+          <div className="h-24 w-60 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[4px_4px_0px_#111111]" />
         </div>
 
         {/* Metrics strip skeleton */}
@@ -593,8 +594,8 @@ export default function AdminDashboardPage() {
 
         {/* Tab content skeleton */}
         <div className="space-y-4">
-          <div className="h-12 bg-[#0F172A]/70 border border-slate-800/80 rounded-xl" />
-          <div className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 p-4 space-y-3">
+          <div className="h-12 bg-white border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111]" />
+          <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-4 space-y-3">
             <SkeletonTableRow />
             <SkeletonTableRow />
             <SkeletonTableRow />
@@ -607,40 +608,39 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* ── TOP HERO BANNER: Super 60 Quota Progress ── */}
-      <div className="rounded-2xl p-6 sm:p-7 bg-gradient-to-br from-[#111C35]/95 to-[#0D1527]/95 border border-slate-800/80 shadow-2xl relative overflow-hidden backdrop-blur-xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-brand-orange/10 blur-[100px] pointer-events-none rounded-full" />
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10">
+    <div className="space-y-6 text-[#111111]">
+      {/* ── TOP HERO BANNER: Super 60 Selection Engine ── */}
+      <div className="bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 sm:p-7 relative">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
           {/* Left: Administrative Context */}
-          <div className="lg:col-span-7 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-orange/15 text-brand-orange border border-brand-orange/30 uppercase tracking-wider flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" />
-                SUPER 60 EXECUTIVE HEADQUARTERS
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[#111111] text-white px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider border-[2px] border-[#111111] flex items-center gap-1 shadow-[2px_2px_0px_#111111]">
+                <ShieldCheck className="w-3 h-3 text-[#F07C27]" />
+                [ HEADQUARTERS // EXECUTIVE CONTROL ]
               </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-xs font-mono text-slate-400">Decision Authority</span>
+              <span className="bg-[#FFF0E5] text-[#111111] px-2 py-0.5 text-[10px] font-mono font-bold border-[2px] border-[#111111]">
+                DECISION AUTHORITY
+              </span>
             </div>
 
-            <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
-              Candidate Selection Pipeline
+            <h1 className="font-display font-black text-2xl sm:text-4xl text-[#111111] uppercase tracking-tight">
+              CANDIDATE SELECTION ENGINE
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300">
+            <p className="text-xs sm:text-sm text-slate-700 font-medium">
               Evaluator authority for Super 60 induction. Automated real-time formula computation and multi-year audit logs.
             </p>
 
             {/* Target Workshop Selector */}
             <div className="flex items-center gap-3 pt-2">
-              <span className="text-xs text-slate-400 font-mono">Scoping Workshop:</span>
+              <span className="text-xs font-mono font-bold text-slate-700">SCOPING WORKSHOP:</span>
               <select
                 value={selectedWorkshopId}
                 onChange={(e) => handleWorkshopChange(e.target.value)}
-                className="bg-[#070B14] border border-slate-700 text-brand-orange font-mono font-bold text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-brand-orange"
+                className="bg-[#F4F3F3] border-[2px] border-[#111111] text-[#111111] font-mono font-bold text-xs px-3 py-1.5 focus:outline-none shadow-[2px_2px_0px_#111111] cursor-pointer"
               >
                 {workshops.map((w) => (
-                  <option key={w.id} value={w.id} className="bg-[#0B1120] text-white">
+                  <option key={w.id} value={w.id} className="bg-white text-[#111111]">
                     {w.name} ({w.year}) — {w.status}
                   </option>
                 ))}
@@ -649,35 +649,35 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Right: Super 60 Quota Progress Box */}
-          <div className="lg:col-span-5 bg-[#070B14]/80 rounded-2xl p-5 border border-slate-800 shadow-inner space-y-3">
+          <div className="bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] p-5 w-full xl:w-80 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block font-bold">
+                <span className="text-[10px] font-mono text-slate-600 uppercase tracking-wider block font-bold">
                   SUPER 60 INTAKE QUOTA
                 </span>
                 <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="font-display font-black text-3xl text-emerald-400">
+                  <span className="font-display font-black text-3xl text-[#111111]">
                     {counts.selected || 0}
                   </span>
-                  <span className="text-slate-500 font-display font-bold text-lg">/ 60 Qualified</span>
+                  <span className="text-slate-600 font-display font-bold text-base">/ 60 Qualified</span>
                 </div>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                <Trophy className="w-6 h-6" />
+              <div className="w-10 h-10 bg-[#F07C27] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center text-white">
+                <Trophy className="w-5 h-5 stroke-[2.5]" />
               </div>
             </div>
 
             {/* Quota Progress Bar */}
             <div className="space-y-1">
-              <div className="flex justify-between text-[11px] font-mono text-slate-400">
+              <div className="flex justify-between text-[11px] font-mono font-bold text-[#111111]">
                 <span>Cohort Completion:</span>
-                <strong className="text-emerald-400">
+                <strong className="text-[#F07C27]">
                   {(((counts.selected || 0) / 60) * 100).toFixed(1)}%
                 </strong>
               </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-white h-3 border-[2px] border-[#111111] overflow-hidden">
                 <div
-                  className="bg-emerald-400 h-full rounded-full transition-all duration-700"
+                  className="bg-[#F07C27] h-full transition-all duration-700"
                   style={{ width: `${Math.min(100, ((counts.selected || 0) / 60) * 100)}%` }}
                 />
               </div>
@@ -688,83 +688,134 @@ export default function AdminDashboardPage() {
 
       {/* ── METRICS STRIP ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="rounded-2xl p-4 bg-[#0F172A]/70 border border-slate-800/80 shadow-md">
-          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">
+        <div className="bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] p-4">
+          <span className="text-[10px] font-mono text-slate-500 uppercase font-bold block mb-1">
             TOTAL CANDIDATES
           </span>
-          <span className="font-display font-black text-2xl text-white">
+          <span className="font-display font-black text-2xl text-[#111111]">
             {counts.totalStudents || 0}
           </span>
-          <span className="text-[11px] font-mono text-slate-500 block mt-1">Enrolled in edition</span>
+          <span className="text-[11px] font-mono text-slate-600 block mt-1">Enrolled in edition</span>
         </div>
 
-        <div className="rounded-2xl p-4 bg-[#0F172A]/70 border border-slate-800/80 shadow-md">
-          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">
+        <div className="bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] p-4">
+          <span className="text-[10px] font-mono text-slate-500 uppercase font-bold block mb-1">
             SELECTED FOR SUPER 60
           </span>
-          <span className="font-display font-black text-2xl text-emerald-400">
+          <span className="font-display font-black text-2xl text-emerald-700">
             {counts.selected || 0}
           </span>
-          <span className="text-[11px] font-mono text-emerald-400/80 block mt-1">
+          <span className="text-[11px] font-mono text-emerald-700 block mt-1 font-bold">
             Induction Approved
           </span>
         </div>
 
-        <div className="rounded-2xl p-4 bg-[#0F172A]/70 border border-slate-800/80 shadow-md">
-          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">
+        <div className="bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] p-4">
+          <span className="text-[10px] font-mono text-slate-500 uppercase font-bold block mb-1">
             AVERAGE CANDIDATE SCORE
           </span>
-          <span className="font-display font-black text-2xl text-brand-orange">
+          <span className="font-display font-black text-2xl text-[#F07C27]">
             {counts.averageScore || 0}%
           </span>
-          <span className="text-[11px] font-mono text-brand-orange/80 block mt-1">
+          <span className="text-[11px] font-mono text-slate-600 block mt-1">
             Aggregate formula
           </span>
         </div>
 
-        <div className="rounded-2xl p-4 bg-[#0F172A]/70 border border-slate-800/80 shadow-md">
-          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">
+        <div className="bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] p-4">
+          <span className="text-[10px] font-mono text-slate-500 uppercase font-bold block mb-1">
             PENDING EVALUATION
           </span>
-          <span className="font-display font-black text-2xl text-amber-400">
+          <span className="font-display font-black text-2xl text-amber-700">
             {counts.pending || 0}
           </span>
-          <span className="text-[11px] font-mono text-amber-400/80 block mt-1">
+          <span className="text-[11px] font-mono text-amber-700 block mt-1 font-bold">
             Awaiting final decision
           </span>
         </div>
       </div>
 
-      {/* ── ADMIN TABS ── */}
-      <div className="flex items-center gap-1.5 border-b border-slate-800/80 pb-2 overflow-x-auto text-xs font-semibold scrollbar-none">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all whitespace-nowrap ${
-                isActive
-                  ? "bg-brand-orange/15 text-brand-orange border border-brand-orange/30 font-bold shadow-[0_0_15px_rgba(240,124,39,0.15)]"
-                  : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-              {tab.count !== null && (
-                <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                    isActive ? "bg-brand-orange text-white" : "bg-slate-800 text-slate-400"
-                  }`}
+      {/* ── TWO-COLUMN WORKSPACE: VERTICAL SIDEBAR + ACTIVE TAB WORKSPACE ── */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* ── LEFT VERTICAL SIDEBAR ── */}
+        <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 lg:sticky lg:top-[125px] z-20 space-y-4">
+          <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-3.5 space-y-3">
+            {/* Sidebar Telemetry Header */}
+            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-2.5">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#111111] flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-[#F07C27] border border-[#111111] animate-pulse" />
+                [ ADMIN // CONTROL ]
+              </span>
+              <span className="text-[10px] font-mono font-bold bg-[#FFF0E5] px-1.5 py-0.5 border border-[#111111] text-[#111111]">
+                {TABS.length} MODULES
+              </span>
+            </div>
+
+            {/* Mobile Horizontal Carousel (< lg) / Desktop Vertical Stack (lg+) */}
+            <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0 scrollbar-none">
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                    className={`flex items-center justify-between gap-2.5 px-3 py-2.5 border-[2px] border-[#111111] uppercase font-mono text-xs font-bold transition-all whitespace-nowrap cursor-pointer text-left ${
+                      isActive
+                        ? "bg-[#F07C27] text-white shadow-[4px_4px_0px_#111111] translate-x-1 font-black"
+                        : "bg-white text-[#111111] shadow-[2px_2px_0px_#111111] hover:bg-[#FFF0E5] hover:translate-x-0.5"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-white" : "text-[#111111]"}`} />
+                      <span className="truncate">{tab.label}</span>
+                    </div>
+                    {tab.count !== null && (
+                      <span
+                        className={`px-1.5 py-0.5 text-[10px] font-mono flex-shrink-0 border ${
+                          isActive
+                            ? "bg-[#111111] text-white border-white/40"
+                            : "bg-[#FFF0E5] text-[#111111] border-[#111111]"
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Quick Context Box at bottom of admin sidebar */}
+            <div className="hidden lg:block pt-2 border-t-[2px] border-[#111111] text-[11px] font-mono space-y-1.5 bg-[#F9F9F9] -mx-3.5 -mb-3.5 p-3">
+              <div className="flex justify-between text-slate-600 font-bold">
+                <span>QUOTA FILL:</span>
+                <span className="text-[#F07C27] font-black">{counts.selected || 0} / 60</span>
+              </div>
+              <div className="flex justify-between text-slate-600 font-bold">
+                <span>TOTAL CANDIDATES:</span>
+                <span className="text-[#111111] font-black">{counts.totalStudents || 0}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 font-bold">
+                <span>AVG SCORE:</span>
+                <span className="text-[#111111] font-black">{counts.averageScore || 0}%</span>
+              </div>
+              <div className="pt-2 border-t border-[#111111]/20">
+                <Link
+                  href="/curriculum"
+                  target="_blank"
+                  className="flex items-center justify-between text-[10px] font-mono font-bold text-[#111111] hover:text-[#F07C27] uppercase bg-white border border-[#111111] px-2 py-1 shadow-[1px_1px_0px_#111111] transition-all hover:translate-x-0.5"
                 >
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+                  <span>⚡ 6-DAY SYLLABUS</span>
+                  <ExternalLink className="w-3 h-3 text-[#F07C27]" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* ── RIGHT MAIN WORKSPACE CONTENT ── */}
+        <main className="flex-1 min-w-0 w-full space-y-6">
 
       {/* ══════════════════════════════════════════════════════════
           TAB 1: CANDIDATE SELECTION PIPELINE
@@ -778,18 +829,20 @@ export default function AdminDashboardPage() {
       {activeTab === "announcements" && (
         <div className="space-y-5">
           <div>
-            <h3 className="font-display font-bold text-white text-base">Announcements</h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Post workshop-wide updates — students receive an in-app notification
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+              Announcements Management
+            </h3>
+            <p className="text-xs text-slate-700 font-mono mt-0.5">
+              Post workshop-wide updates — registered cohort candidates receive live in-app notifications
             </p>
           </div>
 
           <form
             onSubmit={handlePostAnnouncement}
-            className="rounded-2xl p-5 bg-[#0F172A]/80 border border-violet-500/30 space-y-3"
+            className="border-[3px] border-[#111111] p-6 bg-white shadow-[6px_6px_0px_#111111] space-y-4"
           >
             <input
-              className="w-full px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200 text-sm font-mono focus:outline-none focus:border-brand-orange"
+              className="w-full px-3 py-2 bg-[#F4F3F3] border-[2px] border-[#111111] text-[#111111] text-xs font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
               placeholder="Title (e.g. Lab moved to Room 204)"
               value={annTitle}
               onChange={(e) => setAnnTitle(e.target.value)}
@@ -797,7 +850,7 @@ export default function AdminDashboardPage() {
               minLength={3}
             />
             <textarea
-              className="w-full px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200 text-sm font-mono focus:outline-none focus:border-brand-orange"
+              className="w-full px-3 py-2 bg-[#F4F3F3] border-[2px] border-[#111111] text-[#111111] text-xs font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white resize-none"
               rows={3}
               placeholder="Message body…"
               value={annBody}
@@ -806,40 +859,40 @@ export default function AdminDashboardPage() {
               minLength={5}
             />
             <div className="flex flex-wrap items-center gap-4">
-              <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+              <label className="flex items-center gap-2 text-xs font-mono font-bold text-[#111111] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={annPinned}
                   onChange={(e) => setAnnPinned(e.target.checked)}
-                  className="accent-brand-orange"
+                  className="w-4 h-4 accent-[#F07C27]"
                 />
                 📌 Pinned
               </label>
-              <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+              <label className="flex items-center gap-2 text-xs font-mono font-bold text-[#111111] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={annPublic}
                   onChange={(e) => setAnnPublic(e.target.checked)}
-                  className="accent-brand-orange"
+                  className="w-4 h-4 accent-[#F07C27]"
                 />
                 Show on public site
               </label>
               <button
                 type="submit"
                 disabled={postingAnn}
-                className="ml-auto px-4 py-2.5 rounded-xl bg-brand-orange hover:brightness-110 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-md disabled:opacity-50"
+                className="ml-auto px-4 py-2 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 cursor-pointer"
               >
                 {postingAnn ? "Posting…" : "Post Announcement"}
               </button>
             </div>
             {annMsg && (
-              <p className={`text-xs font-mono ${annMsg.ok ? "text-emerald-400" : "text-rose-400"}`}>
+              <p className={`text-xs font-mono font-bold ${annMsg.ok ? "text-emerald-700" : "text-rose-700"}`}>
                 {annMsg.text}
               </p>
             )}
           </form>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {announcements.length === 0 && (
               <EmptyState
                 icon={Megaphone}
@@ -850,26 +903,35 @@ export default function AdminDashboardPage() {
             {announcements.map((a) => (
               <div
                 key={a.id}
-                className="p-4 rounded-xl bg-[#0F172A]/70 border border-slate-800/80 flex items-start justify-between gap-3"
+                className={`p-5 border-[3px] border-[#111111] flex items-start justify-between gap-3 ${
+                  a.pinned
+                    ? "bg-[#FFF0E5] shadow-[6px_6px_0px_#111111]"
+                    : "bg-white shadow-[4px_4px_0px_#111111]"
+                }`}
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {a.pinned && <span className="text-brand-orange text-xs">📌</span>}
-                    <span className="font-display font-bold text-white text-sm">{a.title}</span>
+                    {a.pinned && (
+                      <span className="text-[10px] font-mono text-[#111111] bg-[#F07C27] text-white px-2 py-0.5 border border-[#111111] font-bold">
+                        📌 PINNED
+                      </span>
+                    )}
+                    <span className="font-mono font-bold text-[#111111] text-sm uppercase">{a.title}</span>
                     {a.isPublic && (
-                      <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-mono border border-emerald-500/30">
+                      <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold border border-[#111111]">
                         PUBLIC
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">{a.body}</p>
-                  <span className="text-[10px] font-mono text-slate-600">
+                  <p className="text-xs text-slate-700 mt-1 line-clamp-2 font-mono">{a.body}</p>
+                  <span className="text-[10px] font-mono text-slate-600 block mt-2 font-bold">
                     {new Date(a.createdAt).toLocaleString()}
                   </span>
                 </div>
                 <button
                   onClick={() => handleDeleteAnnouncement(a.id)}
-                  className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 transition-all flex-shrink-0"
+                  className="p-1.5 border-[2px] border-[#111111] bg-rose-100 hover:bg-rose-600 hover:text-white text-rose-800 shadow-[2px_2px_0px_#111111] transition-all flex-shrink-0 cursor-pointer"
+                  title="Delete announcement"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -883,23 +945,25 @@ export default function AdminDashboardPage() {
       {activeTab === "activity" && (
         <div className="space-y-4">
           <div>
-            <h3 className="font-display font-bold text-white text-base">Activity Log</h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Administrative actions for accountability
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+              Activity & Audit Log
+            </h3>
+            <p className="text-xs text-slate-700 font-mono mt-0.5">
+              Administrative actions recording selection overrides and structural changes
             </p>
           </div>
-          <div className="rounded-2xl border border-slate-800/80 overflow-hidden">
+          <div className="border-[3px] border-[#111111] bg-white shadow-[6px_6px_0px_#111111] overflow-hidden">
             <div className="overflow-x-auto scrollbar-none">
               <table className="w-full text-xs font-mono">
                 <thead>
-                  <tr className="bg-slate-900/70 text-slate-500 text-[10px] uppercase">
-                    <th className="text-left py-2.5 px-4">When</th>
-                    <th className="text-left py-2.5 px-4">Action</th>
-                    <th className="text-left py-2.5 px-4">Performed By</th>
+                  <tr className="bg-[#FFF0E5] border-b-[2px] border-[#111111] text-[#111111] text-[10px] uppercase font-bold">
+                    <th className="text-left py-2.5 px-4 border-r border-[#111111]">When</th>
+                    <th className="text-left py-2.5 px-4 border-r border-[#111111]">Action</th>
+                    <th className="text-left py-2.5 px-4 border-r border-[#111111]">Performed By</th>
                     <th className="text-left py-2.5 px-4">Details</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-[#111111]/20">
                   {auditLogs.length === 0 && (
                     <tr>
                       <td colSpan={4} className="py-8">
@@ -912,22 +976,22 @@ export default function AdminDashboardPage() {
                     </tr>
                   )}
                   {auditLogs.map((l) => (
-                    <tr key={l.id} className="border-t border-slate-800/60">
-                      <td className="py-2.5 px-4 text-slate-400 whitespace-nowrap">
+                    <tr key={l.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
+                      <td className="py-2.5 px-4 text-slate-700 whitespace-nowrap border-r border-[#111111]/20">
                         {new Date(l.createdAt).toLocaleString()}
                       </td>
-                      <td className="py-2.5 px-4">
-                        <span className="px-2 py-0.5 rounded bg-brand-orange/10 text-brand-orange border border-brand-orange/25 text-[10px] font-bold">
+                      <td className="py-2.5 px-4 border-r border-[#111111]/20">
+                        <span className="px-2 py-0.5 border border-[#111111] bg-[#FFF0E5] text-[#111111] text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
                           {l.action}
                         </span>
                       </td>
-                      <td className="py-2.5 px-4 text-slate-300">
+                      <td className="py-2.5 px-4 text-[#111111] font-bold border-r border-[#111111]/20">
                         {l.performer?.name || "System"}
-                        <span className="block text-[10px] text-slate-600">
+                        <span className="block text-[10px] text-slate-600 font-normal">
                           {l.performer?.email}
                         </span>
                       </td>
-                      <td className="py-2.5 px-4 text-slate-500 max-w-[320px] truncate">
+                      <td className="py-2.5 px-4 text-slate-700 max-w-[320px] truncate font-mono">
                         {l.details ? JSON.stringify(l.details) : "—"}
                       </td>
                     </tr>
@@ -956,15 +1020,15 @@ export default function AdminDashboardPage() {
           />
 
           {/* Search & Filter Toolbar */}
-          <div className="rounded-2xl p-4 bg-[#0F172A]/70 border border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="bg-white border-[3px] border-[#111111] p-4 shadow-[4px_4px_0px_#111111] flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#111111] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search candidate by name, institution..."
                 value={candidateSearch}
                 onChange={(e) => setCandidateSearch(e.target.value)}
-                className="w-full bg-[#070B14] border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-orange font-mono"
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] pl-9 pr-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
               />
             </div>
 
@@ -973,7 +1037,7 @@ export default function AdminDashboardPage() {
               <select
                 value={selectedLabFilter}
                 onChange={(e) => setSelectedLabFilter(e.target.value)}
-                className="bg-[#070B14] border border-slate-800 text-slate-300 font-mono text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-brand-orange"
+                className="bg-[#F4F3F3] border-[2px] border-[#111111] text-[#111111] font-mono font-bold text-xs px-3 py-2 shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
               >
                 <option value="ALL">All Labs</option>
                 {labs.map((l) => (
@@ -984,15 +1048,15 @@ export default function AdminDashboardPage() {
               </select>
 
               {/* Status Filter */}
-              <div className="flex items-center gap-1 bg-[#070B14] p-1 rounded-xl border border-slate-800 text-xs font-mono">
+              <div className="flex items-center gap-1 bg-[#F4F3F3] p-1 border-[2px] border-[#111111] text-xs font-mono shadow-[2px_2px_0px_#111111]">
                 {["ALL", "SELECTED", "PENDING", "REJECTED"].map((st) => (
                   <button
                     key={st}
                     onClick={() => setStatusFilter(st)}
-                    className={`px-2.5 py-1 rounded-lg transition-all ${
+                    className={`px-2.5 py-1 border font-mono font-bold text-xs uppercase transition-all ${
                       statusFilter === st
-                        ? "bg-brand-orange text-white font-bold"
-                        : "text-slate-400 hover:text-white"
+                        ? "bg-[#F07C27] text-white border-[#111111] shadow-[2px_2px_0px_#111111]"
+                        : "border-transparent text-slate-600 hover:text-[#111111]"
                     }`}
                   >
                     {st}
@@ -1001,7 +1065,7 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Min Score Cutoff Filter */}
-              <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-[#070B14] px-3 py-1.5 rounded-xl border border-slate-800">
+              <div className="flex items-center gap-2 text-xs font-mono text-[#111111] font-bold bg-[#F4F3F3] px-3 py-1.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
                 <span>Cutoff: ≥ {minScoreFilter}%</span>
                 <input
                   type="range"
@@ -1010,44 +1074,44 @@ export default function AdminDashboardPage() {
                   step={5}
                   value={minScoreFilter}
                   onChange={(e) => setMinScoreFilter(Number(e.target.value))}
-                  className="w-20 accent-brand-orange cursor-pointer"
+                  className="w-20 accent-[#F07C27] cursor-pointer"
                 />
               </div>
 
               {/* CSV Export Button */}
               <button
                 onClick={handleExportCSV}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs font-semibold border border-slate-700 transition-all shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#FFF0E5] text-[#111111] font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                 title="Download CSV performance report"
               >
-                <Download className="w-3.5 h-3.5 text-brand-orange" />
+                <Download className="w-3.5 h-3.5 text-[#F07C27]" />
                 <span>Export CSV</span>
               </button>
             </div>
           </div>
 
           {/* Candidate Table */}
-          <div className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 overflow-hidden shadow-md">
+          <div className="bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] overflow-hidden">
             <div className="overflow-x-auto scrollbar-none">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider text-[10px]">
-                    <th className="py-3 px-3 sticky left-0 z-10 bg-[#0F172A] shadow-[2px_0_4px_rgba(0,0,0,0.5)]">Rank</th>
-                    <th className="py-3 px-3 sticky left-14 z-10 bg-[#0F172A] shadow-[2px_0_4px_rgba(0,0,0,0.5)]">Candidate</th>
-                    <th className="py-3 px-3">College / Dept</th>
-                    <th className="py-3 px-3">Lab</th>
-                    <th className="py-3 px-3">Assign. (30%)</th>
-                    <th className="py-3 px-3">Assess. (35%)</th>
-                    <th className="py-3 px-3">Attend. (15%)</th>
-                    <th className="py-3 px-3">Overall Score</th>
-                    <th className="py-3 px-3">Status</th>
+                  <tr className="border-b-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] font-mono uppercase tracking-wider text-[10px] font-black">
+                    <th className="py-3 px-3 sticky left-0 z-10 bg-[#FFF0E5] border-r border-[#111111]/20">Rank</th>
+                    <th className="py-3 px-3 sticky left-14 z-10 bg-[#FFF0E5] border-r border-[#111111]/20">Candidate</th>
+                    <th className="py-3 px-3 border-r border-[#111111]/20">College / Dept</th>
+                    <th className="py-3 px-3 border-r border-[#111111]/20">Lab</th>
+                    <th className="py-3 px-3 border-r border-[#111111]/20">Assign. (30%)</th>
+                    <th className="py-3 px-3 border-r border-[#111111]/20">Assess. (35%)</th>
+                    <th className="py-3 px-3 border-r border-[#111111]/20">Attend. (15%)</th>
+                    <th className="py-3 px-3 border-r border-[#111111]/20">Overall Score</th>
+                    <th className="py-3 px-3 border-r border-[#111111]/20">Status</th>
                     <th className="py-3 px-3 text-right">Selection Decision</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-[#111111]/15 font-mono">
                   {filteredCandidates.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="py-8">
+                      <td colSpan={10} className="py-8 bg-white">
                         <EmptyState
                           icon={Users}
                           title="No candidates match filters"
@@ -1072,74 +1136,74 @@ export default function AdminDashboardPage() {
                     </tr>
                   )}
                   {filteredCandidates.map((c) => (
-                    <tr key={c.studentId} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3 px-3 sticky left-0 z-10 bg-[#0F172A] shadow-[2px_0_4px_rgba(0,0,0,0.5)]">
+                    <tr key={c.studentId} className="hover:bg-[#FFF0E5]/30 transition-colors">
+                      <td className="py-3 px-3 sticky left-0 z-10 bg-white border-r border-[#111111]/20">
                         <span
-                          className={`font-bold ${
+                          className={`font-mono font-black ${
                             c.rank === 1
-                              ? "text-brand-gold text-sm"
+                              ? "text-[#F07C27] text-sm"
                               : c.rank === 2
-                              ? "text-slate-300"
+                              ? "text-[#111111]"
                               : c.rank === 3
-                              ? "text-amber-600"
-                              : "text-slate-400"
+                              ? "text-amber-700"
+                              : "text-slate-500"
                           }`}
                         >
                           #{c.rank}
                         </span>
                       </td>
-                      <td className="py-3 px-3 sticky left-14 z-10 bg-[#0F172A] shadow-[2px_0_4px_rgba(0,0,0,0.5)] whitespace-nowrap">
-                        <div className="font-sans font-bold text-white text-sm">
+                      <td className="py-3 px-3 sticky left-14 z-10 bg-white border-r border-[#111111]/20 whitespace-nowrap">
+                        <div className="font-mono font-black text-[#111111] text-xs">
                           {c.studentName}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-slate-300 font-sans text-[11px] whitespace-nowrap">
+                      <td className="py-3 px-3 text-slate-700 font-mono text-[11px] whitespace-nowrap border-r border-[#111111]/20">
                         {c.college || "Engineering"}
                       </td>
-                      <td className="py-3 px-3 text-slate-400 font-mono text-[11px] whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+                      <td className="py-3 px-3 font-mono text-[11px] whitespace-nowrap border-r border-[#111111]/20">
+                        <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[10px] shadow-[1px_1px_0px_#111111]">
                           {c.labName || "Unassigned"}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-slate-300">{c.assignmentsScore}%</td>
-                      <td className="py-3 px-3 text-slate-300">{c.assessmentsScore}%</td>
-                      <td className="py-3 px-3 text-slate-300">{c.attendancePercentage}%</td>
-                      <td className="py-3 px-3">
-                        <span className="font-bold text-brand-orange text-sm">
+                      <td className="py-3 px-3 text-[#111111] font-bold border-r border-[#111111]/20">{c.assignmentsScore}%</td>
+                      <td className="py-3 px-3 text-[#111111] font-bold border-r border-[#111111]/20">{c.assessmentsScore}%</td>
+                      <td className="py-3 px-3 text-[#111111] font-bold border-r border-[#111111]/20">{c.attendancePercentage}%</td>
+                      <td className="py-3 px-3 border-r border-[#111111]/20">
+                        <span className="font-mono font-black text-[#F07C27] text-sm bg-[#FFF0E5] px-2 py-0.5 border border-[#111111] shadow-[1px_1px_0px_#111111]">
                           {c.overallScore}%
                         </span>
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 border-r border-[#111111]/20">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          className={`px-2 py-0.5 border border-[#111111] font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] ${
                             c.status === "SELECTED"
-                              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                              ? "bg-emerald-100 text-emerald-950"
                               : c.status === "REJECTED"
-                              ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                              : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                              ? "bg-rose-100 text-rose-950"
+                              : "bg-amber-100 text-amber-950"
                           }`}
                         >
                           {c.status}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-right space-x-1.5 whitespace-nowrap">
+                      <td className="py-3 px-3 text-right space-x-2 whitespace-nowrap">
                         <button
                           onClick={() => handleSelectionAction(c.studentId, "SELECTED")}
                           disabled={selectionActionLoading === `${c.studentId}-SELECTED` || c.status === "SELECTED"}
-                          className="px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-white font-bold text-[11px] transition-all disabled:opacity-50 inline-flex items-center gap-1"
+                          className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-mono font-black text-[10px] uppercase border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 inline-flex items-center gap-1"
                         >
                           {selectionActionLoading === `${c.studentId}-SELECTED` && (
-                            <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin" />
+                            <div className="w-2.5 h-2.5 border-2 border-white border-t-transparent animate-spin" />
                           )}
                           <span>Select</span>
                         </button>
                         <button
                           onClick={() => handleSelectionAction(c.studentId, "REJECTED")}
                           disabled={selectionActionLoading === `${c.studentId}-REJECTED` || c.status === "REJECTED"}
-                          className="px-2.5 py-1 rounded bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-bold text-[11px] transition-all disabled:opacity-50 inline-flex items-center gap-1"
+                          className="px-2.5 py-1 bg-rose-500 hover:bg-rose-600 text-white font-mono font-black text-[10px] uppercase border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 inline-flex items-center gap-1"
                         >
                           {selectionActionLoading === `${c.studentId}-REJECTED` && (
-                            <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin" />
+                            <div className="w-2.5 h-2.5 border-2 border-white border-t-transparent animate-spin" />
                           )}
                           <span>Reject</span>
                         </button>
@@ -1158,8 +1222,9 @@ export default function AdminDashboardPage() {
       ══════════════════════════════════════════════════════════ */}
       {activeTab === "workshops" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 space-y-3">
-            <h3 className="font-display font-bold text-white text-base">
+          <div className="lg:col-span-7 space-y-4">
+            <h3 className="font-mono font-black text-[#111111] uppercase tracking-wider text-sm flex items-center gap-2">
+              <span className="w-2.5 h-2.5 bg-[#F07C27] border border-[#111111]"></span>
               Deployed Workshop Editions ({workshops.length})
             </h3>
             {workshops.length === 0 && (
@@ -1172,40 +1237,50 @@ export default function AdminDashboardPage() {
             {workshops.map((w) => (
               <div
                 key={w.id}
-                className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-2"
+                className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-white text-base">{w.name}</h4>
+                  <h4 className="font-mono font-black text-[#111111] text-base">{w.name}</h4>
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold ${
+                    className={`px-2.5 py-0.5 border border-[#111111] text-xs font-mono font-black uppercase shadow-[1px_1px_0px_#111111] ${
                       w.status === "ACTIVE"
-                        ? "bg-emerald-500/20 text-emerald-400"
-                        : "bg-slate-500/20 text-slate-400"
+                        ? "bg-emerald-100 text-emerald-950"
+                        : "bg-[#F4F3F3] text-slate-700"
                     }`}
                   >
                     {w.status}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-4 text-xs font-mono text-slate-400 pt-1">
-                  <span>Year: {w.year}</span>
-                  <span>Slug: {w.slug}</span>
-                  <span>Labs: {w._count?.labs || 0}</span>
-                  <span>Enrolled: {w._count?.enrollments || 0}</span>
-                  <span>Assignments: {w._count?.assignments || 0}</span>
+                <div className="flex flex-wrap gap-2 text-xs font-mono pt-2 border-t border-[#111111]/15">
+                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
+                    Year: {w.year}
+                  </span>
+                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
+                    Slug: {w.slug}
+                  </span>
+                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
+                    Labs: {w._count?.labs || 0}
+                  </span>
+                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
+                    Enrolled: {w._count?.enrollments || 0}
+                  </span>
+                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
+                    Assignments: {w._count?.assignments || 0}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="lg:col-span-5 rounded-2xl p-6 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-4">
-            <h3 className="font-display font-bold text-white text-base flex items-center gap-2">
-              <Plus className="w-4 h-4 text-brand-orange" />
+          <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] p-6 shadow-[6px_6px_0px_#111111] space-y-4">
+            <h3 className="font-mono font-black text-[#111111] text-sm uppercase tracking-wider flex items-center gap-2">
+              <Plus className="w-4 h-4 text-[#F07C27]" />
               Deploy Workshop Edition
             </h3>
 
             <form onSubmit={handleCreateWorkshop} className="space-y-3">
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1">
                   Edition Name
                 </label>
                 <input
@@ -1214,12 +1289,12 @@ export default function AdminDashboardPage() {
                   placeholder="e.g. Skill Up 2027"
                   value={wsName}
                   onChange={(e) => setWsName(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-400 uppercase mb-1">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1">
                   Edition Year
                 </label>
                 <input
@@ -1227,13 +1302,13 @@ export default function AdminDashboardPage() {
                   required
                   value={wsYear}
                   onChange={(e) => setWsYear(Number(e.target.value))}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] font-mono text-slate-400 uppercase mb-1">
+                  <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1">
                     Start Date
                   </label>
                   <input
@@ -1241,11 +1316,11 @@ export default function AdminDashboardPage() {
                     required
                     value={wsStart}
                     onChange={(e) => setWsStart(e.target.value)}
-                    className="w-full bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono"
+                    className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono text-slate-400 uppercase mb-1">
+                  <label className="block text-[10px] font-mono font-black text-[#111111] uppercase mb-1">
                     End Date
                   </label>
                   <input
@@ -1253,7 +1328,7 @@ export default function AdminDashboardPage() {
                     required
                     value={wsEnd}
                     onChange={(e) => setWsEnd(e.target.value)}
-                    className="w-full bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono"
+                    className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                   />
                 </div>
               </div>
@@ -1261,7 +1336,7 @@ export default function AdminDashboardPage() {
               <button
                 type="submit"
                 disabled={creatingWs}
-                className="w-full py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 disabled:opacity-50"
+                className="w-full py-2.5 bg-[#F07C27] hover:bg-[#d96716] text-white font-mono text-xs font-black uppercase tracking-wider border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50"
               >
                 {creatingWs ? "Deploying Edition..." : "Deploy Workshop"}
               </button>
@@ -1277,7 +1352,8 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Lab Cards */}
           <div className="lg:col-span-8 space-y-4">
-            <h3 className="font-display font-bold text-white text-base">
+            <h3 className="font-mono font-black text-[#111111] uppercase tracking-wider text-sm flex items-center gap-2">
+              <span className="w-2.5 h-2.5 bg-[#F07C27] border border-[#111111]"></span>
               Laboratory Tracks ({labs.length})
             </h3>
             {labs.length === 0 && (
@@ -1290,40 +1366,47 @@ export default function AdminDashboardPage() {
             {labs.map((lab) => (
               <div
                 key={lab.id}
-                className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-3"
+                className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-white text-base">{lab.name}</h4>
+                  <h4 className="font-mono font-black text-[#111111] text-base">{lab.name}</h4>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                    <span className="text-[10px] font-mono font-bold text-[#111111] bg-[#FFF0E5] px-2 py-0.5 border border-[#111111] shadow-[1px_1px_0px_#111111]">
                       Cap: {lab.capacity || 30}
                     </span>
                     <button
                       onClick={() => handleDeleteLab(lab.id)}
-                      className="p-1.5 text-rose-400 hover:text-rose-300 transition-colors"
+                      className="p-1.5 border border-[#111111] bg-rose-50 text-rose-700 hover:bg-rose-100 shadow-[1px_1px_0px_#111111] transition-colors"
+                      title="Delete Laboratory Track"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-4 text-xs font-mono text-slate-400">
-                  <span>Enrolled: {lab._count?.students || 0}</span>
-                  <span>Assignments: {lab._count?.assignments || 0}</span>
-                  <span>Sessions: {lab._count?.sessions || 0}</span>
+                <div className="flex flex-wrap gap-2 text-xs font-mono pt-1">
+                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
+                    Enrolled: {lab._count?.students || 0}
+                  </span>
+                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
+                    Assignments: {lab._count?.assignments || 0}
+                  </span>
+                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
+                    Sessions: {lab._count?.sessions || 0}
+                  </span>
                 </div>
 
                 {/* Mentors */}
                 {lab.mentors?.length > 0 && (
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase block">
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[10px] font-mono font-black text-[#111111] uppercase block">
                       Lead Mentors:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {lab.mentors.map((m: any) => (
                         <span
                           key={m.mentor?.id}
-                          className="px-2 py-0.5 text-[10px] bg-sky-500/15 text-sky-400 border border-sky-500/30 rounded font-mono"
+                          className="px-2 py-0.5 text-[10px] bg-sky-100 text-sky-950 border border-[#111111] font-mono font-bold shadow-[1px_1px_0px_#111111]"
                         >
                           {m.mentor?.name} {m.isLead ? "(Lead)" : ""}
                         </span>
@@ -1335,14 +1418,14 @@ export default function AdminDashboardPage() {
                 {/* Students */}
                 {lab.students?.length > 0 && (
                   <div className="space-y-1 pt-1">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase block">
+                    <span className="text-[10px] font-mono font-black text-[#111111] uppercase block">
                       Enrolled Students:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {lab.students.map((s: any) => (
                         <span
                           key={s.student?.id}
-                          className="px-2 py-0.5 text-[10px] bg-slate-900 text-slate-300 border border-slate-800 rounded font-mono"
+                          className="px-2 py-0.5 text-[10px] bg-[#F4F3F3] text-[#111111] border border-[#111111] font-mono font-bold shadow-[1px_1px_0px_#111111]"
                         >
                           {s.student?.name}
                         </span>
@@ -1355,11 +1438,11 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Allocation Actions Sidebar */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-4 space-y-5">
             {/* Create Lab */}
-            <div className="rounded-2xl p-5 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-3">
-              <h4 className="font-display font-bold text-white text-sm flex items-center gap-2">
-                <Plus className="w-4 h-4 text-brand-orange" />
+            <div className="bg-white border-[3px] border-[#111111] p-5 shadow-[6px_6px_0px_#111111] space-y-3">
+              <h4 className="font-mono font-black text-[#111111] text-xs uppercase tracking-wider flex items-center gap-2">
+                <Plus className="w-4 h-4 text-[#F07C27]" />
                 Create Laboratory Track
               </h4>
               <form onSubmit={handleCreateLab} className="space-y-2.5">
@@ -1368,25 +1451,25 @@ export default function AdminDashboardPage() {
                   placeholder="Lab name (e.g. Lab C — Distributed Systems)"
                   value={labName}
                   onChange={(e) => setLabName(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
                 <input
                   placeholder="Schedule (e.g. Tue/Thu 18:00 - 20:30)"
                   value={labSchedule}
                   onChange={(e) => setLabSchedule(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
                 <input
                   type="number"
                   placeholder="Capacity"
                   value={labCapacity}
                   onChange={(e) => setLabCapacity(Number(e.target.value))}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
                 <button
                   type="submit"
                   disabled={creatingLab}
-                  className="w-full py-2 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50"
+                  className="w-full py-2 bg-[#F07C27] hover:bg-[#d96716] text-white font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50"
                 >
                   {creatingLab ? "Creating..." : "Create Lab"}
                 </button>
@@ -1394,16 +1477,16 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Assign Student to Lab */}
-            <div className="rounded-2xl p-5 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-3">
-              <h4 className="font-display font-bold text-white text-sm flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-emerald-400" />
+            <div className="bg-white border-[3px] border-[#111111] p-5 shadow-[6px_6px_0px_#111111] space-y-3">
+              <h4 className="font-mono font-black text-[#111111] text-xs uppercase tracking-wider flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-emerald-600" />
                 Assign Student to Lab
               </h4>
               <form onSubmit={handleAssignStudent} className="space-y-2.5">
                 <select
                   value={assignLabId}
                   onChange={(e) => setAssignLabId(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-emerald-400"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 >
                   <option value="">Select Target Lab...</option>
                   {labs.map((l) => (
@@ -1416,11 +1499,11 @@ export default function AdminDashboardPage() {
                   placeholder="Student User ID"
                   value={assignStudentId}
                   onChange={(e) => setAssignStudentId(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 font-mono"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
                 <button
                   type="submit"
-                  className="w-full py-2 rounded-xl bg-emerald-600 text-white font-mono text-xs font-bold uppercase hover:brightness-110"
+                  className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                 >
                   Assign Candidate
                 </button>
@@ -1428,16 +1511,16 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Assign Mentor to Lab */}
-            <div className="rounded-2xl p-5 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-3">
-              <h4 className="font-display font-bold text-white text-sm flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-sky-400" />
+            <div className="bg-white border-[3px] border-[#111111] p-5 shadow-[6px_6px_0px_#111111] space-y-3">
+              <h4 className="font-mono font-black text-[#111111] text-xs uppercase tracking-wider flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-sky-600" />
                 Assign Mentor to Lab
               </h4>
               <form onSubmit={handleAssignMentor} className="space-y-2.5">
                 <select
                   value={assignMentorLabId}
                   onChange={(e) => setAssignMentorLabId(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-sky-400"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 >
                   <option value="">Select Target Lab...</option>
                   {labs.map((l) => (
@@ -1449,7 +1532,7 @@ export default function AdminDashboardPage() {
                 <select
                   value={assignMentorId}
                   onChange={(e) => setAssignMentorId(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-sky-400"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 >
                   <option value="">Select Mentor...</option>
                   {mentors.map((m) => (
@@ -1460,7 +1543,7 @@ export default function AdminDashboardPage() {
                 </select>
                 <button
                   type="submit"
-                  className="w-full py-2 rounded-xl bg-sky-600 text-white font-mono text-xs font-bold uppercase hover:brightness-110"
+                  className="w-full py-2 bg-sky-500 hover:bg-sky-600 text-white font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                 >
                   Assign Mentor
                 </button>
@@ -1477,7 +1560,8 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h3 className="font-display font-bold text-white text-base">
+              <h3 className="font-mono font-black text-[#111111] uppercase tracking-wider text-sm flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-[#F07C27] border border-[#111111]"></span>
                 User Directory ({users.length})
               </h3>
               <div className="flex gap-1.5 text-xs font-mono">
@@ -1488,10 +1572,10 @@ export default function AdminDashboardPage() {
                       setUserRoleFilter(r);
                       loadUsers(r);
                     }}
-                    className={`px-3 py-1 rounded-lg transition-all ${
+                    className={`px-3 py-1 text-xs font-mono font-black uppercase border-[2px] border-[#111111] transition-all ${
                       userRoleFilter === r
-                        ? "bg-brand-orange text-white font-bold"
-                        : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                        ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111]"
+                        : "bg-white text-slate-600 hover:text-[#111111] shadow-[1px_1px_0px_#111111]"
                     }`}
                   >
                     {r || "ALL"}
@@ -1500,22 +1584,22 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 overflow-hidden shadow-md">
+            <div className="bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] overflow-hidden">
               <div className="overflow-x-auto scrollbar-none">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider text-[10px]">
-                      <th className="py-3 px-3">Name</th>
-                      <th className="py-3 px-3">Email</th>
-                      <th className="py-3 px-3">Role</th>
-                      <th className="py-3 px-3">Status</th>
+                    <tr className="border-b-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] font-mono uppercase tracking-wider text-[10px] font-black">
+                      <th className="py-3 px-3 border-r border-[#111111]/20">Name</th>
+                      <th className="py-3 px-3 border-r border-[#111111]/20">Email</th>
+                      <th className="py-3 px-3 border-r border-[#111111]/20">Role</th>
+                      <th className="py-3 px-3 border-r border-[#111111]/20">Status</th>
                       <th className="py-3 px-3 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 font-mono">
+                  <tbody className="divide-y divide-[#111111]/15 font-mono">
                     {users.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-8">
+                        <td colSpan={5} className="py-8 bg-white">
                           <EmptyState
                             icon={Users}
                             title="No accounts found"
@@ -1525,28 +1609,30 @@ export default function AdminDashboardPage() {
                       </tr>
                     )}
                     {users.map((u) => (
-                      <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3 px-3 font-sans font-bold text-white text-sm">
+                      <tr key={u.id} className="hover:bg-[#FFF0E5]/30 transition-colors">
+                        <td className="py-3 px-3 font-mono font-black text-[#111111] text-xs border-r border-[#111111]/20">
                           {u.name}
                         </td>
-                        <td className="py-3 px-3 text-slate-300">{u.email}</td>
-                        <td className="py-3 px-3">
+                        <td className="py-3 px-3 text-slate-700 font-mono text-xs border-r border-[#111111]/20">
+                          {u.email}
+                        </td>
+                        <td className="py-3 px-3 border-r border-[#111111]/20">
                           <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            className={`px-2 py-0.5 border border-[#111111] font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] ${
                               u.role === "ADMIN"
-                                ? "bg-brand-orange/20 text-brand-orange border border-brand-orange/30"
+                                ? "bg-[#FFF0E5] text-[#F07C27]"
                                 : u.role === "MENTOR"
-                                ? "bg-sky-500/20 text-sky-400 border border-sky-500/30"
-                                : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                ? "bg-sky-100 text-sky-950"
+                                : "bg-emerald-100 text-emerald-950"
                             }`}
                           >
                             {u.role}
                           </span>
                         </td>
-                        <td className="py-3 px-3">
+                        <td className="py-3 px-3 border-r border-[#111111]/20">
                           <span
-                            className={`text-[10px] font-bold ${
-                              u.isActive ? "text-emerald-400" : "text-rose-400"
+                            className={`font-mono text-[10px] font-bold ${
+                              u.isActive ? "text-emerald-700" : "text-rose-700"
                             }`}
                           >
                             {u.isActive ? "ACTIVE" : "INACTIVE"}
@@ -1556,7 +1642,8 @@ export default function AdminDashboardPage() {
                           {u.isActive && u.role !== "ADMIN" && (
                             <button
                               onClick={() => handleDeactivateUser(u.id)}
-                              className="p-1.5 text-rose-400 hover:text-rose-300 transition-colors"
+                              className="p-1.5 border border-[#111111] bg-rose-50 text-rose-700 hover:bg-rose-100 shadow-[1px_1px_0px_#111111] transition-colors"
+                              title="Deactivate User Account"
                             >
                               <UserX className="w-3.5 h-3.5" />
                             </button>
@@ -1571,9 +1658,9 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Provision User Form */}
-          <div className="lg:col-span-4 rounded-2xl p-5 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-3">
-            <h4 className="font-display font-bold text-white text-sm flex items-center gap-2">
-              <Plus className="w-4 h-4 text-brand-orange" />
+          <div className="lg:col-span-4 bg-white border-[3px] border-[#111111] p-5 shadow-[6px_6px_0px_#111111] space-y-3">
+            <h4 className="font-mono font-black text-[#111111] text-xs uppercase tracking-wider flex items-center gap-2">
+              <Plus className="w-4 h-4 text-[#F07C27]" />
               Provision Account
             </h4>
             <form onSubmit={handleCreateUser} className="space-y-2.5">
@@ -1582,7 +1669,7 @@ export default function AdminDashboardPage() {
                 placeholder="Full Name"
                 value={uName}
                 onChange={(e) => setUName(e.target.value)}
-                className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
               />
               <input
                 required
@@ -1590,7 +1677,7 @@ export default function AdminDashboardPage() {
                 placeholder="Email address"
                 value={uEmail}
                 onChange={(e) => setUEmail(e.target.value)}
-                className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
               />
               <input
                 required
@@ -1598,12 +1685,12 @@ export default function AdminDashboardPage() {
                 placeholder="Password (min 6 chars)"
                 value={uPassword}
                 onChange={(e) => setUPassword(e.target.value)}
-                className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
               />
               <select
                 value={uRole}
                 onChange={(e) => setURole(e.target.value as any)}
-                className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-brand-orange"
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
               >
                 <option value="STUDENT">Student Candidate</option>
                 <option value="MENTOR">Super 60 Mentor</option>
@@ -1614,13 +1701,13 @@ export default function AdminDashboardPage() {
                   placeholder="Institution / College"
                   value={uCollege}
                   onChange={(e) => setUCollege(e.target.value)}
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
                 />
               )}
               <button
                 type="submit"
                 disabled={creatingUser}
-                className="w-full py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50"
+                className="w-full py-2.5 bg-[#F07C27] hover:bg-[#d96716] text-white font-mono text-xs font-black uppercase tracking-wider border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50"
               >
                 {creatingUser ? "Provisioning..." : "Provision Account"}
               </button>
@@ -1633,15 +1720,15 @@ export default function AdminDashboardPage() {
           TAB 5: EVALUATION FORMULA WEIGHTS
       ══════════════════════════════════════════════════════════ */}
       {activeTab === "weights" && (
-        <div className="max-w-xl rounded-2xl p-6 sm:p-7 bg-[#0F172A]/80 border border-slate-800/80 shadow-xl space-y-6">
+        <div className="max-w-xl bg-white border-[3px] border-[#111111] p-6 sm:p-7 shadow-[8px_8px_0px_#111111] space-y-6">
           <div>
-            <span className="text-[10px] font-mono text-brand-orange uppercase font-bold tracking-wider">
-              EVALUATION ENGINE
-            </span>
-            <h3 className="font-display font-bold text-2xl text-white mt-0.5">
+            <div className="inline-block px-2.5 py-0.5 border border-[#111111] bg-[#FFF0E5] text-[#F07C27] text-[10px] font-mono font-black uppercase tracking-wider shadow-[2px_2px_0px_#111111] mb-2">
+              [ IDENT: EVALUATION_ENGINE // FORMULA ]
+            </div>
+            <h3 className="font-mono font-black text-2xl text-[#111111]">
               Configurable Component Weights
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs font-mono text-slate-700 mt-1">
               Adjust how the candidate performance formula computes the overall score for this workshop edition. Persisted directly into the database.
             </p>
           </div>
@@ -1650,8 +1737,10 @@ export default function AdminDashboardPage() {
             {(Object.keys(weights) as Array<keyof typeof weights>).map((key) => (
               <div key={key} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="capitalize text-slate-300 font-bold">{key} Component:</span>
-                  <span className="text-brand-orange font-bold text-sm">{weights[key]}%</span>
+                  <span className="capitalize text-[#111111] font-black">{key} Component:</span>
+                  <span className="font-mono font-black text-[#F07C27] text-sm bg-[#FFF0E5] px-2 py-0.5 border border-[#111111] shadow-[1px_1px_0px_#111111]">
+                    {weights[key]}%
+                  </span>
                 </div>
                 <input
                   type="range"
@@ -1661,7 +1750,7 @@ export default function AdminDashboardPage() {
                   onChange={(e) =>
                     setWeights((prev) => ({ ...prev, [key]: Number(e.target.value) }))
                   }
-                  className="w-full accent-brand-orange cursor-pointer"
+                  className="w-full accent-[#F07C27] cursor-pointer"
                 />
               </div>
             ))}
@@ -1669,10 +1758,10 @@ export default function AdminDashboardPage() {
 
           {/* Sum Check */}
           <div
-            className={`p-4 rounded-xl font-mono text-xs font-bold flex items-center justify-between border ${
+            className={`p-4 border-[2px] border-[#111111] font-mono text-xs font-black flex items-center justify-between shadow-[3px_3px_0px_#111111] ${
               weightTotal === 100
-                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                : "bg-rose-500/15 border-rose-500/30 text-rose-400"
+                ? "bg-emerald-100 text-emerald-950"
+                : "bg-rose-100 text-rose-950"
             }`}
           >
             <span>Total Sum: {weightTotal}%</span>
@@ -1682,7 +1771,7 @@ export default function AdminDashboardPage() {
           <button
             onClick={handleSaveWeights}
             disabled={savingWeights || weightTotal !== 100}
-            className="w-full py-3 rounded-xl bg-brand-orange hover:bg-brand-orangeLight text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
+            className="w-full py-3 bg-[#F07C27] hover:bg-[#d96716] text-white font-mono text-xs font-black uppercase tracking-wider border-[2px] border-[#111111] shadow-[4px_4px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <Save className="w-4 h-4" />
             <span>
@@ -1702,7 +1791,8 @@ export default function AdminDashboardPage() {
       {activeTab === "feedback" && (
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <h3 className="font-display font-bold text-white text-base">
+            <h3 className="font-mono font-black text-[#111111] uppercase tracking-wider text-sm flex items-center gap-2">
+              <span className="w-2.5 h-2.5 bg-[#F07C27] border border-[#111111]"></span>
               Faculty Feedback Explorer
             </h3>
             <select
@@ -1711,7 +1801,7 @@ export default function AdminDashboardPage() {
                 setFeedbackLabId(e.target.value);
                 loadFeedbacks(e.target.value);
               }}
-              className="bg-[#070B14] border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-brand-orange"
+              className="bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
             >
               <option value="">Select Laboratory Track...</option>
               {labs.map((l) => (
@@ -1737,7 +1827,7 @@ export default function AdminDashboardPage() {
               {feedbacks.map((f) => (
                 <div
                   key={f.id}
-                  className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-2.5"
+                  className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-2.5"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
@@ -1746,20 +1836,20 @@ export default function AdminDashboardPage() {
                           key={i}
                           className={`w-3.5 h-3.5 ${
                             i < f.rating
-                              ? "text-brand-gold fill-brand-gold drop-shadow-[0_0_6px_rgba(255,184,0,0.5)]"
-                              : "text-slate-700"
+                              ? "text-[#F07C27] fill-[#F07C27]"
+                              : "text-slate-300"
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-orange/15 text-brand-orange border border-brand-orange/30 uppercase">
+                    <span className="text-[10px] font-mono font-black px-2 py-0.5 border border-[#111111] uppercase bg-[#FFF0E5] text-[#F07C27] shadow-[1px_1px_0px_#111111]">
                       {f.category}
                     </span>
                   </div>
 
-                  <p className="text-sm text-slate-200 font-sans italic">&quot;{f.comment}&quot;</p>
+                  <p className="text-sm text-[#111111] font-mono italic">&quot;{f.comment}&quot;</p>
 
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-800">
+                  <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-700 pt-2 border-t border-[#111111]/15">
                     <span>From: {f.isAnonymous ? "Anonymous Candidate" : f.student?.name}</span>
                     <span>Mentor: {f.mentor?.name || "Lead"}</span>
                   </div>
@@ -1769,6 +1859,8 @@ export default function AdminDashboardPage() {
           )}
         </div>
       )}
+        </main>
+      </div>
     </div>
   );
 }

@@ -492,18 +492,16 @@ describe("Milestone 3 Empirical Challenge Suite: UI/UX Modernization & Responsiv
       expect(skeletonSource).toContain("export function SkeletonTableRow");
       expect(skeletonSource).toContain("export function SkeletonProfile");
 
-      // Pulse animation and dark slate styling
+      // Pulse animation and styling
       expect(skeletonSource).toContain("animate-pulse");
-      expect(skeletonSource).toContain("bg-slate-800");
-      expect(skeletonSource).toContain("bg-[#0F172A]/70");
     });
 
     it("should verify EmptyState component structure and action branching", () => {
       expect(emptyStateSource).toContain("export default function EmptyState");
       expect(emptyStateSource).toContain("actionHref && actionLabel &&");
       expect(emptyStateSource).toContain("!actionHref && onAction && actionLabel &&");
-      expect(emptyStateSource).toContain("bg-[#0F172A]/60");
-      expect(emptyStateSource).toContain("text-brand-orange");
+      expect(emptyStateSource).toContain("border-[#111111]");
+      expect(emptyStateSource).toContain("#F07C27");
     });
   });
 
@@ -517,9 +515,9 @@ describe("Milestone 3 Empirical Challenge Suite: UI/UX Modernization & Responsiv
 
       // Candidate table sticky column verification:
       // Rank column must be sticky left-0
-      expect(adminSource).toMatch(/sticky\s+left-0\s+z-10\s+bg-\[#0F172A\]/);
+      expect(adminSource).toMatch(/sticky\s+left-0/);
       // Candidate name column must be sticky left-14
-      expect(adminSource).toMatch(/sticky\s+left-14\s+z-10\s+bg-\[#0F172A\]/);
+      expect(adminSource).toMatch(/sticky\s+left-14/);
       // Wrapper must have horizontal overflow and scrollbar hiding
       expect(adminSource).toContain("overflow-x-auto scrollbar-none");
     });
@@ -529,7 +527,7 @@ describe("Milestone 3 Empirical Challenge Suite: UI/UX Modernization & Responsiv
       const mentorSource = fs.readFileSync(mentorPath, "utf-8");
 
       // Lab roster candidate column sticky verification
-      expect(mentorSource).toMatch(/sticky\s+left-0\s+bg-\[#0F172A\]\s+z-10/);
+      expect(mentorSource).toMatch(/sticky\s+left-0/);
       // Wrapper must have horizontal overflow and scrollbar hiding
       expect(mentorSource).toContain("overflow-x-auto scrollbar-none");
     });

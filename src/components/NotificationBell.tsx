@@ -14,15 +14,15 @@ interface Notification {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  ASSIGNMENT: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  REVIEW: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-  DOUBT: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  ANNOUNCEMENT: "bg-violet-500/15 text-violet-400 border-violet-500/30",
-  ASSESSMENT: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-  RESULT: "bg-rose-500/15 text-rose-400 border-rose-500/30",
-  ATTENDANCE: "bg-slate-500/15 text-slate-300 border-slate-500/30",
-  FEEDBACK: "bg-pink-500/15 text-pink-400 border-pink-500/30",
-  INFO: "bg-slate-500/15 text-slate-300 border-slate-500/30",
+  ASSIGNMENT: "bg-blue-100 text-blue-950 border-[#111111]",
+  REVIEW: "bg-emerald-100 text-emerald-950 border-[#111111]",
+  DOUBT: "bg-amber-100 text-amber-950 border-[#111111]",
+  ANNOUNCEMENT: "bg-purple-100 text-purple-950 border-[#111111]",
+  ASSESSMENT: "bg-sky-100 text-sky-950 border-[#111111]",
+  RESULT: "bg-rose-100 text-rose-950 border-[#111111]",
+  ATTENDANCE: "bg-[#F4F3F3] text-slate-900 border-[#111111]",
+  FEEDBACK: "bg-pink-100 text-pink-950 border-[#111111]",
+  INFO: "bg-[#FFF0E5] text-[#F07C27] border-[#111111]",
 };
 
 export default function NotificationBell() {
@@ -83,24 +83,26 @@ export default function NotificationBell() {
       <button
         onClick={() => setOpen((o) => !o)}
         title="Notifications"
-        className="relative p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-all"
+        className="relative p-2 bg-white hover:bg-[#FFF0E5] border-[2px] border-[#111111] text-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
       >
         <Bell className="w-4 h-4" />
         {unread > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-orange text-white text-[10px] font-bold flex items-center justify-center shadow-md">
+          <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-[#F07C27] text-white text-[10px] font-mono font-black border border-[#111111] shadow-[1px_1px_0px_#111111] flex items-center justify-center">
             {unread > 99 ? "99+" : unread}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[340px] max-w-[90vw] rounded-2xl bg-[#0F172A] border border-slate-700/80 shadow-2xl z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-            <span className="font-display font-bold text-white text-sm">Notifications</span>
+        <div className="absolute right-0 mt-2 w-[340px] max-w-[90vw] bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 bg-[#FFF0E5] border-b-[2px] border-[#111111]">
+            <span className="font-mono font-black uppercase text-[#111111] text-xs tracking-wider">
+              Notifications
+            </span>
             {unread > 0 && (
               <button
                 onClick={markAllRead}
-                className="flex items-center gap-1 text-[11px] font-mono text-brand-orange hover:underline"
+                className="flex items-center gap-1 text-[10px] font-mono font-black uppercase text-[#F07C27] hover:underline"
               >
                 <CheckCheck className="w-3.5 h-3.5" /> Mark all read
               </button>
@@ -109,7 +111,7 @@ export default function NotificationBell() {
 
           <div className="max-h-[380px] overflow-y-auto">
             {items.length === 0 && (
-              <p className="px-4 py-8 text-center text-xs text-slate-500 font-mono">
+              <p className="px-4 py-8 text-center text-xs text-slate-500 font-mono font-bold">
                 No notifications yet
               </p>
             )}
@@ -120,31 +122,31 @@ export default function NotificationBell() {
                   markRead(n);
                   if (n.link) window.location.href = n.link;
                 }}
-                className={`w-full text-left px-4 py-3 border-b border-slate-800/70 hover:bg-slate-800/50 transition-colors ${
-                  n.isRead ? "opacity-60" : ""
+                className={`w-full text-left px-4 py-3 border-b border-[#111111]/15 hover:bg-[#FFF0E5]/40 transition-colors ${
+                  n.isRead ? "opacity-60 bg-[#F9F9F9]" : "bg-white"
                 }`}
               >
                 <div className="flex items-start gap-2.5">
                   {!n.isRead && (
-                    <span className="mt-1.5 w-2 h-2 rounded-full bg-brand-orange flex-shrink-0" />
+                    <span className="mt-1.5 w-2 h-2 bg-[#F07C27] border border-[#111111] flex-shrink-0" />
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border uppercase ${
+                        className={`px-1.5 py-0.5 border text-[9px] font-mono font-black uppercase shadow-[1px_1px_0px_#111111] ${
                           TYPE_COLORS[n.type] || TYPE_COLORS.INFO
                         }`}
                       >
                         {n.type}
                       </span>
-                      <span className="font-semibold text-xs text-white truncate">{n.title}</span>
+                      <span className="font-mono font-black text-xs text-[#111111] truncate">{n.title}</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{n.body}</p>
-                    <span className="text-[10px] text-slate-600 font-mono">
+                    <p className="text-[11px] text-slate-700 font-mono mt-1 line-clamp-2">{n.body}</p>
+                    <span className="text-[10px] text-slate-500 font-mono">
                       {new Date(n.createdAt).toLocaleString()}
                     </span>
                   </div>
-                  {n.link && <ExternalLink className="w-3 h-3 text-slate-600 flex-shrink-0 mt-1" />}
+                  {n.link && <ExternalLink className="w-3.5 h-3.5 text-[#111111] flex-shrink-0 mt-1" />}
                 </div>
               </button>
             ))}

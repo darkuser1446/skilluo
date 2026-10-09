@@ -72,12 +72,12 @@ interface TestManagerProps {
 }
 
 const inputCls =
-  "w-full px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-200 text-sm font-mono focus:outline-none focus:border-brand-orange transition-all";
-const labelCls = "block text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-1.5";
+  "w-full px-3 py-2 bg-[#F4F3F3] border-[2px] border-[#111111] text-[#111111] text-xs font-mono focus:outline-none focus:bg-white shadow-[2px_2px_0px_#111111] transition-all";
+const labelCls = "block text-[11px] font-mono text-[#111111] uppercase tracking-wider mb-1.5 font-bold";
 const btnPrimary =
-  "px-4 py-2.5 rounded-xl bg-brand-orange hover:brightness-110 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-md disabled:opacity-50 flex items-center gap-1.5 justify-center";
+  "px-4 py-2 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 flex items-center gap-1.5 justify-center cursor-pointer";
 const btnGhost =
-  "px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-mono text-xs font-semibold transition-all flex items-center gap-1.5";
+  "px-3 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-[2px_2px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 cursor-pointer";
 
 const emptyQuestion = (): Question => ({
   prompt: "",
@@ -337,15 +337,15 @@ export default function TestManager({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-[#111111]">
       {/* header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-display font-bold text-white text-base flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-brand-orange" /> Tests & Quizzes
+          <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-[#F07C27]" /> Tests & Quizzes Management
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Create online tests, watch submissions and grade answers
+          <p className="text-xs text-slate-700 font-mono mt-0.5">
+            Create online tests, monitor live submissions and grade student answers
           </p>
         </div>
         <div className="flex gap-2">
@@ -361,36 +361,36 @@ export default function TestManager({
 
       {msg && (
         <div
-          className={`p-3 rounded-xl text-xs font-mono border flex items-center gap-2 ${
+          className={`p-3 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-xs font-mono font-bold flex items-center gap-2 ${
             msg.ok
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-              : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+              ? "bg-emerald-100 text-emerald-900"
+              : "bg-rose-100 text-rose-900"
           }`}
         >
-          {msg.ok ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+          {msg.ok ? <CheckCircle2 className="w-4 h-4 text-emerald-700" /> : <AlertTriangle className="w-4 h-4 text-rose-700" />}
           {msg.text}
         </div>
       )}
 
       {/* ── question bank drawer ── */}
       {showBank && (
-        <div className="rounded-2xl p-5 bg-[#0F172A]/80 border border-violet-500/30 space-y-3">
+        <div className="border-[3px] border-[#111111] p-5 bg-white shadow-[6px_6px_0px_#111111] space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h4 className="font-display font-bold text-white text-sm flex items-center gap-2">
-              <BookMarked className="w-4 h-4 text-violet-400" /> Shared Question Bank
+            <h4 className="font-display font-black text-[#111111] text-sm uppercase tracking-tight flex items-center gap-2">
+              <BookMarked className="w-4 h-4 text-[#F07C27]" /> Shared Question Bank
             </h4>
             <div className="flex items-center gap-2">
               <input
                 value={bankTopic}
                 onChange={(e) => setBankTopic(e.target.value)}
-                className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-[11px] font-mono text-slate-300 w-36"
+                className="px-2 py-1 bg-[#F4F3F3] border-[2px] border-[#111111] text-[11px] font-mono text-[#111111] w-36 shadow-[1px_1px_0px_#111111]"
                 placeholder="Topic"
               />
-              <span className="text-[10px] font-mono text-slate-500">topic used when saving</span>
+              <span className="text-[10px] font-mono text-slate-500 font-bold uppercase">topic tag</span>
             </div>
           </div>
           {bank.length === 0 && (
-            <p className="text-xs text-slate-500 font-mono">
+            <p className="text-xs text-slate-600 font-mono">
               Bank is empty — click “Save to bank” next to any question while building a test.
             </p>
           )}
@@ -398,24 +398,24 @@ export default function TestManager({
             {bank.map((b) => (
               <div
                 key={b.id}
-                className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start justify-between gap-2"
+                className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9] shadow-[2px_2px_0px_#111111] flex items-start justify-between gap-2"
               >
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-200 font-semibold truncate">{b.prompt}</p>
-                  <p className="text-[10px] font-mono text-slate-500 mt-1">
+                  <p className="text-xs text-[#111111] font-mono font-bold truncate">{b.prompt}</p>
+                  <p className="text-[10px] font-mono text-slate-600 mt-1">
                     {b.topic || "General"} · {b.difficulty} · {b.marks} pts
                   </p>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
                   <button
                     onClick={() => useBankQuestion(b)}
-                    className="px-2 py-1 rounded bg-violet-500/15 text-violet-300 text-[10px] font-mono font-bold hover:bg-violet-500/25"
+                    className="px-2 py-1 border-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] text-[10px] font-mono font-bold hover:bg-[#F07C27] hover:text-white shadow-[1px_1px_0px_#111111] cursor-pointer"
                   >
                     Use
                   </button>
                   <button
                     onClick={() => deleteBankQuestion(b.id)}
-                    className="px-2 py-1 rounded bg-rose-500/15 text-rose-300 text-[10px] font-mono font-bold hover:bg-rose-500/25"
+                    className="px-2 py-1 border-[2px] border-[#111111] bg-rose-100 text-rose-800 text-[10px] font-mono font-bold hover:bg-rose-600 hover:text-white shadow-[1px_1px_0px_#111111] cursor-pointer"
                   >
                     ✕
                   </button>
@@ -430,7 +430,7 @@ export default function TestManager({
       {showCreate && (
         <form
           onSubmit={handleCreate}
-          className="rounded-2xl p-6 bg-[#0F172A]/80 border border-brand-orange/30 space-y-5"
+          className="border-[3px] border-[#111111] p-6 bg-white shadow-[6px_6px_0px_#111111] space-y-5"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="sm:col-span-2">
@@ -523,8 +523,8 @@ export default function TestManager({
 
           {/* questions */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h4 className="font-display font-bold text-white text-sm">
+            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-2">
+              <h4 className="font-mono font-black text-[#111111] text-sm uppercase">
                 Questions ({questions.length}) — total {totalMarks} marks
               </h4>
               <button
@@ -539,14 +539,14 @@ export default function TestManager({
             {questions.map((q, idx) => (
               <div
                 key={idx}
-                className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-3"
+                className="p-4 bg-[#F4F3F3] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] space-y-3"
               >
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-mono font-bold text-brand-orange">
+                  <span className="text-[10px] font-mono font-black text-[#F07C27] bg-[#FFF0E5] px-2 py-0.5 border border-[#111111] shadow-[1px_1px_0px_#111111]">
                     Q{idx + 1}
                   </span>
                   <select
-                    className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-[11px] font-mono text-slate-300"
+                    className="px-2 py-1 bg-white border-[2px] border-[#111111] text-[11px] font-mono font-bold text-[#111111] shadow-[1px_1px_0px_#111111]"
                     value={q.kind}
                     onChange={(e) => updateQ(idx, { kind: e.target.value as any })}
                   >
@@ -558,14 +558,14 @@ export default function TestManager({
                     min={1}
                     value={q.marks}
                     onChange={(e) => updateQ(idx, { marks: Number(e.target.value) })}
-                    className="w-16 px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-[11px] font-mono text-slate-300"
+                    className="w-16 px-2 py-1 bg-white border-[2px] border-[#111111] text-[11px] font-mono font-bold text-[#111111] shadow-[1px_1px_0px_#111111]"
                     title="Marks"
                   />
-                  <span className="text-[10px] font-mono text-slate-500">pts</span>
+                  <span className="text-[10px] font-mono font-bold text-slate-600">pts</span>
                   <button
                     type="button"
                     onClick={() => saveToBank(q)}
-                    className="ml-auto px-2 py-1 rounded-lg bg-violet-500/15 text-violet-300 text-[10px] font-mono font-bold hover:bg-violet-500/25 flex items-center gap-1"
+                    className="ml-auto px-2 py-1 bg-white text-purple-900 border border-[#111111] text-[10px] font-mono font-bold hover:bg-[#FFF0E5] flex items-center gap-1 shadow-[1px_1px_0px_#111111]"
                   >
                     <BookMarked className="w-3 h-3" /> Save to bank
                   </button>
@@ -573,7 +573,7 @@ export default function TestManager({
                     <button
                       type="button"
                       onClick={() => setQuestions((p) => p.filter((_, i) => i !== idx))}
-                      className="px-2 py-1 rounded-lg bg-rose-500/15 text-rose-300 text-[10px] font-mono font-bold hover:bg-rose-500/25"
+                      className="px-2 py-1 bg-rose-100 text-rose-900 border border-[#111111] text-[10px] font-mono font-bold hover:bg-rose-200 shadow-[1px_1px_0px_#111111]"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -663,10 +663,10 @@ export default function TestManager({
 
       {/* ── tests list ── */}
       {assessments.length === 0 ? (
-        <div className="py-16 rounded-2xl bg-[#0F172A]/50 border border-slate-800 text-center">
-          <ClipboardList className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-400 text-sm font-display font-bold">No tests created yet</p>
-          <p className="text-slate-500 text-xs font-mono mt-1">
+        <div className="py-16 border-[3px] border-[#111111] bg-white shadow-[6px_6px_0px_#111111] text-center">
+          <ClipboardList className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <p className="text-[#111111] text-sm font-mono font-bold uppercase">No tests created yet</p>
+          <p className="text-slate-600 text-xs font-mono mt-1">
             Use “New Test” to schedule a quiz, test or programming task
           </p>
         </div>
@@ -686,31 +686,31 @@ export default function TestManager({
             return (
               <div
                 key={a.id}
-                className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 overflow-hidden"
+                className="border-[3px] border-[#111111] bg-white shadow-[4px_4px_0px_#111111] overflow-hidden"
               >
                 <div className="p-4 flex flex-wrap items-center gap-3 justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase">
+                      <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-[#FFF0E5] text-[#111111] uppercase shadow-[1px_1px_0px_#111111]">
                         {a.type}
                       </span>
                       {isLive && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">
+                        <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 shadow-[1px_1px_0px_#111111] animate-pulse">
                           ● LIVE
                         </span>
                       )}
                       {a.lab && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 bg-slate-800">
+                        <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold text-[#111111] bg-[#F4F3F3]">
                           {a.lab.name}
                         </span>
                       )}
                     </div>
-                    <h4 className="font-display font-bold text-white text-sm mt-1 truncate">
+                    <h4 className="font-mono font-bold text-[#111111] text-sm mt-1 truncate uppercase">
                       {a.title}
                     </h4>
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500 mt-1 flex-wrap">
+                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-600 mt-1 flex-wrap font-bold">
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+                        <Clock className="w-3 h-3 text-[#F07C27]" />
                         {new Date(a.startsAt).toLocaleString()} →{" "}
                         {new Date(a.endsAt).toLocaleString()}
                       </span>
@@ -724,11 +724,11 @@ export default function TestManager({
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <div className="text-right px-3">
-                      <span className="text-[10px] font-mono text-slate-500 uppercase block">
+                      <span className="text-[10px] font-mono text-slate-500 uppercase block font-bold">
                         Submissions
                       </span>
-                      <span className="text-sm font-bold text-white flex items-center gap-1 justify-end">
-                        <Users className="w-3.5 h-3.5 text-slate-500" /> {submitted} · avg {avg}
+                      <span className="text-sm font-mono font-black text-[#111111] flex items-center gap-1 justify-end">
+                        <Users className="w-3.5 h-3.5 text-slate-600" /> {submitted} · avg {avg}
                       </span>
                     </div>
                     <button className={btnGhost} onClick={() => openResults(a)}>
@@ -741,7 +741,7 @@ export default function TestManager({
                     </button>
                     <button
                       onClick={() => handleDelete(a.id, a.title)}
-                      className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 transition-all"
+                      className="p-1.5 border-[2px] border-[#111111] bg-rose-100 hover:bg-rose-600 hover:text-white text-rose-800 shadow-[2px_2px_0px_#111111] transition-all cursor-pointer"
                       title="Delete test"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -751,20 +751,20 @@ export default function TestManager({
 
                 {/* results drawer */}
                 {open && (
-                  <div className="border-t border-slate-800 p-4 bg-slate-900/40">
+                  <div className="border-t-[2px] border-[#111111] p-4 bg-[#FFF0E5]/20">
                     {!results || resultsFor?.id !== a.id ? (
-                      <p className="text-xs font-mono text-slate-500 py-4 text-center">
+                      <p className="text-xs font-mono text-slate-600 py-4 text-center font-bold">
                         Loading results…
                       </p>
                     ) : results.length === 0 ? (
-                      <p className="text-xs font-mono text-slate-500 py-4 text-center">
+                      <p className="text-xs font-mono text-slate-600 py-4 text-center font-bold">
                         No submissions yet
                       </p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs font-mono">
                           <thead>
-                            <tr className="text-slate-500 text-[10px] uppercase border-b border-slate-800">
+                            <tr className="text-[#111111] text-[10px] uppercase font-bold border-b-[2px] border-[#111111] bg-[#FFF0E5]">
                               <th className="text-left py-2 px-3">Student</th>
                               <th className="text-right py-2 px-3">Score</th>
                               <th className="text-right py-2 px-3">%</th>
@@ -774,43 +774,45 @@ export default function TestManager({
                               <th className="text-right py-2 px-3">Action</th>
                             </tr>
                           </thead>
-                          <tbody>
+                          <tbody className="divide-y divide-[#111111]/20">
                             {results.map((r) => {
                               const pct = Math.round((r.score / a.totalMarks) * 100);
                               const pass = r.score >= (a.passingMarks ?? a.totalMarks * 0.6);
                               return (
-                                <tr key={r.id} className="border-b border-slate-800/60">
-                                  <td className="py-2.5 px-3 text-slate-200">
+                                <tr key={r.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
+                                  <td className="py-2.5 px-3 text-[#111111] font-bold">
                                     {r.student?.name || "Student"}
-                                    <span className="block text-[10px] text-slate-600">
+                                    <span className="block text-[10px] text-slate-600 font-normal">
                                       {r.student?.email}
                                     </span>
                                   </td>
-                                  <td className="py-2.5 px-3 text-right text-white font-bold">
+                                  <td className="py-2.5 px-3 text-right text-[#111111] font-black">
                                     {r.score}/{a.totalMarks}
                                   </td>
                                   <td
-                                    className={`py-2.5 px-3 text-right ${
-                                      pass ? "text-emerald-400" : "text-rose-400"
+                                    className={`py-2.5 px-3 text-right font-bold ${
+                                      pass ? "text-emerald-700" : "text-rose-700"
                                     }`}
                                   >
                                     {pct}%
                                   </td>
-                                  <td className="py-2.5 px-3 text-center text-slate-400">
+                                  <td className="py-2.5 px-3 text-center text-slate-600">
                                     {r.correctCount ?? "–"} / {r.incorrectCount ?? "–"} /{" "}
                                     {r.unansweredCount ?? "–"}
                                   </td>
-                                  <td className="py-2.5 px-3 text-right text-slate-400">
+                                  <td className="py-2.5 px-3 text-right text-slate-600">
                                     {r.durationSec
                                       ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
                                       : "–"}
                                   </td>
                                   <td className="py-2.5 px-3 text-center">
                                     <span
-                                      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                      className={`px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-bold shadow-[1px_1px_0px_#111111] ${
                                         r.status === "PENDING_REVIEW"
-                                          ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                                          : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                                          ? "bg-amber-100 text-amber-900"
+                                          : pass
+                                          ? "bg-emerald-100 text-emerald-900"
+                                          : "bg-rose-100 text-rose-900"
                                       }`}
                                     >
                                       {r.status === "PENDING_REVIEW"
@@ -822,7 +824,7 @@ export default function TestManager({
                                   </td>
                                   <td className="py-2.5 px-3 text-right">
                                     <button
-                                      className="px-2.5 py-1 rounded bg-slate-800 hover:bg-brand-orange hover:text-white text-slate-300 text-[11px] transition-all"
+                                      className="px-2.5 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-[11px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer"
                                       onClick={() =>
                                         setGrading({
                                           studentId: r.studentId,
@@ -848,12 +850,12 @@ export default function TestManager({
                             .map((r) => (
                               <div
                                 key={r.id}
-                                className="mt-4 p-4 rounded-xl bg-slate-900/70 border border-brand-orange/30 space-y-3"
+                                className="mt-4 p-4 border-[2px] border-[#111111] bg-white shadow-[4px_4px_0px_#111111] space-y-3"
                               >
-                                <h5 className="text-xs font-bold text-white font-display">
+                                <h5 className="text-xs font-mono font-bold text-[#111111] uppercase">
                                   Answers — {r.student?.name}
                                   {r.status === "PENDING_REVIEW" && (
-                                    <span className="ml-2 px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 text-[10px] font-mono border border-amber-500/30">
+                                    <span className="ml-2 px-2 py-0.5 border border-[#111111] bg-amber-100 text-amber-900 text-[10px] font-mono font-bold">
                                       NEEDS REVIEW
                                     </span>
                                   )}
@@ -864,22 +866,22 @@ export default function TestManager({
                                     return (
                                       <div
                                         key={q.id}
-                                        className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800"
+                                        className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9]"
                                       >
-                                        <p className="text-[11px] text-slate-300">
-                                          <span className="text-brand-orange font-bold">
+                                        <p className="text-[11px] text-[#111111] font-mono font-bold">
+                                          <span className="text-[#F07C27]">
                                             Q{qi + 1}.
                                           </span>{" "}
                                           {q.prompt}
                                         </p>
-                                        <p className="text-[11px] text-emerald-400 mt-1 font-mono whitespace-pre-wrap">
+                                        <p className="text-[11px] text-emerald-800 mt-1 font-mono whitespace-pre-wrap bg-white p-2 border border-[#111111]/30">
                                           Answer: {ans || "(not answered)"}
                                         </p>
                                       </div>
                                     );
                                   })}
                                 </div>
-                                <div className="flex flex-wrap items-end gap-3">
+                                <div className="flex flex-wrap items-end gap-3 pt-2">
                                   <div>
                                     <label className={labelCls}>Score (0–{a.totalMarks})</label>
                                     <input

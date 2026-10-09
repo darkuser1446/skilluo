@@ -7,7 +7,7 @@ import S60Logo from "./S60Logo";
 function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <rect width="20" height="20" x="2" y="2" rx="0" ry="0" />
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
       <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
     </svg>
@@ -54,216 +54,121 @@ export default function Footer() {
   return (
     <footer
       id="contact"
-      className="relative bg-[#070B14] text-white pt-16 pb-12 border-t border-slate-800/80 overflow-hidden"
+      className="relative bg-[#111111] text-white pt-16 pb-12 border-t-[4px] border-[#111111] overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto px-5 sm:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8">
         {/* 5 Columns Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 pb-14 border-b border-slate-800">
-          {/* Column 1: Brand & Slogan (Spans 3 cols) */}
-          <div className="lg:col-span-3 flex flex-col items-start">
-            <Link href="#hero" className="mb-4">
-              <S60Logo size="md" theme="dark" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 pb-12 border-b-[2px] border-white/20">
+          {/* Column 1: Brand & Slogan (Spans 4 cols) */}
+          <div className="lg:col-span-4 flex flex-col items-start gap-3">
+            <Link href="#hero" className="flex items-center gap-2.5">
+              <div className="bg-[#FFFFFF] text-[#111111] font-display text-sm font-black px-2.5 py-1 border-[2px] border-[#FFFFFF] shadow-[3px_3px_0px_#F07C27] uppercase">
+                SUPER 60
+              </div>
+              <div className="bg-[#F07C27] text-white font-mono text-xs font-bold px-2 py-0.5 border border-[#FFFFFF]">
+                SKILL UP 2026
+              </div>
             </Link>
-            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xs">
-              Empowering students to learn, build and grow.
+            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-sm mt-1 font-medium">
+              A premier yearly systems programming initiative by Super 60. Evaluating candidates through competitive C++ coding testbenches, daily labs, and performance-based selection.
             </p>
           </div>
 
           {/* Column 2: Quick Links (Spans 2 cols) */}
           <div className="lg:col-span-2">
-            <h4 className="font-display font-bold text-xs uppercase tracking-widest text-[#F07C27] mb-4">
-              Quick Links
+            <h4 className="font-mono font-bold text-xs uppercase tracking-widest text-[#F07C27] mb-3.5">
+              [ NAVIGATION ]
             </h4>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-slate-300">
+            <ul className="space-y-2 text-xs font-mono font-bold text-slate-300">
               <li>
                 <Link href="#hero" className="hover:text-[#F07C27] transition-colors">
-                  Home
+                  ➔ HOME
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="hover:text-[#F07C27] font-semibold text-[#F07C27] transition-colors flex items-center gap-1.5">
-                  <span>Portal Login</span>
-                  <span className="text-[10px] bg-[#F07C27]/15 text-[#F07C27] px-1.5 py-0.2 rounded border border-[#F07C27]/30 font-mono">Sign in</span>
+                <Link href="/login" className="text-[#F07C27] hover:underline transition-colors">
+                  ➔ LOGIN PORTAL
                 </Link>
               </li>
               <li>
                 <Link href="#about" className="hover:text-[#F07C27] transition-colors">
-                  About
+                  ➔ ABOUT
                 </Link>
               </li>
               <li>
                 <Link href="#program" className="hover:text-[#F07C27] transition-colors">
-                  Program
+                  ➔ PROGRAM
                 </Link>
               </li>
               <li>
                 <Link href="#mentors" className="hover:text-[#F07C27] transition-colors">
-                  Mentors
-                </Link>
-              </li>
-              <li>
-                <Link href="#gallery" className="hover:text-[#F07C27] transition-colors">
-                  Gallery
-                </Link>
-              </li>
-              <li>
-                <Link href="#contact" className="hover:text-[#F07C27] transition-colors">
-                  Contact
+                  ➔ MENTORS
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: Resources (Spans 2 cols) */}
-          <div className="lg:col-span-2">
-            <h4 className="font-display font-bold text-xs uppercase tracking-widest text-[#F07C27] mb-4">
-              Resources
+          {/* Column 3: Resources (Spans 3 cols) */}
+          <div className="lg:col-span-3">
+            <h4 className="font-mono font-bold text-xs uppercase tracking-widest text-[#F07C27] mb-3.5">
+              [ SYSTEMS RESOURCES ]
             </h4>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-slate-300">
+            <ul className="space-y-2 text-xs font-mono font-bold text-slate-300">
               <li>
                 <Link href="/curriculum" className="hover:text-[#F07C27] transition-colors">
-                  Study Material
+                  ➔ 6-DAY WORKSHOP CURRICULUM
                 </Link>
               </li>
               <li>
                 <Link href="/workshops" className="hover:text-[#F07C27] transition-colors">
-                  Previous Sessions
+                  ➔ WORKSHOP ARCHIVES
                 </Link>
               </li>
               <li>
                 <Link href="#faq" className="hover:text-[#F07C27] transition-colors">
-                  FAQ
+                  ➔ FREQUENT QUESTIONS
                 </Link>
               </li>
               <li>
-                <Link href="#why-join" className="hover:text-[#F07C27] transition-colors">
-                  Community
-                </Link>
-              </li>
-              <li>
-                <Link href="/certificate" className="hover:text-[#F07C27] transition-colors">
-                  Certificate
+                <Link href="#impact" className="hover:text-[#F07C27] transition-colors">
+                  ➔ COHORT IMPACT
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 4: Connect With Us (Spans 2 cols) */}
-          <div className="lg:col-span-2">
-            <h4 className="font-display font-bold text-xs uppercase tracking-widest text-[#F07C27] mb-4">
-              Connect With Us
-            </h4>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-slate-300">
-              <li>
-                <a
-                  href="https://instagram.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#F07C27] flex items-center gap-2 transition-colors"
-                >
-                  <InstagramIcon className="w-4 h-4 text-slate-400" />
-                  <span>Instagram</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://youtube.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#F07C27] flex items-center gap-2 transition-colors"
-                >
-                  <YoutubeIcon className="w-4 h-4 text-slate-400" />
-                  <span>YouTube</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://linkedin.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#F07C27] flex items-center gap-2 transition-colors"
-                >
-                  <LinkedinIcon className="w-4 h-4 text-slate-400" />
-                  <span>LinkedIn</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#F07C27] flex items-center gap-2 transition-colors"
-                >
-                  <GithubIcon className="w-4 h-4 text-slate-400" />
-                  <span>GitHub</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://discord.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#F07C27] flex items-center gap-2 transition-colors"
-                >
-                  <DiscordIcon className="w-4 h-4 text-slate-400" />
-                  <span>Discord</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 5: Chalk Sketch Badge (Spans 3 cols) */}
+          {/* Column 4: Stamp Block (Spans 3 cols) */}
           <div className="lg:col-span-3 flex justify-start lg:justify-end items-center">
-            <div className="relative w-44 h-44 rounded-full border-2 border-dashed border-slate-600/80 flex flex-col items-center justify-center p-3 text-center group hover:border-[#F07C27] transition-colors">
-              {/* Circular Curved Loop Arrows */}
-              <svg
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="absolute inset-0 w-full h-full pointer-events-none opacity-40 group-hover:opacity-75 transition-opacity"
-              >
-                <path
-                  d="M15 50 A35 35 0 0 1 85 50"
-                  stroke="#94A3B8"
-                  strokeWidth="1.5"
-                  strokeDasharray="4 4"
-                />
-                <path
-                  d="M85 50 A35 35 0 0 1 15 50"
-                  stroke="#94A3B8"
-                  strokeWidth="1.5"
-                  strokeDasharray="4 4"
-                />
-                <polygon points="86,47 89,52 83,52" fill="#F07C27" />
-                <polygon points="14,53 11,48 17,48" fill="#F07C27" />
-              </svg>
-
-              {/* Centered Chalk Handwritten Words */}
-              <div className="font-handwritten text-lg sm:text-xl leading-tight font-bold text-slate-200 select-none">
-                <span className="block text-white">Code</span>
-                <span className="block text-slate-300">Practice</span>
-                <span className="block text-[#F07C27]">Grow</span>
-                <span className="block text-slate-300">Repeat</span>
+            <div className="bg-[#FFF0E5] text-[#111111] border-[3px] border-[#FFFFFF] shadow-[5px_5px_0px_#F07C27] p-4 text-center -rotate-1 max-w-[220px]">
+              <div className="font-mono text-[10px] font-black uppercase tracking-wider text-slate-700 border-b border-[#111111] pb-1 mb-2">
+                SUPER 60 CADRE
+              </div>
+              <div className="font-display font-black text-sm uppercase leading-tight text-[#111111]">
+                CODE. PRACTICE. BENCHMARK.
+              </div>
+              <div className="mt-2 bg-[#F07C27] text-white font-mono text-[9px] font-bold py-0.5 uppercase">
+                ISO C++23 SPEC
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright & Legal */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>&copy; 2026 Super 60. All rights reserved.</div>
-          <div className="flex items-center gap-6">
-            <Link href="/privacy" className="hover:text-slate-300 transition-colors">
-              Privacy Policy
-            </Link>
-            <span>&middot;</span>
-            <Link href="/terms" className="hover:text-slate-300 transition-colors">
-              Terms
-            </Link>
-            <span>&middot;</span>
-            <Link href="#contact" className="hover:text-slate-300 transition-colors">
-              Contact Us
-            </Link>
+        {/* Bottom Bar: Copyright & Socials */}
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-400">
+          <div>&copy; 2026 SUPER 60 // ALL RIGHTS RESERVED.</div>
+          <div className="flex items-center gap-4">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              <GithubIcon className="w-4 h-4" />
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              <LinkedinIcon className="w-4 h-4" />
+            </a>
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              <DiscordIcon className="w-4 h-4" />
+            </a>
+            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              <YoutubeIcon className="w-4 h-4" />
+            </a>
           </div>
         </div>
       </div>

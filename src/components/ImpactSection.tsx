@@ -1,121 +1,100 @@
 "use client";
 
 import React from "react";
-import { Users, UserCheck, TrendingUp, ThumbsUp } from "lucide-react";
-import GeometricFacet from "./GeometricFacet";
+import { Users, UserCheck, Calendar } from "lucide-react";
 import CountUp from "./CountUp";
-import Anime3DCard from "./Anime3DCard";
-
-const IMPACT_METRICS = [
-  {
-    icon: Users,
-    end: 1000,
-    suffix: "+",
-    label: "Students Guided",
-    graphic: (
-      <svg width="44" height="14" viewBox="0 0 44 14" fill="none" className="mt-1">
-        <path
-          d="M2 12 L10 9 L20 10 L32 4 L42 2"
-          stroke="#F07C27"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle cx="42" cy="2" r="2" fill="#F07C27" />
-      </svg>
-    ),
-  },
-  {
-    icon: UserCheck,
-    end: 8,
-    suffix: "",
-    label: "Expert Mentors",
-    graphic: (
-      <div className="flex items-center gap-1 mt-1">
-        {[...Array(8)].map((_, i) => (
-          <span key={i} className="w-1.5 h-1.5 rounded-full bg-[#F07C27]" />
-        ))}
-      </div>
-    ),
-  },
-  {
-    icon: TrendingUp,
-    end: 4,
-    suffix: " Weeks",
-    label: "Structured Program",
-    graphic: (
-      <div className="flex items-center gap-1 mt-1 text-[10px] font-mono text-slate-500 font-bold">
-        <span className="w-2 h-2 rounded-sm bg-orange-200" />
-        <span className="w-2 h-2 rounded-sm bg-orange-300" />
-        <span className="w-2 h-2 rounded-sm bg-orange-400" />
-        <span className="w-2 h-2 rounded-sm bg-[#F07C27]" />
-      </div>
-    ),
-  },
-  {
-    icon: ThumbsUp,
-    end: 95,
-    suffix: "%",
-    label: "Positive Feedback",
-    graphic: (
-      <div className="w-16 h-1.5 rounded-full bg-slate-100 overflow-hidden mt-1.5">
-        <div className="w-[95%] h-full bg-gradient-to-r from-orange-400 to-[#F07C27] rounded-full" />
-      </div>
-    ),
-  },
-];
 
 export default function ImpactSection() {
   return (
     <section
       id="impact"
-      className="relative py-20 sm:py-24 bg-white/40 backdrop-blur-[1px] overflow-hidden border-t border-slate-100/80"
+      className="relative py-20 sm:py-24 bg-[#F9F9F9] overflow-hidden border-t-[3px] border-[#111111]"
     >
-      {/* Decorative Shard on Right */}
-      <GeometricFacet side="right" position="lower" className="top-8 translate-x-6" />
-
-      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Column: Title & Narrative */}
-          <div className="lg:col-span-5 flex flex-col items-start">
-            <div className="text-xs sm:text-sm font-extrabold tracking-[0.25em] text-slate-500 uppercase mb-3">
-              OUR IMPACT
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          {/* Left Column: Title & Mission */}
+          <div className="lg:col-span-4 flex flex-col items-start gap-3">
+            <div className="bg-[#111111] text-white font-mono text-xs font-bold px-2.5 py-1 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] uppercase tracking-widest inline-block">
+              [ SECTION 07 // IMPACT TELEMETRY ]
             </div>
 
-            <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight text-[#0F172A] leading-tight mb-5">
-              Building a <span className="text-[#F07C27]">Brighter</span> Community Together
+            <h2 className="font-display font-black text-3xl sm:text-5xl text-[#111111] tracking-tight uppercase leading-[1.1]">
+              OUR HISTORICAL{" "}
+              <span className="bg-[#F07C27] text-white px-2.5 py-0.5 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] inline-block -rotate-1">
+                COHORT IMPACT
+              </span>
             </h2>
 
-            <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-              Skill Up has helped students from various academic backgrounds take their first
-              step towards mastering programming and problem solving.
+            <p className="font-body text-slate-700 text-sm sm:text-base leading-relaxed font-medium">
+              Over successive editions, Skill Up has set the benchmark for low-latency systems training, filtering passionate freshers into the Super 60 induction pipeline.
             </p>
           </div>
 
-          {/* Right Column: 4 Stat Cards with Anime.js 3D Tilt */}
-          <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-            {IMPACT_METRICS.map((metric) => {
-              const Icon = metric.icon;
-              return (
-                <Anime3DCard key={metric.label} maxTilt={8} depth={10} className="h-full">
-                  <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col items-center text-center h-full justify-between group">
-                    <div>
-                      <div className="w-12 h-12 rounded-full bg-orange-50 text-[#F07C27] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <div className="font-display font-black text-xl sm:text-2xl text-[#0F172A] leading-tight mb-0.5">
-                        <CountUp end={metric.end} suffix={metric.suffix} duration={1.6} />
-                      </div>
-                      <div className="text-xs text-slate-500 font-medium leading-tight mb-2">
-                        {metric.label}
-                      </div>
-                    </div>
-                    {/* Embedded Data Graphic */}
-                    {metric.graphic}
-                  </div>
-                </Anime3DCard>
-              );
-            })}
+          {/* Right Column: 3 Oversized Neo-Brutalist Metric Blocks */}
+          <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Metric 1: 500+ Candidates Trained */}
+            <div className="bg-[#F07C27] text-[#111111] border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-black uppercase tracking-wider text-black">
+                  CANDIDATES TRAINED
+                </span>
+                <Users className="w-5 h-5 text-black" />
+              </div>
+              <div className="my-4">
+                <div className="font-display font-black text-4xl sm:text-5xl leading-none text-white drop-shadow-[2px_2px_0px_#111111]">
+                  <CountUp end={500} suffix="+" duration={1.5} />
+                </div>
+                <div className="font-mono text-[10px] text-black font-bold uppercase mt-1.5">
+                  HISTORICAL COHORT ALUMNI
+                </div>
+              </div>
+              <div className="bg-[#111111] text-white px-2 py-1 font-mono text-[10px] font-bold uppercase text-center border border-[#111111]">
+                PROVEN TRACK RECORD
+              </div>
+            </div>
+
+            {/* Metric 2: 10 Seats Capacity */}
+            <div className="bg-[#111111] text-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-slate-300">
+                <span className="font-mono text-xs font-black uppercase tracking-wider">
+                  COHORT CAPACITY
+                </span>
+                <UserCheck className="w-5 h-5 text-[#F07C27]" />
+              </div>
+              <div className="my-4">
+                <div className="font-mono font-black text-4xl sm:text-5xl leading-none text-white tracking-tight">
+                  <CountUp end={10} suffix="" duration={1.2} />
+                  <span className="text-xl text-slate-400 font-normal">/SEATS</span>
+                </div>
+                <div className="font-mono text-[10px] text-slate-400 font-bold uppercase mt-1.5">
+                  TOP CANDIDATE INTAKE
+                </div>
+              </div>
+              <div className="bg-white text-[#111111] px-2 py-1 font-mono text-[10px] font-bold uppercase text-center border border-[#111111]">
+                STRICT MERIT CUTOFF
+              </div>
+            </div>
+
+            {/* Metric 3: 1 Week Duration */}
+            <div className="bg-[#FFFFFF] text-[#111111] border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-black uppercase tracking-wider text-slate-700">
+                  SPRINT DURATION
+                </span>
+                <Calendar className="w-5 h-5 text-[#F07C27]" />
+              </div>
+              <div className="my-4">
+                <div className="font-display font-black text-4xl sm:text-5xl leading-none text-[#111111]">
+                  <CountUp end={1} suffix=" WEEK" duration={1.2} />
+                </div>
+                <div className="font-mono text-[10px] text-slate-500 font-bold uppercase mt-1.5">
+                  6 INTENSIVE DAYS (12–16 OCT)
+                </div>
+              </div>
+              <div className="bg-[#FFF0E5] border border-[#111111] px-2 py-1 font-mono text-[10px] font-bold uppercase text-center">
+                100% HANDS-ON LAB CODE
+              </div>
+            </div>
           </div>
         </div>
       </div>

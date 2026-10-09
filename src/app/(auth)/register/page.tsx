@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   User,
@@ -14,12 +13,9 @@ import {
   Code2,
   ArrowRight,
   AlertCircle,
-  CheckCircle,
+  Check,
   Info,
 } from "lucide-react";
-import InteractiveTileGrid from "@/components/InteractiveTileGrid";
-import Super60Logo from "@/components/Super60Logo";
-
 
 type FormData = {
   name: string;
@@ -34,12 +30,12 @@ type FormData = {
 };
 
 const INPUT_CLS =
-  "w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-orange transition-colors";
+  "w-full pl-9 pr-3 py-2 bg-[#F9F9F9] border-[2px] border-[#111111] text-[#111111] placeholder-slate-400 text-xs font-mono font-medium focus:bg-white focus:shadow-[3px_3px_0px_#111111] focus:outline-none transition-all";
 
 const LABEL_CLS =
-  "block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5 font-medium";
+  "block text-[10px] font-mono uppercase font-bold text-slate-700 tracking-wider mb-1";
 
-const ICON_CLS = "w-4 h-4 text-slate-400 absolute left-3.5 top-3";
+const ICON_CLS = "w-4 h-4 text-slate-500 absolute left-2.5 top-2.5";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState<FormData>({
@@ -88,41 +84,40 @@ export default function RegisterPage() {
   /* ── Success state ── */
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#0B1120] text-foreground flex flex-col justify-center items-center px-4 py-12">
+      <div className="min-h-screen bg-[#F9F9F9] text-[#111111] flex flex-col justify-center items-center px-4 py-12 selection:bg-[#F07C27] selection:text-white">
         <div className="w-full max-w-md text-center">
-          <Link href="/" className="inline-flex items-center gap-3 mb-8 group justify-center">
-            <div className="relative h-14 w-12 flex-shrink-0 transition-transform group-hover:scale-105">
-              <Image src="/emblem.png" alt="Super 60" fill className="object-contain" priority />
+          <Link href="/" className="inline-flex items-center gap-2 mb-6 justify-center">
+            <div className="bg-[#111111] text-white font-display font-black text-2xl px-3.5 py-1.5 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] uppercase tracking-wider">
+              SUPER 60
             </div>
-            <div className="text-left">
-              <span className="font-display font-extrabold text-3xl tracking-tight text-brand-orange block">
-                Super 60
-              </span>
-              <span className="text-[11px] font-mono text-slate-400 font-semibold tracking-wider">
-                SKILL UP WORKSHOP PLATFORM
-              </span>
+            <div className="bg-[#F07C27] text-white font-mono text-xs font-black px-2.5 py-2 border-[3px] border-[#111111] shadow-[3px_3px_0px_#111111]">
+              C++
             </div>
           </Link>
 
-          <div className="rounded-2xl p-8 bg-[#131E3A] border border-emerald-500/30 shadow-2xl">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mx-auto mb-5">
-              <CheckCircle className="w-8 h-8 text-emerald-400" />
+          <div className="bg-white border-[4px] border-[#111111] shadow-[8px_8px_0px_#111111] p-8 text-center">
+            <div className="w-14 h-14 bg-[#F07C27] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center mx-auto mb-4 text-white">
+              <Check className="w-8 h-8 stroke-[3]" />
             </div>
-            <h2 className="font-display font-bold text-xl text-white mb-3">
-              Application Submitted!
+            <div className="bg-[#FFF0E5] text-[#111111] font-mono text-[10px] font-bold px-2 py-0.5 border-[2px] border-[#111111] uppercase tracking-wider inline-block mb-2">
+              [ STATUS: APPLICATION LOGGED ]
+            </div>
+            <h2 className="font-display font-black text-2xl text-[#111111] uppercase tracking-tight mb-2">
+              APPLICATION SUBMITTED!
             </h2>
-            <p className="text-sm text-slate-300 leading-relaxed mb-6">
-              Thank you for applying to Skill Up 2026. You will receive access once your
-              application has been reviewed and approved by the admin team.
+            <p className="text-xs text-slate-700 leading-relaxed font-medium mb-4">
+              Thank you for applying to Skill Up 2026. Your candidate dossier has been forwarded
+              to the Super 60 evaluation engine for review.
             </p>
-            <p className="text-xs text-slate-500 font-mono mb-7">
-              Keep an eye on your email for updates on your application status.
+            <p className="text-[11px] text-slate-500 font-mono mb-6">
+              Keep an eye on your email for screening assessment details.
             </p>
             <Link
               href="/login"
-              className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-display font-bold text-sm shadow-md hover:brightness-110 transition-all"
+              className="neo-btn w-full bg-[#111111] text-white py-3 text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2"
             >
-              Go to Login <ArrowRight className="w-4 h-4" />
+              <span>PROCEED TO SIGN IN</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -132,47 +127,58 @@ export default function RegisterPage() {
 
   /* ── Registration form ── */
   return (
-    <div className="relative min-h-screen bg-[#0B1120] text-foreground flex flex-col justify-center items-center px-4 py-12 overflow-hidden">
-      {/* Interactive Square Tiles Canvas Background */}
-      <InteractiveTileGrid tileSize={44} />
+    <div className="relative min-h-screen bg-[#F9F9F9] text-[#111111] flex flex-col justify-center items-center px-4 py-12 overflow-hidden selection:bg-[#F07C27] selection:text-white">
+      {/* Dot Grid Background */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(#d1d5db_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-60"
+      />
 
       <div className="relative z-10 w-full max-w-lg">
         {/* Brand Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-3">
-            <Super60Logo size="lg" subtitleText="APPLICATION" />
+        <div className="text-center mb-6">
+          <Link href="/" className="inline-flex items-center gap-2 mb-3">
+            <div className="bg-[#111111] text-white font-display font-black text-2xl px-3.5 py-1.5 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] uppercase tracking-wider">
+              SUPER 60
+            </div>
+            <div className="bg-[#F07C27] text-white font-mono text-xs font-black px-2.5 py-2 border-[3px] border-[#111111] shadow-[3px_3px_0px_#111111]">
+              C++
+            </div>
           </Link>
-          <h2 className="font-display font-bold text-xl text-white mt-4">
-            Student Registration
+          <div className="bg-[#FFF0E5] text-[#111111] font-mono text-[10px] font-bold px-2 py-0.5 border-[2px] border-[#111111] uppercase tracking-wider inline-block mt-2">
+            [ CANDIDATE ENROLLMENT // 2026 CYCLE ]
+          </div>
+          <h2 className="font-display font-black text-2xl text-[#111111] uppercase tracking-tight mt-1">
+            STUDENT REGISTRATION
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Apply for Skill Up 2026 and compete for one of 60 seats
+          <p className="font-mono text-xs text-slate-600 mt-1">
+            Apply for Skill Up 2026 and compete for one of 60 incubator seats
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl p-7 sm:p-8 bg-[#131E3A] border border-white/10 shadow-2xl">
+        <div className="bg-white border-[4px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 sm:p-8">
           {/* Review notice */}
-          <div className="mb-6 p-3.5 rounded-xl bg-[#F07C27]/8 border border-[#F07C27]/25 flex items-start gap-2.5">
-            <Info className="w-4 h-4 text-brand-orange flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Your application will be reviewed by the admin team before your account
-              is activated.
+          <div className="mb-5 p-3 bg-[#FFF0E5] border-[2px] border-[#111111] flex items-start gap-2.5">
+            <Info className="w-4 h-4 text-[#F07C27] flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-slate-800 leading-relaxed font-medium">
+              Applications are reviewed by the Super 60 selection engine before full lab pod
+              allocation and incubator activation.
             </p>
           </div>
 
           {error && (
-            <div className="mb-5 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+            <div className="mb-5 p-3 bg-rose-50 border-[2px] border-rose-900 text-rose-900 text-xs font-mono font-bold flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-700 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* ── Personal Info ── */}
-            <p className="text-[10px] font-mono uppercase tracking-widest text-slate-500 pb-1 border-b border-white/6">
-              Personal Info
-            </p>
+            <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#111111] pb-1 border-b-[2px] border-[#111111]">
+              [ SECTION 01 // PERSONAL IDENTIFIERS ]
+            </div>
 
             {/* Full Name */}
             <div>
@@ -181,7 +187,7 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Aditya Sharma"
+                  placeholder="e.g. Arjun Sharma"
                   value={formData.name}
                   onChange={set("name")}
                   className={INPUT_CLS}
@@ -190,8 +196,8 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Phone + Email — 2 col */}
-            <div className="grid sm:grid-cols-2 gap-4">
+            {/* Phone + Email */}
+            <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className={LABEL_CLS}>Phone Number</label>
                 <div className="relative">
@@ -212,7 +218,7 @@ export default function RegisterPage() {
                   <input
                     type="email"
                     required
-                    placeholder="you@college.edu"
+                    placeholder="student@college.edu"
                     value={formData.email}
                     onChange={set("email")}
                     className={INPUT_CLS}
@@ -224,13 +230,13 @@ export default function RegisterPage() {
 
             {/* Password */}
             <div>
-              <label className={LABEL_CLS}>Password</label>
+              <label className={LABEL_CLS}>Portal Password (min 6 chars)</label>
               <div className="relative">
                 <input
                   type="password"
                   required
                   minLength={6}
-                  placeholder="At least 6 characters"
+                  placeholder="••••••••••••"
                   value={formData.password}
                   onChange={set("password")}
                   className={INPUT_CLS}
@@ -240,9 +246,9 @@ export default function RegisterPage() {
             </div>
 
             {/* ── Academic Info ── */}
-            <p className="text-[10px] font-mono uppercase tracking-widest text-slate-500 pb-1 border-b border-white/6 pt-2">
-              Academic Info
-            </p>
+            <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#111111] pb-1 border-b-[2px] border-[#111111] pt-2">
+              [ SECTION 02 // ACADEMIC PROFILE ]
+            </div>
 
             {/* College */}
             <div>
@@ -251,7 +257,7 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. IIIT Hyderabad / NIT Warangal"
+                  placeholder="e.g. NIT / IIIT / Engineering Institute"
                   value={formData.college}
                   onChange={set("college")}
                   className={INPUT_CLS}
@@ -260,15 +266,15 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Branch + Semester — 2 col */}
-            <div className="grid sm:grid-cols-2 gap-4">
+            {/* Branch + Semester */}
+            <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className={LABEL_CLS}>Branch / Department</label>
                 <div className="relative">
                   <input
                     type="text"
                     required
-                    placeholder="e.g. CSE, ECE, IT"
+                    placeholder="e.g. CSE / ECE / IT"
                     value={formData.branch}
                     onChange={set("branch")}
                     className={INPUT_CLS}
@@ -292,42 +298,42 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Roll Number */}
-            <div>
-              <label className={LABEL_CLS}>Roll Number</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. 21CS60R01"
-                  value={formData.rollNumber}
-                  onChange={set("rollNumber")}
-                  className={INPUT_CLS}
-                />
-                <Hash className={ICON_CLS} />
+            {/* Roll Number + Experience */}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className={LABEL_CLS}>Roll Number</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 23CS042"
+                    value={formData.rollNumber}
+                    onChange={set("rollNumber")}
+                    className={INPUT_CLS}
+                  />
+                  <Hash className={ICON_CLS} />
+                </div>
               </div>
-            </div>
-
-            {/* Programming Experience */}
-            <div>
-              <label className={LABEL_CLS}>Programming Experience</label>
-              <div className="relative">
-                <select
-                  required
-                  value={formData.programmingExperience}
-                  onChange={set("programmingExperience")}
-                  className={`${INPUT_CLS} pr-10 appearance-none cursor-pointer`}
-                >
-                  <option value="" disabled className="bg-[#131E3A]">
-                    Select your level…
-                  </option>
-                  {["None", "Beginner", "Intermediate", "Advanced"].map((lvl) => (
-                    <option key={lvl} value={lvl} className="bg-[#131E3A]">
-                      {lvl}
+              <div>
+                <label className={LABEL_CLS}>Coding Experience</label>
+                <div className="relative">
+                  <select
+                    required
+                    value={formData.programmingExperience}
+                    onChange={set("programmingExperience")}
+                    className={`${INPUT_CLS} pr-8 appearance-none cursor-pointer`}
+                  >
+                    <option value="" disabled>
+                      Select level…
                     </option>
-                  ))}
-                </select>
-                <Code2 className={ICON_CLS} />
+                    {["None", "Beginner", "Intermediate", "Advanced"].map((lvl) => (
+                      <option key={lvl} value={lvl}>
+                        {lvl}
+                      </option>
+                    ))}
+                  </select>
+                  <Code2 className={ICON_CLS} />
+                </div>
               </div>
             </div>
 
@@ -335,23 +341,23 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-display font-bold text-sm tracking-wide shadow-md hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+              className="neo-btn w-full bg-[#F07C27] text-white py-3 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
             >
-              <span>{loading ? "Submitting Application…" : "Submit Application"}</span>
+              <span>{loading ? "SUBMITTING DOSSIER..." : "SUBMIT APPLICATION"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
-          <div className="mt-5 text-center text-xs text-slate-400">
+          <div className="mt-5 text-center text-xs font-mono font-bold text-slate-700">
             Already have an account?{" "}
-            <Link href="/login" className="text-brand-orange font-semibold hover:underline">
-              Sign in here
+            <Link href="/login" className="text-[#F07C27] hover:underline underline-offset-4">
+              Sign in to portal
             </Link>
           </div>
         </div>
 
         <div className="text-center mt-6 text-xs text-slate-500 font-mono">
-          © 2026 Skill Up · Powered by <span className="text-brand-orange">Super 60</span>
+          © 2026 Skill Up · Powered by <strong className="text-[#111111]">Super 60</strong>
         </div>
       </div>
     </div>

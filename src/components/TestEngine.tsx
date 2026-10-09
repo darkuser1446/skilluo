@@ -109,7 +109,7 @@ const requestFullscreenMode = async () => {
       await (elem as unknown as { msRequestFullscreen: () => Promise<void> }).msRequestFullscreen();
     }
   } catch (err) {
-    console.warn("Fullscreen request:", err);
+    console.warn("Fullscreen request error:", err);
   }
 };
 
@@ -407,17 +407,17 @@ export default function TestEngine({
   const timerWarning = timeLeft < 900; // < 15 min
 
   const statusColor: Record<QuestionStatus, string> = {
-    unanswered: "bg-slate-800 text-slate-400 border border-slate-700",
-    answered: "bg-emerald-600 text-white border border-emerald-500",
-    marked: "bg-amber-500/80 text-white border border-amber-400",
-    "answered-marked": "bg-purple-600 text-white border border-purple-500",
+    unanswered: "bg-[#F4F3F3] text-[#111111] border-[2px] border-[#111111]",
+    answered: "bg-emerald-600 text-white border-[2px] border-[#111111]",
+    marked: "bg-amber-400 text-[#111111] border-[2px] border-[#111111]",
+    "answered-marked": "bg-purple-600 text-white border-[2px] border-[#111111]",
   };
 
   return (
     <div className="space-y-4 relative">
       {/* ── TOAST NOTIFICATION ── */}
       {proctorToast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-rose-600/95 backdrop-blur-md text-white font-mono text-xs font-bold shadow-2xl flex items-center gap-2 border border-rose-400 animate-bounce">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-rose-600 text-white font-mono text-xs font-black shadow-[4px_4px_0px_#111111] flex items-center gap-2 border-[2px] border-[#111111] animate-bounce">
           <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-200" />
           <span>{proctorToast}</span>
         </div>
@@ -425,49 +425,49 @@ export default function TestEngine({
 
       {/* ── PRE-FLIGHT PROCTORING MODAL ── */}
       {showPreflight && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0F172A] border border-brand-orange/40 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-5 text-left">
-            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-              <div className="w-12 h-12 rounded-xl bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center flex-shrink-0">
-                <Shield className="w-6 h-6 text-brand-orange" />
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] p-6 sm:p-7 max-w-lg w-full space-y-5 text-left">
+            <div className="flex items-center gap-3 border-b-[2px] border-[#111111] pb-4">
+              <div className="w-12 h-12 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center flex-shrink-0">
+                <Shield className="w-6 h-6 text-[#F07C27]" />
               </div>
               <div>
-                <span className="text-[10px] font-mono uppercase font-bold text-brand-orange tracking-wider">
-                  Strict Online Proctoring
+                <span className="text-[10px] font-mono uppercase font-black text-[#F07C27] tracking-wider block">
+                  [ STRICT ONLINE PROCTORING PROTOCOL ]
                 </span>
-                <h3 className="font-display font-bold text-white text-base">
+                <h3 className="font-display font-black text-[#111111] text-lg uppercase">
                   {assessment.title}
                 </h3>
               </div>
             </div>
 
-            <div className="space-y-3 text-xs text-slate-300">
-              <p className="font-semibold text-white">
-                Please review the proctoring rules before beginning your assessment:
+            <div className="space-y-3 text-xs text-slate-700">
+              <p className="font-mono font-bold text-[#111111]">
+                Review the following proctoring rules before beginning your assessment:
               </p>
-              <ul className="space-y-2 font-mono text-[11px] text-slate-300">
-                <li className="flex items-start gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-                  <span className="text-brand-orange font-bold">1.</span>
+              <ul className="space-y-2 font-mono text-[11px]">
+                <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <span className="text-[#F07C27] font-black">1.</span>
                   <span>
-                    <strong>Full-Screen Required:</strong> The test runs exclusively in full-screen mode. Do not exit full-screen.
+                    <strong>Full-Screen Required:</strong> The examination runs strictly in full-screen mode. Do not exit full-screen.
                   </span>
                 </li>
-                <li className="flex items-start gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-                  <span className="text-brand-orange font-bold">2.</span>
+                <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <span className="text-[#F07C27] font-black">2.</span>
                   <span>
                     <strong>No Tab / Window Switching:</strong> Tab switches, window blurring, and application switches are actively logged.
                   </span>
                 </li>
-                <li className="flex items-start gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-                  <span className="text-brand-orange font-bold">3.</span>
+                <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <span className="text-[#F07C27] font-black">3.</span>
                   <span>
                     <strong>Clipboard Blocked:</strong> Copying questions, cutting text, and pasting code or answers are strictly disabled.
                   </span>
                 </li>
-                <li className="flex items-start gap-2 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/30 text-rose-300">
-                  <span className="text-rose-400 font-bold">4.</span>
+                <li className="flex items-start gap-2 bg-[#fde8e8] p-2.5 border-[2px] border-[#111111] text-rose-950 font-bold shadow-[2px_2px_0px_#111111]">
+                  <span className="text-rose-700 font-black">4.</span>
                   <span>
-                    <strong>3-Strike Disqualification:</strong> You receive a maximum of 2 warnings. On the 3rd violation, the test is automatically submitted with <strong>0 marks</strong> and an incident report is forwarded to mentors and admins.
+                    <strong>3-Strike Disqualification:</strong> You receive a maximum of 2 warnings. On the 3rd violation, the test is automatically submitted with <strong>0 marks</strong> and an incident report is dispatched to mentors and admins.
                   </span>
                 </li>
               </ul>
@@ -477,7 +477,7 @@ export default function TestEngine({
               <button
                 type="button"
                 onClick={onExit}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-mono text-xs font-bold border border-slate-700 hover:bg-slate-700"
+                className="px-4 py-2.5 bg-white text-[#111111] font-mono text-xs font-bold border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] hover:bg-[#F4F3F3]"
               >
                 Cancel
               </button>
@@ -495,7 +495,7 @@ export default function TestEngine({
                     proctorActiveRef.current = true;
                   }, 1200);
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 shadow-lg shadow-brand-orange/20 flex items-center justify-center gap-2"
+                className="neo-btn flex-1 py-2.5 bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2"
               >
                 <Maximize2 className="w-4 h-4" /> Enter Full Screen & Start Test
               </button>
@@ -506,20 +506,20 @@ export default function TestEngine({
 
       {/* ── PROCTORING VIOLATION MODAL ── */}
       {proctorModal?.isOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div
-            className={`border rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 ${
+            className={`border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] p-6 sm:p-7 max-w-md w-full space-y-4 ${
               proctorModal.count >= 3
-                ? "bg-rose-950/95 border-rose-500 shadow-rose-900/50"
-                : "bg-[#0F172A] border-amber-500/50 shadow-amber-900/30"
+                ? "bg-[#fde8e8] text-rose-950"
+                : "bg-white text-[#111111]"
             }`}
           >
             <div className="flex items-center gap-3">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border ${
+                className={`w-12 h-12 flex items-center justify-center flex-shrink-0 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] ${
                   proctorModal.count >= 3
-                    ? "bg-rose-500/20 border-rose-500/40 text-rose-400"
-                    : "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                    ? "bg-rose-600 text-white"
+                    : "bg-amber-400 text-[#111111]"
                 }`}
               >
                 {proctorModal.count >= 3 ? (
@@ -530,15 +530,15 @@ export default function TestEngine({
               </div>
               <div>
                 <span
-                  className={`text-[10px] font-mono uppercase font-bold tracking-wider block ${
-                    proctorModal.count >= 3 ? "text-rose-400" : "text-amber-400"
+                  className={`text-[10px] font-mono uppercase font-black tracking-wider block ${
+                    proctorModal.count >= 3 ? "text-rose-700" : "text-amber-800"
                   }`}
                 >
                   {proctorModal.count >= 3
-                    ? "Test Terminated"
-                    : `Proctoring Warning ${proctorModal.count} / 3`}
+                    ? "[ TERMINATION: DISQUALIFIED ]"
+                    : `[ PROCTORING WARNING ${proctorModal.count} / 3 ]`}
                 </span>
-                <h4 className="font-display font-bold text-white text-base">
+                <h4 className="font-display font-black text-lg uppercase text-[#111111]">
                   {proctorModal.count >= 3
                     ? "Maximum Violations Exceeded"
                     : "Proctoring Violation Detected"}
@@ -546,12 +546,12 @@ export default function TestEngine({
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono space-y-2">
-              <div className="text-slate-300">
+            <div className="p-3.5 bg-[#F9F9F9] border-[2px] border-[#111111] text-xs font-mono space-y-2 shadow-[2px_2px_0px_#111111]">
+              <div className="text-[#111111]">
                 <strong>Violation:</strong>{" "}
-                <span className="text-rose-400 font-bold">{proctorModal.reason}</span>
+                <span className="text-rose-600 font-black">{proctorModal.reason}</span>
               </div>
-              <div className="text-slate-400 text-[11px] leading-relaxed">
+              <div className="text-slate-700 text-[11px] leading-relaxed font-bold">
                 {proctorModal.count >= 3
                   ? "You have accumulated 3 proctoring violations. Your test session has been terminated and automatically submitted with a score of 0. An incident notification has been dispatched to your lab mentors and administrators."
                   : `Warning ${proctorModal.count} of 3 recorded. Please stay focused on the test and maintain full-screen mode. After 3 warnings, your test will be terminated and submitted as disqualified.`}
@@ -559,9 +559,9 @@ export default function TestEngine({
             </div>
 
             {proctorModal.count >= 3 ? (
-              <div className="p-3.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-center space-y-2">
-                <div className="inline-block w-5 h-5 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
-                <p className="text-xs font-mono font-bold text-rose-300">
+              <div className="p-3.5 bg-rose-200 border-[2px] border-[#111111] text-center space-y-2">
+                <div className="inline-block w-5 h-5 border-[3px] border-rose-900 border-t-transparent rounded-full animate-spin" />
+                <p className="text-xs font-mono font-black text-rose-950 uppercase">
                   Submitting disqualified test and alerting mentors & admins...
                 </p>
               </div>
@@ -574,7 +574,7 @@ export default function TestEngine({
                     await requestFullscreenMode();
                   }
                 }}
-                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                className="neo-btn w-full py-3 bg-amber-400 hover:bg-amber-300 text-[#111111] font-mono font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2"
               >
                 <Maximize2 className="w-4 h-4" /> I Understand — Resume in Full Screen
               </button>
@@ -584,39 +584,39 @@ export default function TestEngine({
       )}
 
       {/* ── TEST HEADER BAR ── */}
-      <div className="sticky top-[105px] z-20 rounded-2xl px-5 py-3 bg-[#0B1526]/95 backdrop-blur-xl border border-slate-800/80 shadow-xl flex items-center justify-between gap-4 flex-wrap">
+      <div className="sticky top-[105px] z-20 px-5 py-3 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] flex items-center justify-between gap-4 flex-wrap">
         {/* Left: Test title */}
         <div className="min-w-0">
-          <span className="text-[10px] font-mono text-brand-orange uppercase font-bold tracking-wider block">
-            Assessment in Progress
+          <span className="inline-block px-2 py-0.5 border border-[#111111] bg-[#FFF0E5] text-[#F07C27] font-mono text-[10px] font-black uppercase tracking-wider shadow-[1px_1px_0px_#111111] mb-0.5">
+            [ RUNTIME: ASSESSMENT_ACTIVE ]
           </span>
-          <h3 className="font-display font-bold text-white text-sm truncate">{assessment.title}</h3>
+          <h3 className="font-mono font-black text-[#111111] text-sm truncate">{assessment.title}</h3>
         </div>
 
         {/* Center: Progress chips + Proctoring badge */}
-        <div className="hidden md:flex items-center gap-2.5 text-[11px] font-mono">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
-            <CheckCircle2 className="w-3 h-3" /> {answered} Answered
+        <div className="hidden md:flex items-center gap-2 text-[11px] font-mono">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-[#111111] font-bold shadow-[1px_1px_0px_#111111]">
+            <CheckCircle2 className="w-3 h-3 text-emerald-700" /> {answered} Answered
           </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/20">
-            <Bookmark className="w-3 h-3" /> {marked} Marked
+          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 text-amber-950 border border-[#111111] font-bold shadow-[1px_1px_0px_#111111]">
+            <Bookmark className="w-3 h-3 text-amber-700" /> {marked} Marked
           </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F4F3F3] text-[#111111] border border-[#111111] font-bold shadow-[1px_1px_0px_#111111]">
             {unanswered} Left
           </span>
 
           {/* Proctoring Status Pill */}
           <span
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 border-[2px] border-[#111111] font-black shadow-[1px_1px_0px_#111111] ${
               warningCount === 0
-                ? "bg-sky-500/10 text-sky-400 border-sky-500/20"
+                ? "bg-sky-100 text-sky-950"
                 : warningCount === 1
-                ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                : "bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse"
+                ? "bg-amber-100 text-amber-950"
+                : "bg-rose-100 text-rose-950 animate-pulse"
             }`}
           >
             <Shield className="w-3 h-3" />
-            {warningCount === 0 ? "Proctored (0/3)" : `⚠️ ${warningCount}/3 Warnings`}
+            {warningCount === 0 ? "PROCTOR (0/3)" : `⚠️ ${warningCount}/3 WARNINGS`}
           </span>
 
           {/* Fullscreen Button if exited */}
@@ -624,14 +624,14 @@ export default function TestEngine({
             <button
               type="button"
               onClick={requestFullscreenMode}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-orange/20 text-brand-orange border border-brand-orange/40 hover:bg-brand-orange hover:text-white transition-all text-[10px] font-mono font-bold animate-pulse"
+              className="flex items-center gap-1 px-2.5 py-1 bg-[#F07C27] text-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] font-black text-[10px] animate-pulse"
               title="Click to enter full-screen mode"
             >
-              <Maximize2 className="w-3 h-3" /> Full Screen
+              <Maximize2 className="w-3 h-3" /> FULL SCREEN
             </button>
           ) : (
-            <span className="hidden xl:flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-800 text-[10px] font-mono">
-              <Maximize2 className="w-2.5 h-2.5 text-emerald-400" /> Fullscreen
+            <span className="hidden xl:flex items-center gap-1 px-2 py-1 bg-[#F4F3F3] text-slate-700 border border-[#111111] text-[10px] font-bold">
+              <Maximize2 className="w-2.5 h-2.5 text-emerald-700" /> Fullscreen
             </span>
           )}
         </div>
@@ -640,29 +640,29 @@ export default function TestEngine({
         <div className="flex items-center gap-3 flex-shrink-0">
           {savedAt && (
             <span
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 text-slate-500 border border-slate-800 text-[10px] font-mono"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-[#F4F3F3] text-slate-700 border border-[#111111] text-[10px] font-mono font-bold shadow-[1px_1px_0px_#111111]"
               title="Answers auto-save locally every change"
             >
               💾 saved {savedAt}
             </span>
           )}
           <div
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-mono font-black text-base border ${
+            className={`flex items-center gap-2 px-3.5 py-2 font-mono font-black text-base border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] ${
               timerCritical
-                ? "bg-rose-500/15 text-rose-400 border-rose-500/40 animate-pulse"
+                ? "bg-rose-100 text-rose-950 animate-pulse"
                 : timerWarning
-                ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                : "bg-slate-900 text-white border-slate-800"
+                ? "bg-amber-100 text-amber-950"
+                : "bg-white text-[#111111]"
             }`}
           >
-            <Clock className="w-4 h-4" />
+            <Clock className="w-4 h-4 text-[#111111]" />
             {formatTime(timeLeft)}
           </div>
           <button
             type="button"
             onClick={() => setShowConfirm(true)}
             disabled={isDisqualified || submittingQuiz}
-            className="px-4 py-2 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 shadow-md flex items-center gap-1.5 disabled:opacity-50"
+            className="px-4 py-2 bg-[#F07C27] hover:bg-[#d96716] text-white font-mono text-xs font-black uppercase tracking-wider border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-1.5 disabled:opacity-50"
           >
             <Send className="w-3.5 h-3.5" /> Submit
           </button>
@@ -670,7 +670,7 @@ export default function TestEngine({
             <button
               type="button"
               onClick={onExit}
-              className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-xs font-mono"
+              className="p-2 bg-white text-[#111111] hover:bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] text-xs font-mono font-black transition-all"
               title="Exit test"
             >
               ✕
@@ -681,14 +681,14 @@ export default function TestEngine({
 
       {/* ── INSTRUCTIONS (collapsible) ── */}
       {assessment.instructions && showInstructions && (
-        <div className="rounded-2xl p-4 bg-sky-500/5 border border-sky-500/25 flex items-start justify-between gap-3">
+        <div className="p-4 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className="text-[10px] font-mono font-bold text-sky-400 uppercase tracking-wider block mb-1">
+            <span className="text-[10px] font-mono font-black text-[#F07C27] uppercase tracking-wider block mb-1">
               Instructions
             </span>
-            <p className="text-xs text-slate-300 whitespace-pre-wrap">{assessment.instructions}</p>
+            <p className="text-xs text-slate-800 whitespace-pre-wrap font-sans font-medium">{assessment.instructions}</p>
             {assessment.durationMinutes && (
-              <p className="text-[11px] font-mono text-slate-500 mt-1">
+              <p className="text-[11px] font-mono text-slate-600 mt-1 font-bold">
                 ⏱ Duration: {assessment.durationMinutes} minutes · one attempt only
               </p>
             )}
@@ -696,7 +696,7 @@ export default function TestEngine({
           <button
             type="button"
             onClick={() => setShowInstructions(false)}
-            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 text-[11px] font-mono flex-shrink-0"
+            className="px-2.5 py-1 bg-white hover:bg-[#F4F3F3] text-[#111111] border border-[#111111] shadow-[1px_1px_0px_#111111] text-[11px] font-mono font-bold flex-shrink-0"
           >
             Hide
           </button>
@@ -708,25 +708,25 @@ export default function TestEngine({
         <div className="lg:col-span-8">
           <form ref={formRef} onSubmit={onSubmit}>
             {currentQuestion && (
-              <div className="rounded-2xl p-6 bg-[#0F172A]/90 border border-slate-800/80 shadow-xl space-y-5 select-none">
+              <div className="p-6 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-5 select-none">
                 {/* Question header */}
-                <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-4">
+                <div className="flex items-start justify-between gap-3 border-b-[2px] border-[#111111] pb-4">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+                    <div className="flex items-center gap-2 text-[11px] font-mono text-slate-700 font-bold">
                       <span>
                         Question {currentIdx + 1} of {totalQuestions}
                       </span>
                       <span>•</span>
-                      <span className="text-brand-orange font-bold">
-                        {currentQuestion.marks} marks
+                      <span className="text-[#F07C27] font-black">
+                        {currentQuestion.marks} MARKS
                       </span>
                       {markedForReview.has(currentQuestion.id) && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        <span className="px-2 py-0.5 border border-[#111111] bg-amber-100 text-amber-900 text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
                           📌 Marked for Review
                         </span>
                       )}
                     </div>
-                    <p className="text-base font-sans font-semibold text-white leading-relaxed">
+                    <p className="text-base font-sans font-bold text-[#111111] leading-relaxed">
                       {currentQuestion.prompt}
                     </p>
                   </div>
@@ -744,24 +744,24 @@ export default function TestEngine({
                           onClick={() =>
                             setQuizAnswers((prev) => ({ ...prev, [currentQuestion.id]: opt }))
                           }
-                          className={`flex items-center gap-4 p-4 rounded-xl text-sm cursor-pointer transition-all border group ${
+                          className={`flex items-center gap-4 p-4 text-sm cursor-pointer transition-all border-[2px] border-[#111111] group ${
                             isSelected
-                              ? "bg-brand-orange/12 border-brand-orange/50 shadow-[0_0_15px_rgba(240,124,39,0.1)]"
-                              : "bg-slate-900/70 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900"
+                              ? "bg-[#FFF0E5] shadow-[4px_4px_0px_#F07C27]"
+                              : "bg-[#F9F9F9] shadow-[3px_3px_0px_#111111] hover:bg-white hover:shadow-[4px_4px_0px_#111111]"
                           }`}
                         >
                           <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-black text-sm flex-shrink-0 border transition-all ${
+                            className={`w-8 h-8 flex items-center justify-center font-mono font-black text-sm flex-shrink-0 border-[2px] border-[#111111] transition-all ${
                               isSelected
-                                ? "bg-brand-orange text-white border-brand-orange shadow-md"
-                                : "bg-slate-800 text-slate-400 border-slate-700 group-hover:border-slate-600"
+                                ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111]"
+                                : "bg-white text-[#111111] shadow-[2px_2px_0px_#111111]"
                             }`}
                           >
                             {letter}
                           </div>
                           <span
                             className={`font-sans ${
-                              isSelected ? "text-white font-semibold" : "text-slate-200"
+                              isSelected ? "text-[#111111] font-bold" : "text-slate-800 font-medium"
                             }`}
                           >
                             {opt}
@@ -779,7 +779,7 @@ export default function TestEngine({
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                    <label className="text-[11px] font-mono text-slate-700 font-bold uppercase tracking-wider">
                       {assessment.type === "PROGRAMMING"
                         ? "Your C++ solution (graded manually by your mentor)"
                         : "Your answer (graded manually by your mentor)"}
@@ -798,26 +798,26 @@ export default function TestEngine({
                           ? "#include <iostream>\nusing namespace std;\n\nint main() {\n    // your code here\n    return 0;\n}"
                           : "Type your answer…"
                       }
-                      className={`w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-100 text-sm focus:outline-none focus:border-brand-orange transition-all select-text ${
+                      className={`w-full px-4 py-3 bg-[#F9F9F9] border-[2px] border-[#111111] text-[#111111] text-sm focus:outline-none focus:bg-white focus:shadow-[4px_4px_0px_#111111] transition-all select-text ${
                         assessment.type === "PROGRAMMING"
                           ? "font-mono leading-relaxed resize-y"
                           : "font-sans"
                       }`}
                       spellCheck={false}
                     />
-                    <p className="text-[10px] font-mono text-slate-600">
+                    <p className="text-[10px] font-mono text-slate-600 font-bold">
                       💾 Saved automatically — copy & paste is disabled.
                     </p>
                   </div>
                 )}
 
                 {/* Navigation row */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-between pt-2 border-t-[2px] border-[#111111]">
                   <button
                     type="button"
                     onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
                     disabled={currentIdx === 0}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono font-bold disabled:opacity-30 transition-all border border-slate-700"
+                    className="flex items-center gap-2 px-4 py-2 bg-white text-[#111111] text-xs font-mono font-bold border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] hover:bg-[#F4F3F3] disabled:opacity-40 transition-all"
                   >
                     <ChevronLeft className="w-4 h-4" /> Previous
                   </button>
@@ -825,10 +825,10 @@ export default function TestEngine({
                   <button
                     type="button"
                     onClick={toggleMark}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all border ${
+                    className={`flex items-center gap-2 px-4 py-2 text-xs font-mono font-bold transition-all border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] ${
                       markedForReview.has(currentQuestion.id)
-                        ? "bg-amber-500/20 text-amber-400 border-amber-500/40 hover:bg-amber-500/30"
-                        : "bg-slate-800 text-slate-400 border-slate-700 hover:text-amber-400 hover:border-amber-500/40"
+                        ? "bg-amber-400 text-[#111111]"
+                        : "bg-white text-slate-700 hover:bg-amber-100"
                     }`}
                   >
                     <Bookmark className="w-3.5 h-3.5" />
@@ -840,7 +840,7 @@ export default function TestEngine({
                       type="button"
                       onClick={() => setShowConfirm(true)}
                       disabled={isDisqualified}
-                      className="flex items-center gap-2 px-5 py-2 rounded-xl bg-brand-orange text-white text-xs font-mono font-bold hover:brightness-110 shadow-md disabled:opacity-50"
+                      className="flex items-center gap-2 px-5 py-2 bg-[#F07C27] hover:bg-[#d96716] text-white text-xs font-mono font-black uppercase tracking-wider border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] disabled:opacity-50"
                     >
                       Submit Test <Send className="w-3.5 h-3.5" />
                     </button>
@@ -848,7 +848,7 @@ export default function TestEngine({
                     <button
                       type="button"
                       onClick={() => setCurrentIdx((i) => Math.min(totalQuestions - 1, i + 1))}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono font-bold transition-all border border-slate-700"
+                      className="flex items-center gap-2 px-4 py-2 bg-white text-[#111111] text-xs font-mono font-bold border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] hover:bg-[#F4F3F3] transition-all"
                     >
                       Next <ChevronRight className="w-4 h-4" />
                     </button>
@@ -861,22 +861,22 @@ export default function TestEngine({
 
         {/* ── QUESTION NAVIGATOR ── */}
         <div className="lg:col-span-4 space-y-4">
-          <div className="rounded-2xl p-5 bg-[#0F172A]/90 border border-slate-800/80 shadow-md sticky top-[170px]">
-            <h4 className="font-display font-bold text-white text-sm mb-3 flex items-center gap-2">
-              <Flag className="w-4 h-4 text-brand-orange" /> Question Navigator
+          <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] sticky top-[170px]">
+            <h4 className="font-mono font-black text-[#111111] text-sm mb-3 flex items-center gap-2 uppercase">
+              <Flag className="w-4 h-4 text-[#F07C27]" /> Question Navigator
             </h4>
 
             {/* Legend */}
-            <div className="grid grid-cols-2 gap-1.5 mb-4 text-[10px] font-mono">
+            <div className="grid grid-cols-2 gap-1.5 mb-4 text-[10px] font-mono font-bold">
               {[
                 { label: "Answered", cls: "bg-emerald-600 text-white" },
-                { label: "Unanswered", cls: "bg-slate-800 text-slate-400" },
-                { label: "Marked", cls: "bg-amber-500 text-white" },
+                { label: "Unanswered", cls: "bg-[#F4F3F3] text-[#111111]" },
+                { label: "Marked", cls: "bg-amber-400 text-[#111111]" },
                 { label: "Ans+Marked", cls: "bg-purple-600 text-white" },
               ].map((l) => (
                 <div key={l.label} className="flex items-center gap-1.5">
-                  <div className={`w-4 h-4 rounded flex-shrink-0 ${l.cls}`} />
-                  <span className="text-slate-400">{l.label}</span>
+                  <div className={`w-4 h-4 border border-[#111111] flex-shrink-0 ${l.cls}`} />
+                  <span className="text-slate-700">{l.label}</span>
                 </div>
               ))}
             </div>
@@ -891,9 +891,9 @@ export default function TestEngine({
                     key={q.id}
                     type="button"
                     onClick={() => setCurrentIdx(idx)}
-                    className={`w-full aspect-square rounded-lg text-xs font-mono font-bold transition-all ${
+                    className={`w-full aspect-square text-xs font-mono font-black transition-all shadow-[1px_1px_0px_#111111] ${
                       isCurrent
-                        ? "ring-2 ring-brand-orange ring-offset-1 ring-offset-[#0F172A] scale-110 z-10 relative"
+                        ? "ring-2 ring-[#F07C27] ring-offset-2 scale-105 z-10 relative"
                         : ""
                     } ${statusColor[status]}`}
                   >
@@ -904,20 +904,20 @@ export default function TestEngine({
             </div>
 
             {/* Summary stats */}
-            <div className="mt-4 pt-3 border-t border-slate-800 space-y-1.5 font-mono text-[11px]">
+            <div className="mt-4 pt-3 border-t-[2px] border-[#111111] space-y-1.5 font-mono text-[11px] font-bold">
               <div className="flex justify-between">
-                <span className="text-slate-400">Answered</span>
-                <span className="text-emerald-400 font-bold">
+                <span className="text-slate-600">Answered</span>
+                <span className="text-emerald-700">
                   {answered}/{totalQuestions}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Not Answered</span>
-                <span className="text-rose-400 font-bold">{unanswered}</span>
+                <span className="text-slate-600">Not Answered</span>
+                <span className="text-rose-700">{unanswered}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Marked for Review</span>
-                <span className="text-amber-400 font-bold">{marked}</span>
+                <span className="text-slate-600">Marked for Review</span>
+                <span className="text-amber-800">{marked}</span>
               </div>
             </div>
           </div>
@@ -927,44 +927,44 @@ export default function TestEngine({
       {/* ── CONFIRM SUBMIT DIALOG ── */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0F172A] border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+          <div className="bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] p-6 max-w-sm w-full space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              <div className="w-10 h-10 bg-amber-100 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-amber-700" />
               </div>
               <div>
-                <h4 className="font-display font-bold text-white">Submit Test?</h4>
-                <p className="text-xs text-slate-400 mt-0.5">This action cannot be undone.</p>
+                <h4 className="font-display font-black text-[#111111] text-base uppercase">Submit Test?</h4>
+                <p className="text-xs text-slate-600 font-mono mt-0.5">This action cannot be undone.</p>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 font-mono text-xs space-y-1.5">
+            <div className="p-3 bg-[#F9F9F9] border-[2px] border-[#111111] font-mono text-xs space-y-1.5 shadow-[2px_2px_0px_#111111]">
               <div className="flex justify-between">
-                <span className="text-slate-400">Answered</span>
-                <span className="text-emerald-400 font-bold">{answered}</span>
+                <span className="text-slate-600">Answered</span>
+                <span className="text-emerald-700 font-bold">{answered}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Unanswered</span>
-                <span className="text-rose-400 font-bold">{unanswered}</span>
+                <span className="text-slate-600">Unanswered</span>
+                <span className="text-rose-700 font-bold">{unanswered}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Marked for Review</span>
-                <span className="text-amber-400 font-bold">{marked}</span>
+                <span className="text-slate-600">Marked for Review</span>
+                <span className="text-amber-800 font-bold">{marked}</span>
               </div>
-              <div className="flex justify-between pt-1 border-t border-slate-800">
-                <span className="text-slate-400">Time Remaining</span>
-                <span className={timerCritical ? "text-rose-400 font-bold" : "text-white"}>
+              <div className="flex justify-between pt-1 border-t border-[#111111]">
+                <span className="text-slate-600">Time Remaining</span>
+                <span className={timerCritical ? "text-rose-700 font-bold" : "text-[#111111] font-bold"}>
                   {formatTime(timeLeft)}
                 </span>
               </div>
             </div>
 
             {unanswered > 0 && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs font-mono text-amber-300 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <div className="p-3 bg-amber-50 border-[2px] border-[#111111] text-xs font-mono text-amber-950 font-bold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-700" />
                 <span>
                   You have <strong>{unanswered}</strong> unanswered question
-                  {unanswered !== 1 ? "s" : ""}. They will be marked as wrong.
+                  {unanswered !== 1 ? "s" : ""}.
                 </span>
               </div>
             )}
@@ -973,7 +973,7 @@ export default function TestEngine({
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-200 font-mono text-xs font-bold border border-slate-700 hover:bg-slate-700"
+                className="flex-1 py-2.5 bg-white text-[#111111] font-mono text-xs font-bold border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] hover:bg-[#F4F3F3]"
               >
                 Go Back
               </button>
@@ -984,7 +984,7 @@ export default function TestEngine({
                   formRef.current?.requestSubmit();
                 }}
                 disabled={submittingQuiz}
-                className="flex-1 py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 shadow-md disabled:opacity-50"
+                className="neo-btn flex-1 py-2.5 bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider disabled:opacity-50"
               >
                 {submittingQuiz ? "Submitting..." : "Confirm Submit"}
               </button>

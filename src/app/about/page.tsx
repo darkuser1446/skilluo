@@ -1,7 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
-import InteractiveTileGrid from "@/components/InteractiveTileGrid";
-import Super60Logo from "@/components/Super60Logo";
 import {
   Target,
   BookOpen,
@@ -11,294 +8,320 @@ import {
   Layers,
   Trophy,
   Star,
-  CheckCircle,
+  Check,
   ArrowRight,
+  Terminal,
+  Cpu,
+  ShieldCheck,
+  Zap,
+  Calendar,
+  Sparkles,
 } from "lucide-react";
 
 /* ──────────────────────────────────────────────
-   Static data
+   Workshop 6-Day Roadmap & Pillars
 ────────────────────────────────────────────── */
-const CPP_TOPICS = [
+const WORKSHOP_PILLARS = [
   {
-    icon: <Code2 className="w-5 h-5" />,
-    title: "C++ Foundations",
-    desc: "Data types, pointers, memory layout, compile-time reasoning.",
-    phase: "Phase 1",
+    step: "01",
+    title: "Core Foundations",
+    desc: "Syntax, variables, primitive types, operators, and standard I/O streams.",
+    icon: Code2,
   },
   {
-    icon: <Layers className="w-5 h-5" />,
-    title: "OOP & Design",
-    desc: "Classes, inheritance, polymorphism, RAII, smart pointers.",
-    phase: "Phase 2",
+    step: "02",
+    title: "Revision & Practice",
+    desc: "Daily problem solving, decision-making drills, loop invariants, and logic puzzles.",
+    icon: Target,
   },
   {
-    icon: <BookOpen className="w-5 h-5" />,
-    title: "STL Mastery",
-    desc: "Containers, iterators, algorithms, ranges, complexity trade-offs.",
-    phase: "Phase 3",
+    step: "03",
+    title: "Real-World Project Practice",
+    desc: "Hands-on CLI systems: ATM machines, calculators, quiz engines, converters, and patterns.",
+    icon: Cpu,
   },
   {
-    icon: <Target className="w-5 h-5" />,
-    title: "Systems Programming",
-    desc: "File I/O, processes, sockets, OS interfaces, low-level APIs.",
-    phase: "Phase 4",
+    step: "04",
+    title: "Project Review & Guidance",
+    desc: "Line-by-line code audits, compiler error clinics, and 1-on-1 guidance from lead mentors.",
+    icon: Award,
+  },
+];
+
+const WORKSHOP_SCHEDULE_DAYS = [
+  {
+    day: "Day 1",
+    date: "12 Oct",
+    title: "C++ Fundamentals",
+    focus: "Syntax, variables, data types, I/O and operators",
+    tag: "FOUNDATION",
   },
   {
-    icon: <Star className="w-5 h-5" />,
-    title: "Advanced Concurrency",
-    desc: "Threads, atomics, lock-free structures, async patterns.",
-    phase: "Phase 5",
+    day: "Day 2",
+    date: "13 Oct",
+    title: "Conditional Statements",
+    focus: "if/else, switch and decision-making problems",
+    tag: "BRANCHING",
   },
   {
-    icon: <Trophy className="w-5 h-5" />,
-    title: "Capstone Project",
-    desc: "Build a real low-latency system end-to-end with mentor review.",
-    phase: "Final",
+    day: "Day 3",
+    date: "14 Oct",
+    title: "Loops",
+    focus: "for, while, do-while, break, continue and logic problems",
+    tag: "ITERATION",
   },
+  {
+    day: "Day 4",
+    date: "15 Oct",
+    title: "Patterns & Basic CLI",
+    focus: "Nested loops, pattern printing and menu-driven programs",
+    tag: "2D MATRICES",
+  },
+  {
+    day: "Day 5",
+    date: "16 Oct",
+    title: "Advanced CLI & Project",
+    focus: "Calculator, ATM, quiz, converter or pattern generator",
+    tag: "CAPSTONES",
+  },
+  {
+    day: "Day 6",
+    date: "Optional",
+    title: "Doubt Solving & Real-World Practice",
+    focus: "Revision, debugging, project practice and project guidance",
+    tag: "CLINIC & REVIEW",
+  },
+];
+
+const LEAD_MENTORS = [
+  { name: "Ayush Mitra", role: "Lead Systems Architect", lab: "Lab 1", focus: "Architecture & I/O" },
+  { name: "Ranjeet", role: "Algorithm & Memory Specialist", lab: "Lab 2", focus: "Conditionals & Logic" },
+  { name: "Ramanand", role: "Systems Engineer", lab: "Lab 3", focus: "Loops & Accumulators" },
+  { name: "Shontu", role: "Console Software Engineer", lab: "Lab 4", focus: "Pattern Matrices & CLI" },
+  { name: "Kamal", role: "Virtual Lab Coordinator", lab: "Online Track", focus: "Live Debugging & Review" },
 ];
 
 const ASSESSMENT_BREAKDOWN = [
-  { label: "Tests & Quizzes", pct: 35, color: "bg-brand-orange" },
-  { label: "Assignments", pct: 30, color: "bg-[#FFA048]" },
-  { label: "Attendance", pct: 15, color: "bg-sky-500" },
-  { label: "Lab Exercises", pct: 10, color: "bg-emerald-500" },
-  { label: "Participation", pct: 5, color: "bg-violet-400" },
+  { label: "Technical Assessments & Tests", pct: 35, barColor: "bg-[#F07C27]" },
+  { label: "Graded Assignments & Projects", pct: 30, barColor: "bg-[#111111]" },
+  { label: "Attendance & Lab Pod Hours", pct: 15, barColor: "bg-sky-600" },
+  { label: "Daily Problem-Solving Exercises", pct: 10, barColor: "bg-emerald-600" },
+  { label: "Doubt Resolution & Engagement", pct: 10, barColor: "bg-violet-600" },
 ];
 
 const BENEFITS = [
-  "Real-world mentorship from industry engineers",
-  "Hands-on systems programming curriculum",
-  "Career-ready low-latency C++ skills",
-  "Super 60 Certificate of Excellence",
-  "Access to an elite peer network",
-  "Project portfolio for placements",
-  "Performance-tracked learning path",
-  "Lifetime alumni community membership",
+  "Direct 1-on-1 mentorship from 5 experienced systems guides",
+  "Intensive hands-on C++ workshop curriculum (12–16 Oct + Optional Day 6)",
+  "Ship complete CLI capstones: ATM System, Calculator, Quiz Engine, Converter",
+  "Cryptographically verifiable Certificate of Completion issued by Super 60",
+  "Merit qualification for the 10 coveted Super 60 incubator seats",
+  "Live compiler error debugging clinic and automated test assertion feedback",
+  "Access to an active peer network of 500+ historical cohort alumni",
+  "Continuous transparent performance telemetry and cohort rank tracking",
 ];
 
-const TIMELINE = [
-  {
-    month: "Month 1",
-    title: "Bootcamp Phase",
-    desc: "Foundations, OOP, memory model — three intensive lab sessions per week.",
-  },
-  {
-    month: "Month 2",
-    title: "Intermediate Labs",
-    desc: "STL, algorithms, systems programming — paired exercises with mentor review.",
-  },
-  {
-    month: "Month 3",
-    title: "Advanced & Project",
-    desc: "Concurrency, low-latency design, capstone project delivery and evaluation.",
-  },
-];
-
-/* ──────────────────────────────────────────────
-   Sub-components
-────────────────────────────────────────────── */
-function PublicNavbar() {
-  return (
-    <header className="sticky top-0 z-40 bg-[#070B14]/90 backdrop-blur-xl border-b border-white/8 shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between py-3.5">
-        <Link href="/">
-          <Super60Logo size="sm" subtitleText="SKILL UP" />
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          <Link href="/" className="text-slate-300 hover:text-white transition-colors">
-            Home
-          </Link>
-          <Link href="/about" className="text-brand-orange font-semibold">
-            About
-          </Link>
-          <Link href="/workshops" className="text-slate-300 hover:text-white transition-colors">
-            Workshops
-          </Link>
-        </nav>
-
-        <div className="flex items-center gap-2.5">
-          <Link
-            href="/login"
-            className="text-xs uppercase tracking-wider font-semibold text-slate-300 hover:text-white px-4 py-2 rounded-full border border-white/15 hover:border-white/40 hover:bg-white/5 transition-all"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="text-xs uppercase tracking-wider font-semibold text-white px-4 py-2.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orangeLight shadow-[0_0_20px_rgba(240,124,39,0.4)] hover:shadow-[0_0_30px_rgba(240,124,39,0.6)] hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
-          >
-            <span>Register</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold uppercase tracking-widest text-brand-orange bg-[#F07C27]/10 border border-[#F07C27]/25 mb-4">
-      {children}
-    </span>
-  );
-}
-
-/* ──────────────────────────────────────────────
-   Page
-────────────────────────────────────────────── */
 export default function AboutPage() {
   return (
-    <div className="relative min-h-screen bg-[#0B1120] text-foreground overflow-x-hidden">
-      {/* Interactive Square Tiles Canvas Background */}
-      <InteractiveTileGrid tileSize={48} />
+    <div className="relative min-h-screen bg-[#F9F9F9] text-[#111111] overflow-x-hidden">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white border-b-[3px] border-[#111111] shadow-[0px_4px_0px_#111111]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="bg-[#111111] text-white font-display font-black text-xl px-3 py-1.5 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] uppercase tracking-wider">
+              SUPER 60
+            </div>
+            <div className="bg-[#F07C27] text-white font-mono text-xs font-black px-2 py-1.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+              C++
+            </div>
+          </Link>
 
-      <PublicNavbar />
+          <nav className="hidden md:flex items-center gap-6 font-display font-bold text-xs uppercase tracking-wider">
+            <Link href="/" className="text-slate-600 hover:text-[#111111] hover:underline underline-offset-4">
+              Home
+            </Link>
+            <Link href="/curriculum" className="text-slate-600 hover:text-[#111111] hover:underline underline-offset-4">
+              Curriculum
+            </Link>
+            <Link href="/workshops" className="text-slate-600 hover:text-[#111111] hover:underline underline-offset-4">
+              Workshops
+            </Link>
+            <Link href="/about" className="text-[#F07C27] underline underline-offset-8 decoration-[3px]">
+              About
+            </Link>
+          </nav>
 
-      {/* ── Hero Banner ── */}
-      <section className="relative overflow-hidden pt-24 pb-20 px-5">
-        {/* Background glows */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-[#F07C27]/8 blur-[120px]" />
-          <div className="absolute bottom-0 right-0 w-[300px] h-[300px] rounded-full bg-sky-600/5 blur-[100px]" />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="neo-btn-sm bg-white text-[#111111] px-4 py-2 text-xs font-bold uppercase"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/register"
+              className="neo-btn-sm bg-[#F07C27] text-white px-5 py-2 text-xs font-bold uppercase flex items-center gap-1.5"
+            >
+              <span>Join 2026</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
+      </header>
 
-        <div className="relative max-w-4xl mx-auto text-center">
-          <SectionLabel>
-            <Star className="w-3 h-3" /> Super 60 · Skill Up
-          </SectionLabel>
+      {/* Hero Section */}
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-8 pt-16 pb-12">
+        <div className="flex flex-col items-start gap-4 max-w-4xl">
+          <div className="inline-flex items-center gap-2 bg-[#111111] text-white font-mono text-xs font-bold px-3 py-1.5 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] uppercase tracking-widest">
+            <Star className="w-3.5 h-3.5 text-[#F07C27]" />
+            [ DOSSIER // SKILL UP WORKSHOP INITIATIVE ]
+          </div>
 
-          <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-white leading-[1.1] mb-6">
-            About{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFA048] via-[#F07C27] to-[#FFA048]">
-              Skill Up
+          <h1 className="font-display font-black text-4xl sm:text-6xl text-[#111111] tracking-tight uppercase leading-[1.05]">
+            ABOUT <span className="bg-[#FFF0E5] px-2 py-0.5 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">SKILL UP</span> —{" "}
+            <span className="bg-[#F07C27] text-white px-3 py-0.5 border-[3px] border-[#111111] shadow-[5px_5px_0px_#111111] inline-block -rotate-1">
+              SYSTEMS RIGOR
             </span>
           </h1>
 
-          <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-8">
-            A high-intensity C++ workshop by Super&nbsp;60 that transforms
-            engineering students into systems programmers through structured labs,
-            expert mentorship, and real project work.
+          <p className="text-slate-700 text-sm sm:text-base leading-relaxed max-w-3xl font-medium mt-1">
+            Skill Up is Super 60&apos;s intensive 1-week C++ workshop (12–16 Oct + Optional Day 6).
+            Designed to mentor engineering students through fundamental syntax, decision logic, loop invariants,
+            and real-world CLI capstones (ATM, Calculator, Quiz, Converters) with direct guidance from 5 lead mentors.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4">
+          {/* Quick Telemetry Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full mt-4">
+            {[
+              { label: "TRAINED ALUMNI", val: "500+ TRAINED" },
+              { label: "COHORT CAPACITY", val: "10 SEATS" },
+              { label: "WORKSHOP TIMELINE", val: "12 OCT – 16 OCT" },
+              { label: "LEAD MENTORS", val: "5 EXPERT GUIDES" },
+            ].map((t) => (
+              <div
+                key={t.label}
+                className="bg-white border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] p-3 text-left"
+              >
+                <div className="font-mono text-[10px] text-slate-500 uppercase tracking-wider">{t.label}</div>
+                <div className="font-display font-black text-sm sm:text-base text-[#111111] mt-0.5">{t.val}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 mt-4">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-display font-bold text-sm shadow-[0_0_25px_rgba(240,124,39,0.5)] hover:shadow-[0_0_40px_rgba(240,124,39,0.7)] hover:scale-105 active:scale-95 transition-all"
+              className="neo-btn bg-[#F07C27] text-white px-6 py-2.5 text-xs font-black uppercase flex items-center gap-2"
             >
-              Apply for 2026 <ArrowRight className="w-4 h-4" />
+              <span>APPLY FOR 2026</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/workshops"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 text-slate-200 font-semibold text-sm hover:bg-white/5 transition-all"
+              href="/curriculum"
+              className="neo-btn bg-white text-[#111111] px-6 py-2.5 text-xs font-black uppercase"
             >
-              View Editions
+              VIEW 6-DAY SYLLABUS
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ── Our Mission ── */}
-      <section className="py-20 px-5 border-t border-white/6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <SectionLabel>
-                <Target className="w-3 h-3" /> Mission
-              </SectionLabel>
-              <h2 className="font-display font-bold text-3xl sm:text-4xl text-white mb-5 leading-tight">
-                Engineering Excellence Through Depth
-              </h2>
-              <p className="text-slate-300 leading-relaxed mb-4">
-                Skill Up is Super&nbsp;60's flagship C++ workshop. We believe that
-                mastering systems programming isn't a side skill — it's the foundation
-                of engineering excellence. Our workshop is designed to push students
-                beyond surface-level code into the world of memory-aware, low-latency,
-                production-quality software.
-              </p>
-              <p className="text-slate-400 leading-relaxed">
-                Every cohort works through a carefully curated curriculum, from
-                first-principles C++ to advanced concurrency — all under the guidance
-                of experienced industry mentors who have built real systems.
-              </p>
+      {/* Mission & 4 Core Pillars Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 py-12 border-t-[3px] border-[#111111]">
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-5 space-y-4">
+            <span className="bg-[#111111] text-white font-mono text-[10px] font-bold px-2 py-0.5 border-[2px] border-[#111111] uppercase tracking-wider">
+              [ MISSION STATEMENT ]
+            </span>
+            <h2 className="font-display font-black text-3xl sm:text-4xl text-[#111111] uppercase tracking-tight leading-tight">
+              ENGINEERING EXCELLENCE THROUGH DEPTH
+            </h2>
+            <p className="text-slate-700 text-sm leading-relaxed font-medium">
+              We reject shallow surface-level coding tutorials. Mastering systems programming
+              isn&apos;t a hobby — it is the bedrock of world-class software engineering. Our workshop is
+              engineered to push candidates through core memory models, syntax precision, algorithmic
+              control flow, and production-grade console application architecture.
+            </p>
+            <div className="bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] p-4 font-mono text-xs font-bold text-[#111111]">
+              &quot;If you understand fundamental logic down to byte boundaries, you can build anything.&quot;
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                {
-                  icon: <Target className="w-5 h-5 text-brand-orange" />,
-                  title: "Systems Programming",
-                  desc: "Deep-dive into OS interfaces, memory, and low-level APIs.",
-                },
-                {
-                  icon: <Code2 className="w-5 h-5 text-brand-orange" />,
-                  title: "Low-Latency C++",
-                  desc: "Write code that performs at microsecond timescales.",
-                },
-                {
-                  icon: <Users className="w-5 h-5 text-brand-orange" />,
-                  title: "Mentored Learning",
-                  desc: "1 expert mentor per lab, guiding every student personally.",
-                },
-                {
-                  icon: <Award className="w-5 h-5 text-brand-orange" />,
-                  title: "Certified Excellence",
-                  desc: "Super 60 certificate recognised by top tech companies.",
-                },
-              ].map((item) => (
+          <div className="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+            {WORKSHOP_PILLARS.map((p) => {
+              const Icon = p.icon;
+              return (
                 <div
-                  key={item.title}
-                  className="p-5 rounded-2xl bg-[#111827] border border-white/8 hover:border-brand-orange/30 transition-colors"
+                  key={p.title}
+                  className="bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] p-5 flex flex-col justify-between"
                 >
-                  <div className="mb-3">{item.icon}</div>
-                  <h3 className="font-display font-semibold text-sm text-white mb-1">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="bg-[#111111] text-[#F07C27] font-mono font-black text-xs px-2 py-0.5 border border-[#111111]">
+                        PILLAR {p.step}
+                      </span>
+                      <div className="w-8 h-8 bg-[#FFF0E5] border-[2px] border-[#111111] flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-[#F07C27]" />
+                      </div>
+                    </div>
+                    <h3 className="font-display font-black text-sm text-[#111111] uppercase mb-1.5">
+                      {p.title}
+                    </h3>
+                    <p className="text-xs font-mono text-slate-700 font-semibold leading-relaxed">
+                      {p.desc}
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ── The Learning Journey (Timeline) ── */}
-      <section className="py-20 px-5 bg-[#080D1A] border-t border-white/6">
-        <div className="max-w-4xl mx-auto text-center mb-14">
-          <SectionLabel>
-            <BookOpen className="w-3 h-3" /> Methodology
-          </SectionLabel>
-          <h2 className="font-display font-bold text-3xl sm:text-4xl text-white mb-4">
-            The Learning Journey
-          </h2>
-          <p className="text-slate-400 text-sm leading-relaxed max-w-xl mx-auto">
-            A 3-month intensive program structured around weekly labs, mentor check-ins,
-            and cumulative project milestones.
-          </p>
-        </div>
+      {/* 6-Day Workshop Schedule Timeline */}
+      <section className="bg-slate-50 border-t-[3px] border-b-[3px] border-[#111111] py-16 px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 border-b-[3px] border-[#111111] pb-4">
+            <div>
+              <span className="bg-[#111111] text-white font-mono text-[10px] font-bold px-2 py-0.5 border-[2px] border-[#111111] uppercase tracking-wider">
+                [ WORKSHOP TIMELINE // 12–16 OCT ]
+              </span>
+              <h2 className="font-display font-black text-3xl text-[#111111] uppercase tracking-tight mt-2">
+                6-DAY DAY-BY-DAY EXECUTION SPRINT
+              </h2>
+            </div>
+            <Link
+              href="/curriculum"
+              className="neo-btn-sm bg-white text-[#111111] px-4 py-2 text-xs font-bold uppercase self-start sm:self-auto flex items-center gap-1.5"
+            >
+              <span>INSPECT FULL LAB CODE</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#F07C27]" />
+            </Link>
+          </div>
 
-        <div className="max-w-3xl mx-auto">
-          <div className="relative flex flex-col gap-0">
-            {/* Vertical line */}
-            <div className="absolute left-[19px] top-6 bottom-6 w-[2px] bg-gradient-to-b from-brand-orange via-[#F07C27]/40 to-transparent" />
-
-            {TIMELINE.map((step, i) => (
-              <div key={step.month} className="flex gap-6 pb-10 last:pb-0">
-                {/* Node */}
-                <div className="relative flex-shrink-0 w-10 h-10 rounded-full bg-[#F07C27]/15 border-2 border-brand-orange flex items-center justify-center z-10">
-                  <span className="font-mono font-bold text-brand-orange text-xs">
-                    {i + 1}
-                  </span>
-                </div>
-                <div className="flex-1 pt-1.5">
-                  <span className="text-[11px] font-mono text-brand-orange uppercase tracking-widest">
-                    {step.month}
-                  </span>
-                  <h3 className="font-display font-bold text-white text-lg mt-0.5 mb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {WORKSHOP_SCHEDULE_DAYS.map((step) => (
+              <div
+                key={step.day}
+                className="bg-white border-[3px] border-[#111111] shadow-[5px_5px_0px_#111111] p-5 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-2 mb-3">
+                    <span className="bg-[#111111] text-white font-mono font-black text-xs px-2 py-0.5 border border-[#111111]">
+                      {step.day}
+                    </span>
+                    <span className="bg-[#FFF0E5] text-[#C2410C] font-mono text-xs font-bold px-2 py-0.5 border border-[#111111]">
+                      {step.date}
+                    </span>
+                  </div>
+                  <h3 className="font-display font-black text-base text-[#111111] uppercase mb-1">
                     {step.title}
                   </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
+                  <div className="text-[10px] font-mono font-bold text-slate-500 uppercase mb-2">
+                    {step.tag}
+                  </div>
+                  <p className="text-xs font-mono text-slate-700 font-semibold leading-relaxed">
+                    {step.focus}
+                  </p>
                 </div>
               </div>
             ))}
@@ -306,239 +329,137 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── What You Learn — C++ Topics Grid ── */}
-      <section className="py-20 px-5 border-t border-white/6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <SectionLabel>
-              <Layers className="w-3 h-3" /> Curriculum
-            </SectionLabel>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl text-white mb-4">
-              What You Learn
+      {/* 5 Lead Mentors Roster */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 py-16">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 border-b-[3px] border-[#111111] pb-4">
+          <div>
+            <span className="bg-[#111111] text-white font-mono text-[10px] font-bold px-2 py-0.5 border-[2px] border-[#111111] uppercase tracking-wider">
+              [ FACULTY &amp; GUIDES ]
+            </span>
+            <h2 className="font-display font-black text-3xl sm:text-4xl text-[#111111] uppercase tracking-tight mt-2">
+              MEET OUR 5 LEAD MENTORS
             </h2>
-            <p className="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
-              A progressive C++ learning path that takes you from fundamentals
-              to production-grade systems engineering.
-            </p>
           </div>
+          <span className="font-mono text-xs font-bold bg-[#FFF0E5] text-[#C2410C] border-[2px] border-[#111111] px-3 py-1 shadow-[2px_2px_0px_#111111]">
+            4 OFFLINE LABS + 1 ONLINE TRACK
+          </span>
+        </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {CPP_TOPICS.map((topic) => (
-              <div
-                key={topic.title}
-                className="group p-6 rounded-2xl bg-[#0E1520] border border-white/8 hover:border-brand-orange/40 hover:bg-[#111827] transition-all"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#F07C27]/10 border border-[#F07C27]/20 flex items-center justify-center text-brand-orange group-hover:bg-[#F07C27]/20 transition-colors">
-                    {topic.icon}
-                  </div>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 bg-white/5 px-2 py-1 rounded-full">
-                    {topic.phase}
-                  </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {LEAD_MENTORS.map((m) => (
+            <div
+              key={m.name}
+              className="bg-white border-[3px] border-[#111111] shadow-[5px_5px_0px_#111111] p-4 flex flex-col justify-between"
+            >
+              <div>
+                <div className="bg-[#111111] text-[#F07C27] font-mono text-[10px] font-black px-2 py-0.5 inline-block mb-3 border border-[#111111]">
+                  {m.lab}
                 </div>
-                <h3 className="font-display font-bold text-white text-base mb-2">
-                  {topic.title}
+                <h3 className="font-display font-black text-base text-[#111111] uppercase">
+                  {m.name}
                 </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">{topic.desc}</p>
+                <div className="text-[11px] font-mono text-slate-600 font-bold mt-0.5">
+                  {m.role}
+                </div>
+                <div className="mt-3 pt-2 border-t border-[#111111]/20 text-[10px] font-mono text-slate-700">
+                  <span className="font-bold text-[#111111]">Focus:</span> {m.focus}
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── Assessment Formula ── */}
-      <section className="py-20 px-5 bg-[#080D1A] border-t border-white/6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <SectionLabel>
-              <Trophy className="w-3 h-3" /> Evaluation
-            </SectionLabel>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl text-white mb-4">
-              Assessment Formula
-            </h2>
-            <p className="text-slate-400 text-sm max-w-lg mx-auto">
-              Your final score is calculated across five dimensions to reward
-              consistent effort, not just exam performance.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {ASSESSMENT_BREAKDOWN.map((item) => (
-              <div key={item.label} className="flex items-center gap-4">
-                <span className="w-36 text-right text-sm font-medium text-slate-300 flex-shrink-0">
-                  {item.label}
+      {/* Assessment Formula & 10 Seats Selection */}
+      <section className="bg-[#FFF0E5] border-t-[3px] border-b-[3px] border-[#111111] py-16 px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-12 gap-10 items-start">
+            {/* Left: Formula Breakdown */}
+            <div className="lg:col-span-7 space-y-6">
+              <div>
+                <span className="bg-[#111111] text-white font-mono text-[10px] font-bold px-2 py-0.5 border-[2px] border-[#111111] uppercase tracking-wider">
+                  [ EVALUATION METRIC ]
                 </span>
-                <div className="flex-1 h-3 bg-white/6 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${item.color} rounded-full`}
-                    style={{ width: `${item.pct}%` }}
-                  />
-                </div>
-                <span className="w-10 text-sm font-mono font-bold text-white flex-shrink-0">
-                  {item.pct}%
-                </span>
+                <h2 className="font-display font-black text-3xl text-[#111111] uppercase tracking-tight mt-2">
+                  TRANSPARENT ASSESSMENT FORMULA
+                </h2>
+                <p className="text-xs sm:text-sm font-mono text-slate-700 font-bold mt-1">
+                  Your workshop standing is calculated across 5 weighted dimensions to reward continuous
+                  problem solving and active lab participation. Top performers secure the 10 coveted Super 60 seats.
+                </p>
               </div>
-            ))}
-          </div>
 
-          <p className="text-center text-[11px] font-mono text-slate-500 mt-8">
-            Total = 100% · Minimum passing score: 60% · Certificate threshold: 75%
-          </p>
-        </div>
-      </section>
-
-      {/* ── Mentoring System ── */}
-      <section className="py-20 px-5 border-t border-white/6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <SectionLabel>
-              <Users className="w-3 h-3" /> Mentors
-            </SectionLabel>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl text-white mb-4">
-              The Mentoring System
-            </h2>
-            <p className="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
-              Each lab operates under the dedicated guidance of one expert mentor —
-              ensuring no student is left behind.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                stat: "1",
-                unit: "Mentor / Lab",
-                desc: "Every lab has a dedicated expert who monitors all student progress personally.",
-                color: "text-brand-orange",
-              },
-              {
-                stat: "15–30",
-                unit: "Students / Lab",
-                desc: "Small cohorts guarantee hands-on attention and immediate doubt resolution.",
-                color: "text-sky-400",
-              },
-              {
-                stat: "3",
-                unit: "Months Intensive",
-                desc: "Weekly labs, mentor check-ins, and milestone reviews keep everyone on track.",
-                color: "text-emerald-400",
-              },
-            ].map((card) => (
-              <div
-                key={card.unit}
-                className="p-7 rounded-2xl bg-[#0E1520] border border-white/8 text-center"
-              >
-                <div className={`font-display font-extrabold text-5xl mb-1 ${card.color}`}>
-                  {card.stat}
-                </div>
-                <div className="font-mono text-xs text-slate-400 uppercase tracking-widest mb-4">
-                  {card.unit}
-                </div>
-                <p className="text-sm text-slate-300 leading-relaxed">{card.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Selection Process ── */}
-      <section className="py-20 px-5 bg-[#080D1A] border-t border-white/6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            <div>
-              <SectionLabel>
-                <Award className="w-3 h-3" /> Selection
-              </SectionLabel>
-              <h2 className="font-display font-bold text-3xl sm:text-4xl text-white mb-5 leading-tight">
-                How Candidates Are Selected
-              </h2>
-              <p className="text-slate-300 leading-relaxed mb-4">
-                Skill Up is not open to everyone — it's designed for the top
-                performers. After applications open, candidates go through a
-                structured evaluation that tests aptitude, logical thinking, and
-                basic programming concepts.
-              </p>
-              <p className="text-slate-400 leading-relaxed">
-                The <span className="text-white font-semibold">Top 60</span> candidates
-                ranked by evaluation score are admitted into the workshop. Labs are
-                formed from these 60 students based on performance bands.
-              </p>
-
-              <div className="mt-8 flex items-center gap-4 p-5 rounded-2xl bg-[#F07C27]/8 border border-[#F07C27]/25">
-                <Trophy className="w-8 h-8 text-brand-orange flex-shrink-0" />
-                <div>
-                  <div className="font-display font-bold text-white text-lg">Top 60</div>
-                  <div className="text-sm text-slate-300">
-                    Selected by evaluation score from all applicants
+              <div className="space-y-3 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6">
+                {ASSESSMENT_BREAKDOWN.map((dim) => (
+                  <div key={dim.label}>
+                    <div className="flex items-center justify-between text-xs font-mono font-bold mb-1">
+                      <span className="text-[#111111]">{dim.label}</span>
+                      <span className="text-[#111111]">{dim.pct}% WEIGHT</span>
+                    </div>
+                    <div className="h-4 bg-[#F4F3F3] border-[2px] border-[#111111] overflow-hidden">
+                      <div
+                        className={`h-full ${dim.barColor}`}
+                        style={{ width: `${dim.pct}%` }}
+                      />
+                    </div>
                   </div>
+                ))}
+
+                <div className="pt-3 border-t-[2px] border-[#111111] text-[11px] font-mono text-slate-700 font-bold flex justify-between">
+                  <span>TOTAL WEIGHT: 100%</span>
+                  <span className="text-[#F07C27]">SELECTION QUOTA: TOP 10 SEATS</span>
                 </div>
               </div>
             </div>
 
-            {/* Benefits */}
-            <div>
-              <SectionLabel>
-                <CheckCircle className="w-3 h-3" /> Benefits
-              </SectionLabel>
-              <h2 className="font-display font-bold text-3xl sm:text-4xl text-white mb-6 leading-tight">
-                What You Gain
-              </h2>
-              <ul className="space-y-3">
-                {BENEFITS.map((benefit) => (
-                  <li key={benefit} className="flex items-start gap-3">
-                    <CheckCircle className="w-4.5 h-4.5 text-brand-orange flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-slate-300 leading-relaxed">
-                      {benefit}
+            {/* Right: Benefits Checklist */}
+            <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 sm:p-8">
+              <span className="bg-[#F07C27] text-white font-mono text-[10px] font-bold px-2 py-0.5 border-[2px] border-[#111111] uppercase tracking-wider">
+                [ INDUCTION PERKS ]
+              </span>
+              <h3 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight my-2">
+                WHAT YOU GAIN
+              </h3>
+              <ul className="space-y-2 mt-4">
+                {BENEFITS.map((b) => (
+                  <li key={b} className="flex items-start gap-2.5 text-xs text-slate-800 font-medium font-mono">
+                    <span className="w-4 h-4 bg-[#FFF0E5] border-[1.5px] border-[#111111] flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-[#111111] stroke-[3]" />
                     </span>
+                    <span>{b}</span>
                   </li>
                 ))}
               </ul>
+
+              <div className="mt-6 pt-4 border-t-[2px] border-[#111111]">
+                <Link
+                  href="/register"
+                  className="neo-btn w-full bg-[#111111] text-white py-2.5 text-xs font-black uppercase text-center block"
+                >
+                  SUBMIT APPLICATION FOR 2026
+                </Link>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Bottom CTA ── */}
-      <section className="py-24 px-5 border-t border-white/6 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#F07C27]/6 via-transparent to-sky-900/5" />
-        </div>
-
-        <div className="relative max-w-2xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-[#F07C27]/10 border border-[#F07C27]/30 text-brand-orange text-[11px] font-mono font-bold uppercase tracking-widest">
-            <Star className="w-3 h-3" /> Registrations Open
-          </div>
-          <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white mb-4">
-            Register for Skill Up 2026
-          </h2>
-          <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-lg mx-auto">
-            Applications are reviewed by the admin team. Top candidates are admitted
-            into the workshop. Don't miss your shot at the most rigorous C++ program
-            for students.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-display font-bold text-sm shadow-[0_0_30px_rgba(240,124,39,0.5)] hover:shadow-[0_0_50px_rgba(240,124,39,0.7)] hover:scale-105 active:scale-95 transition-all"
-            >
-              Apply Now <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-white/20 text-slate-200 font-semibold text-sm hover:bg-white/5 transition-all"
-            >
-              Already applied? Sign in
-            </Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/8 py-8 px-5 text-center">
-        <p className="text-xs font-mono text-slate-500">
-          © 2026 Skill Up · Powered by{" "}
-          <span className="text-brand-orange">Super 60</span> · All rights reserved.
-        </p>
+      <footer className="bg-[#111111] text-white border-t-[4px] border-[#111111] py-10 px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
+          <div className="flex items-center gap-2">
+            <span className="bg-[#F07C27] text-white px-2 py-0.5 border-[2px] border-white font-bold">
+              S60
+            </span>
+            <span>© 2026 Skill Up · 6-Day Intensive C++ Workshop (12–16 Oct)</span>
+          </div>
+          <div className="flex items-center gap-4 text-slate-400">
+            <Link href="/" className="hover:text-white">Home</Link>
+            <Link href="/curriculum" className="hover:text-white">Curriculum</Link>
+            <Link href="/workshops" className="hover:text-white">Workshops</Link>
+            <Link href="/about" className="text-[#F07C27]">About</Link>
+          </div>
+        </div>
       </footer>
     </div>
   );

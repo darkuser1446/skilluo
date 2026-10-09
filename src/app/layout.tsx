@@ -1,36 +1,8 @@
 import type { Metadata } from "next";
-import { Sora, Inter, JetBrains_Mono, Caveat } from "next/font/google";
 import "./globals.css";
 
-const sora = Sora({
-  subsets: ["latin"],
-  variable: "--font-sora",
-  weight: ["400", "600", "700", "800"],
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  weight: ["400", "500", "700"],
-  display: "swap",
-});
-
-const caveat = Caveat({
-  subsets: ["latin"],
-  variable: "--font-caveat",
-  weight: ["500", "700"],
-  display: "swap",
-});
-
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "Skill Up 2026 | An Initiative of Super 60",
   description:
     "A premier yearly hands-on C++ workshop by Super 60. Master systems programming, ship real assignments, climb assessments, and learn from top mentors.",
@@ -52,7 +24,6 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo.svg",
   },
-
 };
 
 export default function RootLayout({
@@ -61,10 +32,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sora.variable} ${inter.variable} ${jetbrainsMono.variable} ${caveat.variable} scroll-smooth`}>
+    <html lang="en" className="scroll-smooth">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@400;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="bg-background text-foreground antialiased selection:bg-brand-orange selection:text-white relative">
         {children}
       </body>
     </html>
   );
 }
+

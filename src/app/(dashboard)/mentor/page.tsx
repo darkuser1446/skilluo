@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Users,
   FileCode,
@@ -35,8 +36,8 @@ import {
   ZapOff,
   Zap,
   ClipboardList,
+  ShieldCheck,
 } from "lucide-react";
-import Link from "next/link";
 import TestManager from "@/components/TestManager";
 import { SkeletonCard, SkeletonMetric, SkeletonProfile } from "@/components/Skeleton";
 import EmptyState from "@/components/EmptyState";
@@ -417,7 +418,7 @@ export default function MentorDashboardPage() {
           <SkeletonMetric />
           <SkeletonMetric />
         </div>
-        <div className="rounded-2xl p-6 bg-[#0F172A]/70 border border-slate-800/80">
+        <div className="bg-white border-[3px] border-[#111111] p-6 shadow-[6px_6px_0px_#111111]">
           <SkeletonCard />
         </div>
       </div>
@@ -425,64 +426,138 @@ export default function MentorDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* ── HERO BANNER ── */}
-      <div className="rounded-2xl p-6 sm:p-7 bg-gradient-to-br from-[#111C35]/95 to-[#0D1527]/95 border border-slate-800/80 shadow-2xl relative overflow-hidden backdrop-blur-xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/10 blur-[100px] pointer-events-none rounded-full" />
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10">
+    <div className="space-y-6 text-[#111111]">
+      {/* ── HERO BANNER: LEAD EVALUATOR DOSSIER ── */}
+      <div className="bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 sm:p-7 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           <div className="lg:col-span-7 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase tracking-wider flex items-center gap-1">
-                SUPER 60 MENTOR & LEAD EVALUATOR
+              <span className="bg-[#111111] text-white px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider border-[2px] border-[#111111] flex items-center gap-1.5 shadow-[2px_2px_0px_#111111]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#F07C27]" />
+                [ IDENT: LEAD_EVALUATOR // PROTOCOL ]
               </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-xs font-mono text-slate-400">{profile?.company || "Ex-Google · Super 60 Alumni"}</span>
+              <span className="bg-[#FFF0E5] text-[#111111] px-2 py-0.5 text-[10px] font-mono font-bold border-[2px] border-[#111111]">
+                {profile?.company || "Ex-Google · Super 60 Alumni"}
+              </span>
             </div>
             <div>
-              <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">{user?.name}</h1>
-              <p className="text-xs sm:text-sm text-sky-300 font-mono mt-0.5">{profile?.title || "Senior Systems Architect"} · {profile?.specialty || "Low-Latency C++ & Kernel Bypass"}</p>
+              <h1 className="font-display font-black text-2xl sm:text-4xl text-[#111111] uppercase tracking-tight">{user?.name}</h1>
+              <p className="text-xs sm:text-sm text-slate-700 font-mono font-bold mt-1">
+                {profile?.title || "Senior Systems Architect"} · {profile?.specialty || "Low-Latency C++ & Kernel Bypass"}
+              </p>
             </div>
-            <div className="flex items-center gap-3 pt-1">
-              <span className="text-xs text-slate-400 font-mono">Assigned Lab:</span>
-              <select value={selectedLabId} onChange={(e) => setSelectedLabId(e.target.value)} className="bg-[#070B14] border border-sky-500/30 text-white rounded-lg px-3 py-1 text-xs font-mono font-bold focus:outline-none focus:border-sky-400">
-                {labs.map((l) => <option key={l.id} value={l.id} className="bg-[#0B1120]">{l.name}</option>)}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <span className="text-xs text-slate-700 font-mono font-bold uppercase">Assigned Laboratory:</span>
+              <select
+                value={selectedLabId}
+                onChange={(e) => setSelectedLabId(e.target.value)}
+                className="bg-[#F4F3F3] border-[2px] border-[#111111] text-[#111111] px-3 py-1.5 text-xs font-mono font-bold shadow-[2px_2px_0px_#111111] focus:outline-none cursor-pointer"
+              >
+                {labs.map((l) => <option key={l.id} value={l.id} className="bg-white text-[#111111]">{l.name}</option>)}
               </select>
-              <Link href="/mentor/profile" className="text-xs text-brand-orange hover:underline font-mono flex items-center gap-1">
+              <Link href="/mentor/profile" className="text-xs text-[#F07C27] hover:underline font-mono font-bold flex items-center gap-1">
                 Edit Profile <ExternalLink className="w-3 h-3" />
               </Link>
             </div>
           </div>
           <div className="lg:col-span-5 grid grid-cols-2 gap-3">
             {[
-              { label: "STUDENTS IN LAB", val: activeLab?.students?.length || 0, color: "text-white", sub: `Cap: ${activeLab?.capacity || 30}` },
-              { label: "GRADING QUEUE", val: pendingSubmissions.length, color: "text-amber-400", sub: "Pending Code Review" },
-              { label: "OPEN DOUBTS", val: doubts.filter((d) => d.status === "OPEN").length, color: "text-sky-400", sub: "Awaiting Response" },
-              { label: "LAB SESSIONS", val: sessions.length, color: "text-emerald-400", sub: "Verified Attendance" },
+              { label: "STUDENTS IN LAB", val: activeLab?.students?.length || 0, color: "text-[#111111]", sub: `Cap: ${activeLab?.capacity || 30}` },
+              { label: "GRADING QUEUE", val: pendingSubmissions.length, color: "text-[#F07C27]", sub: "Pending Review" },
+              { label: "OPEN DOUBTS", val: doubts.filter((d) => d.status === "OPEN").length, color: "text-blue-700", sub: "Awaiting Action" },
+              { label: "LAB SESSIONS", val: sessions.length, color: "text-emerald-700", sub: "Verified Attend." },
             ].map((kpi) => (
-              <div key={kpi.label} className="rounded-xl p-4 bg-[#070B14]/80 border border-slate-800 shadow-inner">
-                <span className="text-[10px] font-mono text-slate-400 block uppercase">{kpi.label}</span>
+              <div key={kpi.label} className="p-4 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+                <span className="text-[10px] font-mono text-slate-500 block uppercase font-bold">{kpi.label}</span>
                 <span className={`font-display font-black text-2xl ${kpi.color}`}>{kpi.val}</span>
-                <span className={`text-[11px] font-mono block mt-0.5 ${kpi.color}/80`}>{kpi.sub}</span>
+                <span className="text-[11px] font-mono block mt-0.5 text-slate-600 font-bold">{kpi.sub}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── TABS ── */}
-      <div className="flex items-center gap-1.5 border-b border-slate-800/80 pb-2 overflow-x-auto text-xs font-semibold scrollbar-none">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all whitespace-nowrap ${isActive ? "bg-sky-500/15 text-sky-300 border border-sky-500/30 font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]" : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"}`}>
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-              {tab.count !== null && tab.count > 0 && <span className={`px-1.5 rounded-full text-[10px] font-mono ${isActive ? "bg-sky-500 text-white" : "bg-slate-800 text-slate-400"}`}>{tab.count}</span>}
-            </button>
-          );
-        })}
-      </div>
+      {/* ── TWO-COLUMN WORKSPACE: VERTICAL SIDEBAR + ACTIVE TAB WORKSPACE ── */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* ── LEFT VERTICAL SIDEBAR ── */}
+        <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 lg:sticky lg:top-[125px] z-20 space-y-4">
+          <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-3.5 space-y-3">
+            {/* Sidebar Telemetry Header */}
+            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-2.5">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#111111] flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-[#F07C27] border border-[#111111] animate-pulse" />
+                [ MENTOR // CONSOLE ]
+              </span>
+              <span className="text-[10px] font-mono font-bold bg-[#FFF0E5] px-1.5 py-0.5 border border-[#111111] text-[#111111]">
+                {TABS.length} MODULES
+              </span>
+            </div>
+
+            {/* Mobile Horizontal Carousel (< lg) / Desktop Vertical Stack (lg+) */}
+            <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0 scrollbar-none">
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex items-center justify-between gap-2.5 px-3 py-2.5 border-[2px] border-[#111111] uppercase font-mono text-xs font-bold transition-all whitespace-nowrap cursor-pointer text-left ${
+                      isActive
+                        ? "bg-[#F07C27] text-white shadow-[4px_4px_0px_#111111] translate-x-1 font-black"
+                        : "bg-white text-[#111111] shadow-[2px_2px_0px_#111111] hover:bg-[#FFF0E5] hover:translate-x-0.5"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-white" : "text-[#111111]"}`} />
+                      <span className="truncate">{tab.label}</span>
+                    </div>
+                    {tab.count !== null && tab.count > 0 && (
+                      <span
+                        className={`px-1.5 py-0.5 text-[10px] font-mono flex-shrink-0 border ${
+                          isActive
+                            ? "bg-[#111111] text-white border-white/40"
+                            : "bg-[#FFF0E5] text-[#111111] border-[#111111]"
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Quick Context Box at bottom of sidebar */}
+            <div className="hidden lg:block pt-2 border-t-[2px] border-[#111111] text-[11px] font-mono space-y-1.5 bg-[#F9F9F9] -mx-3.5 -mb-3.5 p-3">
+              <div className="flex justify-between text-slate-600 font-bold">
+                <span>LABORATORY:</span>
+                <span className="text-[#111111] font-black truncate max-w-[120px]">{activeLab?.name || "LAB 1"}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 font-bold">
+                <span>TOTAL CANDIDATES:</span>
+                <span className="text-[#111111] font-black">{activeLab?.students?.length || 0}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 font-bold">
+                <span>PENDING GRADES:</span>
+                <span className="text-[#F07C27] font-black">{pendingSubmissions.length}</span>
+              </div>
+              <div className="pt-2 border-t border-[#111111]/20">
+                <Link
+                  href="/curriculum"
+                  target="_blank"
+                  className="flex items-center justify-between text-[10px] font-mono font-bold text-[#111111] hover:text-[#F07C27] uppercase bg-white border border-[#111111] px-2 py-1 shadow-[1px_1px_0px_#111111] transition-all hover:translate-x-0.5"
+                >
+                  <span>⚡ 6-DAY SYLLABUS</span>
+                  <ExternalLink className="w-3 h-3 text-[#F07C27]" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* ── RIGHT MAIN WORKSPACE CONTENT ── */}
+        <main className="flex-1 min-w-0 w-full space-y-6">
 
       {/* ══ TAB: ROSTER ══ */}
       {/* ══ TESTS & QUIZZES (create, manage, grade online tests) ══ */}
@@ -493,22 +568,26 @@ export default function MentorDashboardPage() {
       {activeTab === "roster" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-display font-bold text-white text-base">Enrolled Candidates — {activeLab?.name}</h3>
-            <span className="text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">Total: {activeLab?.students?.length || 0} Engineers</span>
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+              Enrolled Candidates — {activeLab?.name}
+            </h3>
+            <span className="text-xs font-mono font-bold text-[#111111] bg-[#FFF0E5] px-3 py-1 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+              Total: {activeLab?.students?.length || 0} Engineers
+            </span>
           </div>
-          <div className="rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 overflow-hidden shadow-md">
+          <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] overflow-hidden">
             <div className="overflow-x-auto scrollbar-none">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider text-[10px]">
-                    <th className="sticky left-0 bg-[#0F172A] z-10 py-3 px-4 shadow-[1px_0_0_0_rgba(51,65,85,0.6)]">Candidate</th>
-                    <th className="py-3 px-4">Email</th>
-                    <th className="py-3 px-4">Institution</th>
-                    <th className="py-3 px-4">Enrolled At</th>
+                  <tr className="border-b-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] font-mono uppercase font-bold text-[10px] tracking-wider">
+                    <th className="sticky left-0 bg-[#FFF0E5] z-10 py-3 px-4 border-r border-[#111111]">Candidate</th>
+                    <th className="py-3 px-4 border-r border-[#111111]">Email</th>
+                    <th className="py-3 px-4 border-r border-[#111111]">Institution</th>
+                    <th className="py-3 px-4 border-r border-[#111111]">Enrolled At</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-[#111111]/20 font-mono">
                   {(!activeLab?.students || activeLab.students.length === 0) && (
                     <tr>
                       <td colSpan={5} className="py-8">
@@ -524,22 +603,25 @@ export default function MentorDashboardPage() {
                     const st = ls.student;
                     const initials = st?.name ? st.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("") : "S";
                     return (
-                      <tr key={ls.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="sticky left-0 bg-[#0F172A] z-10 py-3 px-4 shadow-[1px_0_0_0_rgba(51,65,85,0.6)]">
+                      <tr key={ls.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
+                        <td className="sticky left-0 bg-white z-10 py-3 px-4 border-r border-[#111111]/20">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-white">
+                            <div className="w-7 h-7 border-[2px] border-[#111111] bg-[#FFF0E5] shadow-[1px_1px_0px_#111111] flex items-center justify-center text-xs font-mono font-bold text-[#111111]">
                               {initials}
                             </div>
-                            <span className="font-sans font-bold text-white text-sm whitespace-nowrap">
+                            <span className="font-mono font-bold text-[#111111] text-sm whitespace-nowrap">
                               {st?.name}
                             </span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-slate-300">{st?.email}</td>
-                        <td className="py-3 px-4 text-slate-400 font-sans">{st?.college || "—"}</td>
-                        <td className="py-3 px-4 text-slate-500">{new Date(ls.enrolledAt).toLocaleDateString()}</td>
+                        <td className="py-3 px-4 text-slate-700 border-r border-[#111111]/20">{st?.email}</td>
+                        <td className="py-3 px-4 text-slate-700 font-mono border-r border-[#111111]/20">{st?.college || "—"}</td>
+                        <td className="py-3 px-4 text-slate-600 border-r border-[#111111]/20">{new Date(ls.enrolledAt).toLocaleDateString()}</td>
                         <td className="py-3 px-4 text-right">
-                          <button onClick={() => setActiveTab("review")} className="px-2.5 py-1 rounded bg-slate-800 hover:bg-sky-500 hover:text-white text-slate-300 font-mono text-[11px] transition-all whitespace-nowrap">
+                          <button
+                            onClick={() => setActiveTab("review")}
+                            className="px-2.5 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-[11px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all whitespace-nowrap cursor-pointer"
+                          >
                             View Submissions →
                           </button>
                         </td>
@@ -557,7 +639,9 @@ export default function MentorDashboardPage() {
       {activeTab === "review" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-5 space-y-3">
-            <h3 className="font-display font-bold text-white text-base">Submissions to Grade ({allSubmissions.length})</h3>
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+              Submissions to Grade ({allSubmissions.length})
+            </h3>
             <div className="space-y-2.5">
               {allSubmissions.length === 0 && (
                 <EmptyState
@@ -570,13 +654,33 @@ export default function MentorDashboardPage() {
                 const isSelected = selectedSubmission?.id === s.id;
                 const isGraded = s.score !== null && s.score !== undefined;
                 return (
-                  <div key={s.id} onClick={() => { setSelectedSubmission(s); setReviewScore(s.score ?? 90); setReviewFeedback(s.feedback ?? ""); setReviewSuccess(false); }} className={`p-4 rounded-2xl border cursor-pointer transition-all ${isSelected ? "bg-sky-500/10 border-sky-500/40 shadow-lg shadow-sky-500/5" : "bg-[#0F172A]/70 border-slate-800/80 hover:border-slate-700"}`}>
+                  <div
+                    key={s.id}
+                    onClick={() => { setSelectedSubmission(s); setReviewScore(s.score ?? 90); setReviewFeedback(s.feedback ?? ""); setReviewSuccess(false); }}
+                    className={`p-4 border-[2px] border-[#111111] cursor-pointer transition-all ${
+                      isSelected
+                        ? "bg-[#FFF0E5] shadow-[4px_4px_0px_#111111] translate-x-0.5"
+                        : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-slate-50"
+                    }`}
+                  >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-sans font-bold text-sm text-white">{s.student?.name || "Student"}</span>
-                      {isGraded ? <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400">{s.score}/{s.maxScore}</span> : <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400">Needs Review</span>}
+                      <span className="font-mono font-bold text-sm text-[#111111]">{s.student?.name || "Student"}</span>
+                      {isGraded ? (
+                        <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 shadow-[1px_1px_0px_#111111]">
+                          {s.score}/{s.maxScore}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-amber-100 text-amber-900 shadow-[1px_1px_0px_#111111]">
+                          Needs Review
+                        </span>
+                      )}
                     </div>
-                    <p className="text-xs text-slate-300 font-mono">{s.assignmentTitle}</p>
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 mt-2"><span>Submitted: {new Date(s.submittedAt).toLocaleDateString()}</span><span>•</span><span className={s.status === "LATE" ? "text-rose-400 font-bold" : ""}>{s.status}</span></div>
+                    <p className="text-xs text-slate-700 font-mono font-medium">{s.assignmentTitle}</p>
+                    <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 mt-2 font-bold">
+                      <span>Submitted: {new Date(s.submittedAt).toLocaleDateString()}</span>
+                      <span>•</span>
+                      <span className={s.status === "LATE" ? "text-rose-600 font-bold" : "text-slate-600"}>{s.status}</span>
+                    </div>
                   </div>
                 );
               })}
@@ -584,24 +688,90 @@ export default function MentorDashboardPage() {
           </div>
           <div className="lg:col-span-7">
             {selectedSubmission ? (
-              <div className="rounded-2xl p-6 bg-[#0F172A]/80 border border-slate-800/80 shadow-xl space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div><span className="text-[10px] font-mono text-sky-400 uppercase font-bold">CODE REVIEW</span><h3 className="font-display font-bold text-xl text-white">{selectedSubmission.student?.name}</h3><span className="text-xs text-slate-400 font-mono">Task: {selectedSubmission.assignmentTitle}</span></div>
-                  {selectedSubmission.score !== null && <div className="text-right"><span className="text-[10px] font-mono text-slate-400 uppercase block">CURRENT GRADE</span><span className="font-display font-bold text-xl text-emerald-400">{selectedSubmission.score}/{selectedSubmission.maxScore}</span></div>}
+              <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 space-y-4">
+                <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3">
+                  <div>
+                    <span className="text-[10px] font-mono text-[#F07C27] uppercase font-black tracking-wider">
+                      CODE REVIEW PROTOCOL
+                    </span>
+                    <h3 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
+                      {selectedSubmission.student?.name}
+                    </h3>
+                    <span className="text-xs text-slate-600 font-mono font-bold">
+                      Task: {selectedSubmission.assignmentTitle}
+                    </span>
+                  </div>
+                  {selectedSubmission.score !== null && (
+                    <div className="text-right">
+                      <span className="text-[10px] font-mono text-slate-500 uppercase block font-bold">CURRENT GRADE</span>
+                      <span className="font-display font-black text-2xl text-emerald-700">
+                        {selectedSubmission.score}/{selectedSubmission.maxScore}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div><label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">Candidate Implementation</label><div className="rounded-xl border border-slate-800 bg-[#070B14] p-4 font-mono text-xs text-slate-200 overflow-x-auto max-h-60 scrollbar-thin"><pre className="whitespace-pre-wrap">{selectedSubmission.content}</pre></div></div>
+                <div>
+                  <label className="block text-[11px] font-mono text-slate-700 uppercase mb-1 font-bold">
+                    Candidate Implementation
+                  </label>
+                  <div className="border-[2px] border-[#111111] bg-[#111111] text-[#E0E0E0] p-4 font-mono text-xs overflow-x-auto max-h-60 shadow-inner">
+                    <pre className="whitespace-pre-wrap">{selectedSubmission.content}</pre>
+                  </div>
+                </div>
                 <form onSubmit={handleReviewSubmit} className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between"><label className="text-xs font-mono text-slate-300 font-bold uppercase">Score (0–{selectedSubmission.maxScore})</label><span className="font-mono text-lg font-black text-brand-orange">{reviewScore} / {selectedSubmission.maxScore}</span></div>
-                    <input type="range" min={0} max={selectedSubmission.maxScore} value={reviewScore} onChange={(e) => setReviewScore(Number(e.target.value))} className="w-full accent-brand-orange cursor-pointer" />
-                    <div className="flex gap-2 font-mono text-xs">{[100, 95, 90, 85, 75].map((p) => <button key={p} type="button" onClick={() => setReviewScore(p)} className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]">{p}%</button>)}</div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-mono text-[#111111] font-bold uppercase">
+                        Score (0–{selectedSubmission.maxScore})
+                      </label>
+                      <span className="font-mono text-lg font-black text-[#F07C27]">
+                        {reviewScore} / {selectedSubmission.maxScore}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={selectedSubmission.maxScore}
+                      value={reviewScore}
+                      onChange={(e) => setReviewScore(Number(e.target.value))}
+                      className="w-full accent-[#F07C27] cursor-pointer"
+                    />
+                    <div className="flex gap-2 font-mono text-xs">
+                      {[100, 95, 90, 85, 75].map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setReviewScore(p)}
+                          className="px-2.5 py-1 border-[2px] border-[#111111] bg-[#F4F3F3] hover:bg-white text-[#111111] text-[11px] font-mono font-bold shadow-[1px_1px_0px_#111111] cursor-pointer"
+                        >
+                          {p}%
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div><label className="block text-xs font-mono text-slate-300 uppercase mb-1">Mentor Critique</label><textarea required rows={3} value={reviewFeedback} onChange={(e) => setReviewFeedback(e.target.value)} placeholder="Comment on cache alignment, concurrency, correctness..." className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono resize-none" /></div>
-                  {reviewSuccess && <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /><span>Review recorded! Candidate performance updated.</span></div>}
+                  <div>
+                    <label className="block text-xs font-mono text-[#111111] uppercase mb-1 font-bold">
+                      Mentor Critique
+                    </label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={reviewFeedback}
+                      onChange={(e) => setReviewFeedback(e.target.value)}
+                      placeholder="Comment on cache alignment, concurrency, correctness..."
+                      className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono resize-none shadow-[2px_2px_0px_#111111]"
+                    />
+                  </div>
+                  {reviewSuccess && (
+                    <div className="p-3 border-[2px] border-[#111111] bg-emerald-100 text-emerald-900 font-mono text-xs flex items-center gap-2 shadow-[2px_2px_0px_#111111]">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                      <span>Review recorded! Candidate performance updated.</span>
+                    </div>
+                  )}
                   <button
                     type="submit"
                     disabled={reviewing}
-                    className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
+                    className="w-full py-2.5 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {reviewing ? (
                       <>
@@ -614,7 +784,11 @@ export default function MentorDashboardPage() {
                   </button>
                 </form>
               </div>
-            ) : <div className="rounded-2xl p-12 bg-[#0F172A]/70 border border-slate-800 text-center text-slate-500 font-mono text-xs">Select a submission from the queue to inspect code and grade.</div>}
+            ) : (
+              <div className="bg-white border-[3px] border-[#111111] p-12 shadow-[6px_6px_0px_#111111] text-center text-slate-600 font-mono text-xs font-bold uppercase">
+                Select a submission from the queue to inspect code and grade.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -623,7 +797,9 @@ export default function MentorDashboardPage() {
       {activeTab === "assignments" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-3">
-            <h3 className="font-display font-bold text-white text-base">Laboratory Assignments ({assignments.length})</h3>
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+              Laboratory Assignments ({assignments.length})
+            </h3>
             {assignments.length === 0 && (
               <EmptyState
                 icon={FileText}
@@ -632,26 +808,64 @@ export default function MentorDashboardPage() {
               />
             )}
             {assignments.map((a) => (
-              <div key={a.id} className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-2">
-                <div className="flex items-center justify-between"><h4 className="font-bold text-white text-sm">{a.title}</h4><span className="text-xs font-mono text-brand-orange font-bold">Max: {a.maxScore} pts</span></div>
-                <p className="text-xs text-slate-400 line-clamp-2">{a.description}</p>
-                <div className="flex items-center gap-4 text-xs font-mono text-slate-500 pt-1"><span>Due: {new Date(a.dueDate).toLocaleDateString()}</span><span>•</span><span>{a._count?.submissions || 0} Submissions</span></div>
+              <div key={a.id} className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-mono font-bold text-[#111111] text-sm uppercase">{a.title}</h4>
+                  <span className="text-xs font-mono text-[#F07C27] font-black border-[2px] border-[#111111] bg-[#FFF0E5] px-2 py-0.5 shadow-[1px_1px_0px_#111111]">
+                    MAX: {a.maxScore} PTS
+                  </span>
+                </div>
+                <p className="text-xs text-slate-700 font-mono line-clamp-2">{a.description}</p>
+                <div className="flex items-center gap-4 text-xs font-mono text-slate-500 pt-1 border-t border-[#111111]/15 font-bold">
+                  <span>DUE: {new Date(a.dueDate).toLocaleDateString()}</span>
+                  <span>•</span>
+                  <span>{a._count?.submissions || 0} SUBMISSIONS</span>
+                </div>
               </div>
             ))}
           </div>
-          <div className="lg:col-span-5 rounded-2xl p-6 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-4">
-            <h3 className="font-display font-bold text-white text-base flex items-center gap-2"><FileText className="w-4 h-4 text-brand-orange" />Publish New Assignment</h3>
+          <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] p-6 shadow-[6px_6px_0px_#111111] space-y-4">
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#F07C27]" />
+              Publish New Assignment
+            </h3>
             <form onSubmit={handleCreateAssignment} className="space-y-3">
-              <input required placeholder="Assignment Title" value={assignTitle} onChange={(e) => setAssignTitle(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono" />
-              <textarea required rows={4} placeholder="Architectural constraints, benchmark targets, submission requirements..." value={assignDesc} onChange={(e) => setAssignDesc(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono resize-none" />
+              <input
+                required
+                placeholder="Assignment Title"
+                value={assignTitle}
+                onChange={(e) => setAssignTitle(e.target.value)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
+              />
+              <textarea
+                required
+                rows={4}
+                placeholder="Architectural constraints, benchmark targets, submission requirements..."
+                value={assignDesc}
+                onChange={(e) => setAssignDesc(e.target.value)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono resize-none shadow-[2px_2px_0px_#111111]"
+              />
               <div className="grid grid-cols-2 gap-2">
-                <input type="date" required value={assignDueDate} onChange={(e) => setAssignDueDate(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
-                <input type="number" required value={assignMaxScore} onChange={(e) => setAssignMaxScore(Number(e.target.value))} className="w-full bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" placeholder="Max Score" />
+                <input
+                  type="date"
+                  required
+                  value={assignDueDate}
+                  onChange={(e) => setAssignDueDate(e.target.value)}
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
+                />
+                <input
+                  type="number"
+                  required
+                  value={assignMaxScore}
+                  onChange={(e) => setAssignMaxScore(Number(e.target.value))}
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
+                  placeholder="Max Score"
+                />
               </div>
               <button
                 type="submit"
                 disabled={creatingAssignment}
-                className="w-full py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-2.5 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {creatingAssignment ? (
                   <>
@@ -671,7 +885,9 @@ export default function MentorDashboardPage() {
       {activeTab === "exercises" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-3">
-            <h3 className="font-display font-bold text-white text-base">Programming Exercises ({exercises.length})</h3>
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+              Programming Exercises ({exercises.length})
+            </h3>
             {exercises.length === 0 && (
               <EmptyState
                 icon={Dumbbell}
@@ -680,49 +896,111 @@ export default function MentorDashboardPage() {
               />
             )}
             {exercises.map((ex) => (
-              <div key={ex.id} className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-2">
+              <div key={ex.id} className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-white text-sm">{ex.title}</h4>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${ex.difficulty === "EASY" ? "bg-emerald-500/20 text-emerald-400" : ex.difficulty === "HARD" ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400"}`}>{ex.difficulty}</span>
+                    <h4 className="font-mono font-bold text-[#111111] text-sm uppercase">{ex.title}</h4>
+                    <span className={`px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold shadow-[1px_1px_0px_#111111] ${
+                      ex.difficulty === "EASY"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : ex.difficulty === "HARD"
+                        ? "bg-rose-100 text-rose-800"
+                        : "bg-amber-100 text-amber-800"
+                    }`}>
+                      {ex.difficulty}
+                    </span>
                   </div>
-                  <span className="text-xs font-mono text-brand-orange font-bold">Max: {ex.maxScore} pts</span>
+                  <span className="text-xs font-mono text-[#F07C27] font-black border-[2px] border-[#111111] bg-[#FFF0E5] px-2 py-0.5 shadow-[1px_1px_0px_#111111]">
+                    MAX: {ex.maxScore} PTS
+                  </span>
                 </div>
-                <p className="text-xs text-slate-400 line-clamp-2">{ex.description}</p>
-                <div className="flex items-center gap-4 text-xs font-mono text-slate-500 pt-1">
-                  <span>Topic: {ex.topic || "General"}</span>
-                  {ex.dueDate && <><span>•</span><span>Due: {new Date(ex.dueDate).toLocaleDateString()}</span></>}
-                  <span>•</span><span>{ex._count?.submissions || 0} Submissions</span>
+                <p className="text-xs text-slate-700 font-mono line-clamp-2">{ex.description}</p>
+                <div className="flex items-center gap-4 text-xs font-mono text-slate-500 pt-1 border-t border-[#111111]/15 font-bold">
+                  <span>TOPIC: {ex.topic || "General"}</span>
+                  {ex.dueDate && <><span>•</span><span>DUE: {new Date(ex.dueDate).toLocaleDateString()}</span></>}
+                  <span>•</span><span>{ex._count?.submissions || 0} SUBMISSIONS</span>
                 </div>
               </div>
             ))}
           </div>
-          <div className="lg:col-span-5 rounded-2xl p-6 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-4">
-            <h3 className="font-display font-bold text-white text-base flex items-center gap-2"><Dumbbell className="w-4 h-4 text-emerald-400" />Create Exercise</h3>
+          <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] p-6 shadow-[6px_6px_0px_#111111] space-y-4">
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
+              <Dumbbell className="w-4 h-4 text-emerald-600" />
+              Create Exercise
+            </h3>
             <form onSubmit={handleCreateExercise} className="space-y-3">
-              <input required placeholder="Exercise Title" value={exTitle} onChange={(e) => setExTitle(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 font-mono" />
-              <textarea required rows={2} placeholder="Brief description..." value={exDesc} onChange={(e) => setExDesc(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 font-mono resize-none" />
-              <textarea required rows={3} placeholder="Problem statement..." value={exProblem} onChange={(e) => setExProblem(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 font-mono resize-none" />
+              <input
+                required
+                placeholder="Exercise Title"
+                value={exTitle}
+                onChange={(e) => setExTitle(e.target.value)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
+              />
+              <textarea
+                required
+                rows={2}
+                placeholder="Brief description..."
+                value={exDesc}
+                onChange={(e) => setExDesc(e.target.value)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono resize-none shadow-[2px_2px_0px_#111111]"
+              />
+              <textarea
+                required
+                rows={3}
+                placeholder="Problem statement..."
+                value={exProblem}
+                onChange={(e) => setExProblem(e.target.value)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono resize-none shadow-[2px_2px_0px_#111111]"
+              />
               <div className="grid grid-cols-2 gap-2">
-                <select value={exTopic} onChange={(e) => setExTopic(e.target.value)} className="bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white">
+                <select
+                  value={exTopic}
+                  onChange={(e) => setExTopic(e.target.value)}
+                  className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111]"
+                >
                   {["C++ Basics","OOP","STL","Pointers","Concurrency","Algorithms","Systems"].map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <select value={exDifficulty} onChange={(e) => setExDifficulty(e.target.value as any)} className="bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white">
+                <select
+                  value={exDifficulty}
+                  onChange={(e) => setExDifficulty(e.target.value as any)}
+                  className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111]"
+                >
                   <option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <input placeholder="Sample Input" value={exSampleIn} onChange={(e) => setExSampleIn(e.target.value)} className="bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
-                <input placeholder="Sample Output" value={exSampleOut} onChange={(e) => setExSampleOut(e.target.value)} className="bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
+                <input
+                  placeholder="Sample Input"
+                  value={exSampleIn}
+                  onChange={(e) => setExSampleIn(e.target.value)}
+                  className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
+                />
+                <input
+                  placeholder="Sample Output"
+                  value={exSampleOut}
+                  onChange={(e) => setExSampleOut(e.target.value)}
+                  className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
+                />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <input type="date" value={exDueDate} onChange={(e) => setExDueDate(e.target.value)} className="bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
-                <input type="number" value={exMaxScore} onChange={(e) => setExMaxScore(Number(e.target.value))} className="bg-[#070B14] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" placeholder="Max Score" />
+                <input
+                  type="date"
+                  value={exDueDate}
+                  onChange={(e) => setExDueDate(e.target.value)}
+                  className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
+                />
+                <input
+                  type="number"
+                  value={exMaxScore}
+                  onChange={(e) => setExMaxScore(Number(e.target.value))}
+                  className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
+                  placeholder="Max Score"
+                />
               </div>
               <button
                 type="submit"
                 disabled={creatingExercise}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-2.5 border-[2px] border-[#111111] bg-emerald-600 hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {creatingExercise ? (
                   <>
@@ -742,28 +1020,72 @@ export default function MentorDashboardPage() {
       {activeTab === "notes" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-3">
-            <h3 className="font-display font-bold text-white text-base">Published Resources ({notes.length})</h3>
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+              Published Resources ({notes.length})
+            </h3>
             {notes.map((n) => (
-              <div key={n.id} className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-2">
-                <div className="flex items-center justify-between"><h4 className="font-bold text-white text-sm">{n.title}</h4><span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/15 text-sky-400 uppercase">{n.category}</span></div>
-                <p className="text-xs text-slate-400 line-clamp-2">{n.description}</p>
-                <div className="flex items-center justify-between text-xs font-mono text-slate-500 pt-1"><span>{new Date(n.createdAt).toLocaleDateString()}</span><div className="flex gap-1">{n.tags?.map((t: string) => <span key={t} className="text-[10px] bg-slate-900 px-1.5 py-0.5 rounded">#{t}</span>)}</div></div>
+              <div key={n.id} className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-mono font-bold text-[#111111] text-sm uppercase">{n.title}</h4>
+                  <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-[#FFF0E5] text-[#111111] uppercase shadow-[1px_1px_0px_#111111]">
+                    {n.category}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-700 font-mono line-clamp-2">{n.description}</p>
+                <div className="flex items-center justify-between text-xs font-mono text-slate-500 pt-1 border-t border-[#111111]/15 font-bold">
+                  <span>{new Date(n.createdAt).toLocaleDateString()}</span>
+                  <div className="flex gap-1">
+                    {n.tags?.map((t: string) => (
+                      <span key={t} className="text-[10px] border border-[#111111] bg-[#F4F3F3] text-[#111111] px-1.5 py-0.5">
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-          <div className="lg:col-span-5 rounded-2xl p-6 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-4">
-            <h3 className="font-display font-bold text-white text-base flex items-center gap-2"><BookOpen className="w-4 h-4 text-sky-400" />Publish Material</h3>
+          <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] p-6 shadow-[6px_6px_0px_#111111] space-y-4">
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-blue-700" />
+              Publish Material
+            </h3>
             <form onSubmit={handlePublishNote} className="space-y-3">
-              <input required placeholder="Title" value={noteTitle} onChange={(e) => setNoteTitle(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono" />
-              <select value={noteCategory} onChange={(e) => setNoteCategory(e.target.value as any)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-sky-400">
-                <option value="NOTES">Architecture Notes</option><option value="CODE">C++ Code Sample</option><option value="PDF">PDF Slides</option><option value="RESOURCE">External Resource</option>
+              <input
+                required
+                placeholder="Title"
+                value={noteTitle}
+                onChange={(e) => setNoteTitle(e.target.value)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
+              />
+              <select
+                value={noteCategory}
+                onChange={(e) => setNoteCategory(e.target.value as any)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] focus:outline-none focus:bg-white shadow-[2px_2px_0px_#111111]"
+              >
+                <option value="NOTES">Architecture Notes</option>
+                <option value="CODE">C++ Code Sample</option>
+                <option value="PDF">PDF Slides</option>
+                <option value="RESOURCE">External Resource</option>
               </select>
-              <textarea rows={4} placeholder="// Code snippet or notes..." value={noteContent} onChange={(e) => setNoteContent(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-400 font-mono resize-none" />
-              <input type="text" value={noteTags} onChange={(e) => setNoteTags(e.target.value)} placeholder="Tags: systems, cpp" className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono" />
+              <textarea
+                rows={4}
+                placeholder="// Code snippet or notes..."
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono resize-none shadow-[2px_2px_0px_#111111]"
+              />
+              <input
+                type="text"
+                value={noteTags}
+                onChange={(e) => setNoteTags(e.target.value)}
+                placeholder="Tags: systems, cpp"
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
+              />
               <button
                 type="submit"
                 disabled={publishingNote}
-                className="w-full py-2.5 rounded-xl bg-sky-500 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-2.5 border-[2px] border-[#111111] bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {publishingNote ? (
                   <>
@@ -783,18 +1105,46 @@ export default function MentorDashboardPage() {
       {activeTab === "attendance" && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <div className="lg:col-span-8 rounded-2xl p-6 bg-[#0F172A]/70 border border-slate-800/80 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-                <div><h3 className="font-display font-bold text-white text-base">Mark Session Attendance</h3><p className="text-xs text-slate-400">Active: <strong className="text-white">{activeSession?.title || "Select a session"}</strong></p></div>
-                <div className="flex items-center gap-2">
-                  <select value={activeSession?.id || ""} onChange={(e) => { const s = sessions.find((x) => x.id === e.target.value); setActiveSession(s); if (s) { const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {}; s.attendanceRecords?.forEach((r: any) => { map[r.studentId] = r.status; }); setAttendanceMap(map); }}} className="bg-[#070B14] border border-slate-800 rounded-lg px-2 py-1 text-xs font-mono text-white">
-                    {sessions.map((s) => <option key={s.id} value={s.id}>{s.title}{s.startTime ? ` · ${s.startTime}${s.endTime ? `–${s.endTime}` : ""}` : ""}</option>)}
+            <div className="lg:col-span-8 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-[2px] border-[#111111] pb-3">
+                <div>
+                  <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+                    Mark Session Attendance
+                  </h3>
+                  <p className="text-xs text-slate-700 font-mono">
+                    Active: <strong className="text-[#111111]">{activeSession?.title || "Select a session"}</strong>
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={activeSession?.id || ""}
+                    onChange={(e) => {
+                      const s = sessions.find((x) => x.id === e.target.value);
+                      setActiveSession(s);
+                      if (s) {
+                        const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
+                        s.attendanceRecords?.forEach((r: any) => { map[r.studentId] = r.status; });
+                        setAttendanceMap(map);
+                      }
+                    }}
+                    className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none cursor-pointer"
+                  >
+                    {sessions.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.title}{s.startTime ? ` · ${s.startTime}${s.endTime ? `–${s.endTime}` : ""}` : ""}
+                      </option>
+                    ))}
                   </select>
-                  <button onClick={() => handleMarkAll("PRESENT")} className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white font-mono text-[11px] font-bold transition-all">Mark All Present</button>
+                  <button
+                    onClick={() => handleMarkAll("PRESENT")}
+                    className="px-2.5 py-1 border-[2px] border-[#111111] bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-900 font-mono text-[11px] font-bold shadow-[2px_2px_0px_#111111] transition-all cursor-pointer"
+                  >
+                    Mark All Present
+                  </button>
                   <button
                     onClick={handleSaveAttendance}
                     disabled={savingAttendance}
-                    className="px-3.5 py-1 rounded bg-brand-orange text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5"
+                    className="px-3.5 py-1 border-[2px] border-[#111111] bg-[#F07C27] text-white font-mono text-xs font-bold uppercase shadow-[2px_2px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     {savingAttendance ? (
                       <>
@@ -812,11 +1162,32 @@ export default function MentorDashboardPage() {
                   const sid = ls.studentId;
                   const currentStatus = attendanceMap[sid] || "PRESENT";
                   return (
-                    <div key={sid} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between gap-4">
-                      <div><span className="font-bold text-xs text-white block">{ls.student?.name}</span><span className="text-[10px] text-slate-400 font-mono">{ls.student?.college || "IIIT"}</span></div>
-                      <div className="flex items-center gap-1 font-mono text-[11px]">
+                    <div
+                      key={sid}
+                      className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9] flex items-center justify-between gap-4 shadow-[2px_2px_0px_#111111]"
+                    >
+                      <div>
+                        <span className="font-mono font-bold text-xs text-[#111111] block">{ls.student?.name}</span>
+                        <span className="text-[10px] text-slate-600 font-mono">{ls.student?.college || "IIIT"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 font-mono text-[11px]">
                         {(["PRESENT", "LATE", "ABSENT"] as const).map((st) => (
-                          <button key={st} type="button" onClick={() => setAttendanceMap((prev) => ({ ...prev, [sid]: st }))} className={`px-2.5 py-1 rounded transition-all font-bold ${currentStatus === st ? (st === "PRESENT" ? "bg-emerald-500 text-white" : st === "LATE" ? "bg-amber-500 text-white" : "bg-rose-500 text-white") : "bg-slate-800 text-slate-400 hover:text-white"}`}>{st}</button>
+                          <button
+                            key={st}
+                            type="button"
+                            onClick={() => setAttendanceMap((prev) => ({ ...prev, [sid]: st }))}
+                            className={`px-2.5 py-1 border-[2px] border-[#111111] transition-all font-bold cursor-pointer ${
+                              currentStatus === st
+                                ? st === "PRESENT"
+                                  ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
+                                  : st === "LATE"
+                                  ? "bg-amber-500 text-white shadow-[2px_2px_0px_#111111]"
+                                  : "bg-rose-600 text-white shadow-[2px_2px_0px_#111111]"
+                                : "bg-white text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            {st}
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -824,24 +1195,56 @@ export default function MentorDashboardPage() {
                 })}
               </div>
             </div>
-            <div className="lg:col-span-4 rounded-2xl p-5 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-3">
-              <h4 className="font-display font-bold text-white text-sm flex items-center gap-2"><CalendarCheck className="w-4 h-4 text-emerald-400" />Schedule Session</h4>
+            <div className="lg:col-span-4 bg-white border-[3px] border-[#111111] p-5 shadow-[6px_6px_0px_#111111] space-y-3">
+              <h4 className="font-display font-black text-[#111111] text-sm uppercase tracking-tight flex items-center gap-2">
+                <CalendarCheck className="w-4 h-4 text-emerald-600" />
+                Schedule Session
+              </h4>
               <form onSubmit={handleCreateSession} className="space-y-2.5">
-                <input required placeholder="Session title (e.g. Lab Day 4)" value={newSessionTitle} onChange={(e) => setNewSessionTitle(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 font-mono" />
-                <input placeholder="Topic (e.g. SIMD Vectorization)" value={newSessionTopic} onChange={(e) => setNewSessionTopic(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-400 font-mono" />
-                <input type="date" required value={newSessionDate} onChange={(e) => setNewSessionDate(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono" />
+                <input
+                  required
+                  placeholder="Session title (e.g. Lab Day 4)"
+                  value={newSessionTitle}
+                  onChange={(e) => setNewSessionTitle(e.target.value)}
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
+                />
+                <input
+                  placeholder="Topic (e.g. SIMD Vectorization)"
+                  value={newSessionTopic}
+                  onChange={(e) => setNewSessionTopic(e.target.value)}
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
+                />
+                <input
+                  type="date"
+                  required
+                  value={newSessionDate}
+                  onChange={(e) => setNewSessionDate(e.target.value)}
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
+                />
                 <div className="grid grid-cols-2 gap-2">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase">Start time
-                    <input type="time" value={newSessionStart} onChange={(e) => setNewSessionStart(e.target.value)} className="mt-1 w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono" />
+                  <label className="text-[10px] font-mono text-slate-700 uppercase font-bold">
+                    Start time
+                    <input
+                      type="time"
+                      value={newSessionStart}
+                      onChange={(e) => setNewSessionStart(e.target.value)}
+                      className="mt-1 w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs text-[#111111] font-mono shadow-[1px_1px_0px_#111111]"
+                    />
                   </label>
-                  <label className="text-[10px] font-mono text-slate-500 uppercase">End time
-                    <input type="time" value={newSessionEnd} onChange={(e) => setNewSessionEnd(e.target.value)} className="mt-1 w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono" />
+                  <label className="text-[10px] font-mono text-slate-700 uppercase font-bold">
+                    End time
+                    <input
+                      type="time"
+                      value={newSessionEnd}
+                      onChange={(e) => setNewSessionEnd(e.target.value)}
+                      className="mt-1 w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs text-[#111111] font-mono shadow-[1px_1px_0px_#111111]"
+                    />
                   </label>
                 </div>
                 <button
                   type="submit"
                   disabled={creatingSession}
-                  className="w-full py-2 rounded-xl bg-emerald-600 text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-2.5 border-[2px] border-[#111111] bg-emerald-600 hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {creatingSession ? (
                     <>
@@ -862,7 +1265,26 @@ export default function MentorDashboardPage() {
       {activeTab === "doubts" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-5 space-y-3">
-            <div className="flex items-center justify-between"><h3 className="font-display font-bold text-white text-base">Student Queries</h3><div className="flex gap-1 text-[10px] font-mono">{(["ALL", "OPEN", "RESOLVED"] as const).map((f) => <button key={f} onClick={() => setDoubtFilter(f)} className={`px-2 py-0.5 rounded transition-all ${doubtFilter === f ? "bg-sky-500 text-white font-bold" : "bg-slate-800 text-slate-400 hover:text-white"}`}>{f}</button>)}</div></div>
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+                Student Queries
+              </h3>
+              <div className="flex gap-1.5 text-[10px] font-mono">
+                {(["ALL", "OPEN", "RESOLVED"] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setDoubtFilter(f)}
+                    className={`px-2 py-0.5 border-[2px] border-[#111111] font-bold uppercase transition-all cursor-pointer ${
+                      doubtFilter === f
+                        ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111]"
+                        : "bg-white text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="space-y-2">
               {doubts.filter((d) => doubtFilter === "ALL" || d.status === doubtFilter).length === 0 && (
                 <EmptyState
@@ -872,37 +1294,89 @@ export default function MentorDashboardPage() {
                 />
               )}
               {doubts.filter((d) => doubtFilter === "ALL" || d.status === doubtFilter).map((d) => (
-                <div key={d.id} onClick={() => setSelectedDoubt(d)} className={`p-3.5 rounded-xl border cursor-pointer transition-all ${selectedDoubt?.id === d.id ? "bg-sky-500/10 border-sky-500/40" : "bg-[#0F172A]/70 border-slate-800/80 hover:border-slate-700"}`}>
-                  <div className="flex items-center justify-between mb-1"><span className="font-bold text-xs text-white truncate max-w-[180px]">{d.title}</span><span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold ${d.status === "RESOLVED" ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>{d.status}</span></div>
-                  <span className="text-[10px] font-mono text-slate-500">From: {d.student?.name} • {new Date(d.createdAt).toLocaleDateString()}</span>
+                <div
+                  key={d.id}
+                  onClick={() => setSelectedDoubt(d)}
+                  className={`p-3.5 border-[2px] border-[#111111] cursor-pointer transition-all ${
+                    selectedDoubt?.id === d.id
+                      ? "bg-[#FFF0E5] shadow-[4px_4px_0px_#111111] translate-x-0.5"
+                      : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono font-bold text-xs text-[#111111] truncate max-w-[180px]">{d.title}</span>
+                    <span
+                      className={`px-2 py-0.5 border-[2px] border-[#111111] text-[9px] font-mono font-bold shadow-[1px_1px_0px_#111111] ${
+                        d.status === "RESOLVED" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"
+                      }`}
+                    >
+                      {d.status}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-600 block font-bold">
+                    From: {d.student?.name} • {new Date(d.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
           <div className="lg:col-span-7">
             {selectedDoubt ? (
-              <div className="rounded-2xl p-5 bg-[#0F172A]/80 border border-slate-800/80 shadow-xl flex flex-col h-[520px]">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
-                  <div><h3 className="font-display font-bold text-white text-base">{selectedDoubt.title}</h3><span className="text-[10px] font-mono text-slate-400">Author: {selectedDoubt.student?.name}</span></div>
-                  <button onClick={() => handleToggleDoubtStatus(selectedDoubt.id, selectedDoubt.status)} className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${selectedDoubt.status === "RESOLVED" ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white"}`}>{selectedDoubt.status === "RESOLVED" ? "Re-open Thread" : "Mark as Resolved ✓"}</button>
+              <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-5 flex flex-col h-[540px]">
+                <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3 mb-3">
+                  <div>
+                    <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">{selectedDoubt.title}</h3>
+                    <span className="text-[10px] font-mono text-slate-600 font-bold">Author: {selectedDoubt.student?.name}</span>
+                  </div>
+                  <button
+                    onClick={() => handleToggleDoubtStatus(selectedDoubt.id, selectedDoubt.status)}
+                    className={`px-3 py-1 border-[2px] border-[#111111] text-xs font-mono font-bold shadow-[2px_2px_0px_#111111] transition-all cursor-pointer ${
+                      selectedDoubt.status === "RESOLVED"
+                        ? "bg-[#F4F3F3] text-[#111111] hover:bg-slate-200"
+                        : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    }`}
+                  >
+                    {selectedDoubt.status === "RESOLVED" ? "Re-open Thread" : "Mark as Resolved ✓"}
+                  </button>
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
                   {selectedDoubt.messages?.map((m: any) => {
                     const isMentor = m.sender?.role === "MENTOR";
                     return (
-                      <div key={m.id} className={`p-3.5 rounded-xl text-xs space-y-1 ${isMentor ? "bg-sky-950/30 border border-sky-500/30 mr-4" : "bg-slate-900 border border-slate-800 ml-4"}`}>
-                        <div className="flex items-center justify-between text-[10px] font-mono"><strong className={isMentor ? "text-sky-400" : "text-brand-orange"}>{m.sender?.name || (isMentor ? "You" : "Candidate")}</strong><span className="text-slate-500">{new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></div>
-                        <p className="text-slate-200 whitespace-pre-wrap font-sans">{m.body}</p>
+                      <div
+                        key={m.id}
+                        className={`p-3.5 border-[2px] border-[#111111] text-xs space-y-1 ${
+                          isMentor
+                            ? "bg-[#FFF0E5] shadow-[2px_2px_0px_#111111] mr-4"
+                            : "bg-[#F4F3F3] ml-4"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-[10px] font-mono font-bold">
+                          <strong className={isMentor ? "text-[#F07C27]" : "text-[#111111]"}>
+                            {m.sender?.name || (isMentor ? "You" : "Candidate")}
+                          </strong>
+                          <span className="text-slate-500">
+                            {new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        <p className="text-slate-800 whitespace-pre-wrap font-mono">{m.body}</p>
                       </div>
                     );
                   })}
                 </div>
-                <form onSubmit={handleSendReply} className="pt-3 border-t border-slate-800 flex gap-2">
-                  <input type="text" required placeholder="Provide technical solution..." value={replyText} onChange={(e) => setReplyText(e.target.value)} className="flex-1 bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 font-mono" />
+                <form onSubmit={handleSendReply} className="pt-3 border-t-[2px] border-[#111111] flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Provide technical solution..."
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    className="flex-1 bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
+                  />
                   <button
                     type="submit"
                     disabled={sendingReply}
-                    className="px-4 py-2 rounded-xl bg-sky-500 text-white font-mono text-xs font-bold hover:brightness-110 disabled:opacity-50 flex items-center gap-1.5"
+                    className="px-4 py-2 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[2px_2px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center gap-1.5 cursor-pointer"
                   >
                     {sendingReply ? (
                       <>
@@ -918,7 +1392,11 @@ export default function MentorDashboardPage() {
                   </button>
                 </form>
               </div>
-            ) : <div className="rounded-2xl p-12 bg-[#0F172A]/70 border border-slate-800 text-center text-slate-500 font-mono text-xs">Select a doubt from the inbox to reply.</div>}
+            ) : (
+              <div className="bg-white border-[3px] border-[#111111] p-12 shadow-[6px_6px_0px_#111111] text-center text-slate-600 font-mono text-xs font-bold uppercase">
+                Select a doubt from the inbox to reply.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -926,7 +1404,9 @@ export default function MentorDashboardPage() {
       {/* ══ TAB: FEEDBACK ══ */}
       {activeTab === "feedback" && (
         <div className="space-y-4">
-          <h3 className="font-display font-bold text-white text-base">Student Appraisals ({feedbacks.length})</h3>
+          <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+            Student Appraisals ({feedbacks.length})
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {feedbacks.length === 0 && (
               <div className="col-span-full">
@@ -938,13 +1418,28 @@ export default function MentorDashboardPage() {
               </div>
             )}
             {feedbacks.map((f) => (
-              <div key={f.id} className="p-5 rounded-2xl bg-[#0F172A]/70 border border-slate-800/80 space-y-2.5">
+              <div key={f.id} className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">{Array.from({ length: 5 }).map((_, i) => <svg key={i} className={`w-3.5 h-3.5 ${i < f.rating ? "text-brand-gold fill-brand-gold" : "text-slate-700"}`} viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}</div>
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase">{f.category}</span>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <svg
+                        key={i}
+                        className={`w-4 h-4 ${i < f.rating ? "text-[#F07C27] fill-[#F07C27]" : "text-slate-300"}`}
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 border-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] uppercase shadow-[1px_1px_0px_#111111]">
+                    {f.category}
+                  </span>
                 </div>
-                <p className="text-sm text-slate-200 font-sans italic">&quot;{f.comment}&quot;</p>
-                <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-800"><span>From: {f.isAnonymous ? "Anonymous Candidate" : f.student?.name}</span><span>{new Date(f.createdAt).toLocaleDateString()}</span></div>
+                <p className="text-sm text-slate-800 font-mono italic">&quot;{f.comment}&quot;</p>
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 pt-2 border-t border-[#111111]/15 font-bold">
+                  <span>From: {f.isAnonymous ? "Anonymous Candidate" : f.student?.name}</span>
+                  <span>{new Date(f.createdAt).toLocaleDateString()}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -955,7 +1450,9 @@ export default function MentorDashboardPage() {
       {activeTab === "announcements" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-3">
-            <h3 className="font-display font-bold text-white text-base">Published Announcements ({announcements.length})</h3>
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+              Published Announcements ({announcements.length})
+            </h3>
             {announcements.length === 0 && (
               <EmptyState
                 icon={Megaphone}
@@ -964,29 +1461,74 @@ export default function MentorDashboardPage() {
               />
             )}
             {announcements.map((a) => (
-              <div key={a.id} className={`p-5 rounded-2xl bg-[#0F172A]/70 border space-y-2 ${a.pinned ? "border-brand-orange/40 shadow-[0_0_15px_rgba(240,124,39,0.1)]" : "border-slate-800/80"}`}>
+              <div
+                key={a.id}
+                className={`p-5 border-[3px] border-[#111111] space-y-2 ${
+                  a.pinned
+                    ? "bg-[#FFF0E5] shadow-[6px_6px_0px_#111111]"
+                    : "bg-white shadow-[4px_4px_0px_#111111]"
+                }`}
+              >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2"><h4 className="font-bold text-white text-sm">{a.title}</h4>{a.pinned && <span className="text-[10px] font-mono text-brand-orange bg-brand-orange/15 px-1.5 py-0.5 rounded border border-brand-orange/30">📌 Pinned</span>}</div>
-                  <span className="text-[10px] text-slate-500 font-mono flex-shrink-0">{new Date(a.createdAt).toLocaleDateString()}</span>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-mono font-bold text-[#111111] text-sm uppercase">{a.title}</h4>
+                    {a.pinned && (
+                      <span className="text-[10px] font-mono text-[#111111] bg-[#F07C27] text-white px-2 py-0.5 border border-[#111111] font-bold">
+                        📌 PINNED
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-600 font-mono flex-shrink-0 font-bold">
+                    {new Date(a.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
-                <p className="text-xs text-slate-300 whitespace-pre-wrap">{a.body}</p>
+                <p className="text-xs text-slate-700 whitespace-pre-wrap font-mono">{a.body}</p>
               </div>
             ))}
           </div>
-          <div className="lg:col-span-5 rounded-2xl p-6 bg-[#0F172A]/80 border border-slate-800/80 shadow-md space-y-4">
-            <h3 className="font-display font-bold text-white text-base flex items-center gap-2"><Megaphone className="w-4 h-4 text-brand-orange" />Post Announcement</h3>
+          <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] p-6 shadow-[6px_6px_0px_#111111] space-y-4">
+            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
+              <Megaphone className="w-4 h-4 text-[#F07C27]" />
+              Post Announcement
+            </h3>
             <form onSubmit={handlePostAnnouncement} className="space-y-3">
-              <input required placeholder="Announcement title" value={annTitle} onChange={(e) => setAnnTitle(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono" />
-              <textarea required rows={4} placeholder="Announcement body (supports plain text)..." value={annBody} onChange={(e) => setAnnBody(e.target.value)} className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-orange font-mono resize-none" />
-              <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                <input type="checkbox" checked={annPinned} onChange={(e) => setAnnPinned(e.target.checked)} className="w-4 h-4 accent-brand-orange rounded" />
-                <div><span className="text-xs font-bold text-white block">Pin to top of dashboard</span><span className="text-[10px] text-slate-500 font-mono">Students will see this first</span></div>
+              <input
+                required
+                placeholder="Announcement title"
+                value={annTitle}
+                onChange={(e) => setAnnTitle(e.target.value)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
+              />
+              <textarea
+                required
+                rows={4}
+                placeholder="Announcement body (supports plain text)..."
+                value={annBody}
+                onChange={(e) => setAnnBody(e.target.value)}
+                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono resize-none shadow-[2px_2px_0px_#111111]"
+              />
+              <label className="flex items-center gap-2.5 cursor-pointer p-3 border-[2px] border-[#111111] bg-[#F9F9F9] shadow-[2px_2px_0px_#111111]">
+                <input
+                  type="checkbox"
+                  checked={annPinned}
+                  onChange={(e) => setAnnPinned(e.target.checked)}
+                  className="w-4 h-4 accent-[#F07C27]"
+                />
+                <div>
+                  <span className="text-xs font-bold text-[#111111] font-mono block">Pin to top of dashboard</span>
+                  <span className="text-[10px] text-slate-600 font-mono">Students will see this first</span>
+                </div>
               </label>
-              {annSuccess && <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" />Announcement published to all students!</div>}
+              {annSuccess && (
+                <div className="p-3 border-[2px] border-[#111111] bg-emerald-100 text-emerald-900 font-mono text-xs flex items-center gap-2 shadow-[2px_2px_0px_#111111]">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                  <span>Announcement published to all students!</span>
+                </div>
+              )}
               <button
                 type="submit"
                 disabled={postingAnn}
-                className="w-full py-2.5 rounded-xl bg-brand-orange text-white font-mono text-xs font-bold uppercase hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-2.5 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {postingAnn ? (
                   <>
@@ -1001,6 +1543,8 @@ export default function MentorDashboardPage() {
           </div>
         </div>
       )}
+        </main>
+      </div>
     </div>
   );
 }

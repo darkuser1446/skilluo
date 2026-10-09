@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import InteractiveTileGrid from "@/components/InteractiveTileGrid";
-import Super60Logo from "@/components/Super60Logo";
 import {
   Calendar,
   Users,
@@ -13,6 +10,8 @@ import {
   ExternalLink,
   ArrowRight,
   CheckCircle,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 
 /* ──────────────────────────────────────────────
@@ -39,29 +38,28 @@ interface Workshop {
 /* ──────────────────────────────────────────────
    Helpers
 ────────────────────────────────────────────── */
-function statusLabel(status: WorkshopStatus) {
+function statusConfig(status: WorkshopStatus) {
   switch (status) {
     case "ACTIVE":
       return {
-        text: "Active",
-        className:
-          "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+        text: "[ ACTIVE // IN SESSION ]",
+        badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-900",
       };
     case "COMPLETED":
       return {
-        text: "Completed",
-        className: "bg-slate-500/15 text-slate-400 border border-slate-500/30",
+        text: "[ COMPLETED // ARCHIVED ]",
+        badgeBg: "bg-slate-200 text-slate-800 border-[#111111]",
       };
     case "UPCOMING":
       return {
-        text: "Upcoming",
-        className: "bg-sky-500/15 text-sky-400 border border-sky-500/30",
+        text: "[ UPCOMING // STAGING ]",
+        badgeBg: "bg-sky-100 text-sky-800 border-sky-900",
       };
   }
 }
 
 function formatDate(dateStr: string | null) {
-  if (!dateStr) return "—";
+  if (!dateStr) return "TBD";
   return new Date(dateStr).toLocaleDateString("en-IN", {
     month: "short",
     year: "numeric",
@@ -70,163 +68,88 @@ function formatDate(dateStr: string | null) {
 }
 
 /* ──────────────────────────────────────────────
-   Navbar
-────────────────────────────────────────────── */
-function PublicNavbar() {
-  return (
-    <header className="sticky top-0 z-40 bg-[#070B14]/90 backdrop-blur-xl border-b border-white/8 shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between py-3.5">
-        <Link href="/">
-          <Super60Logo size="sm" subtitleText="SKILL UP" />
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          <Link
-            href="/"
-            className="text-slate-300 hover:text-white transition-colors"
-          >
-            Home
-          </Link>
-          <Link
-            href="/about"
-            className="text-slate-300 hover:text-white transition-colors"
-          >
-            About
-          </Link>
-          <Link href="/workshops" className="text-brand-orange font-semibold">
-            Workshops
-          </Link>
-        </nav>
-
-        <div className="flex items-center gap-2.5">
-          <Link
-            href="/login"
-            className="text-xs uppercase tracking-wider font-semibold text-slate-300 hover:text-white px-4 py-2 rounded-full border border-white/15 hover:border-white/40 hover:bg-white/5 transition-all"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="text-xs uppercase tracking-wider font-semibold text-white px-4 py-2.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orangeLight shadow-[0_0_20px_rgba(240,124,39,0.4)] hover:shadow-[0_0_30px_rgba(240,124,39,0.6)] hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
-          >
-            <span>Register</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-/* ──────────────────────────────────────────────
-   Workshop Card
+   Workshop Card Component
 ────────────────────────────────────────────── */
 function WorkshopCard({ workshop }: { workshop: Workshop }) {
-  const badge = statusLabel(workshop.status);
+  const cfg = statusConfig(workshop.status);
   const isActive = workshop.status === "ACTIVE";
 
   return (
     <div
-      className={`relative rounded-2xl border transition-all group overflow-hidden ${
-        isActive
-          ? "bg-[#0E1520] border-brand-orange/50 shadow-[0_0_40px_rgba(240,124,39,0.12)]"
-          : "bg-[#0E1520] border-white/8 hover:border-white/20"
+      className={`bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0px_#111111] transition-all flex flex-col justify-between ${
+        isActive ? "ring-2 ring-[#F07C27]" : ""
       }`}
     >
-      {/* Active highlight stripe */}
-      {isActive && (
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand-orange via-brand-orangeLight to-brand-orange" />
-      )}
-
-      <div className="p-6 sm:p-7">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-5">
+      <div>
+        {/* Card Header Ribbon */}
+        <div className="p-4 sm:p-5 border-b-[2px] border-[#111111] bg-slate-50 flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-display font-bold text-white text-lg leading-tight mb-1.5">
+            <span
+              className={`inline-block font-mono text-[10px] font-bold px-2 py-0.5 border-[2px] mb-2 uppercase ${cfg.badgeBg}`}
+            >
+              {cfg.text}
+            </span>
+            <h3 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
               {workshop.name}
             </h3>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className={`text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full ${badge.className}`}
+          </div>
+          <div className="bg-[#111111] text-white font-mono font-black text-xl px-2.5 py-1 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+            {workshop.year}
+          </div>
+        </div>
+
+        {/* Date Window */}
+        <div className="p-5 pb-3">
+          <div className="flex items-center gap-2 font-mono text-xs text-slate-700 bg-[#FFF0E5] p-2.5 border-[2px] border-[#111111] font-bold">
+            <Calendar className="w-4 h-4 text-[#F07C27] flex-shrink-0" />
+            <span>
+              RUNTIME: {formatDate(workshop.startDate)} → {formatDate(workshop.endDate)}
+            </span>
+          </div>
+
+          {/* Telemetry Stats Grid */}
+          <div className="grid grid-cols-3 gap-2.5 my-4">
+            {[
+              { label: "LABS", val: workshop._count.labs },
+              { label: "STUDENTS", val: workshop._count.enrollments },
+              { label: "TASKS", val: workshop._count.assignments },
+            ].map((st) => (
+              <div
+                key={st.label}
+                className="bg-[#F4F3F3] border-[2px] border-[#111111] p-2.5 text-center"
               >
-                {badge.text}
-              </span>
-              <span className="text-[11px] font-mono text-slate-500">
-                Cohort {workshop.year}
-              </span>
-            </div>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <div className="font-display font-extrabold text-4xl text-transparent bg-clip-text bg-gradient-to-br from-slate-300 to-slate-500 leading-none">
-              {workshop.year}
-            </div>
+                <div className="font-display font-black text-lg text-[#111111] leading-none">
+                  {st.val}
+                </div>
+                <div className="font-mono text-[9px] font-bold text-slate-600 mt-1 uppercase tracking-wider">
+                  {st.label}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Dates */}
-        <div className="flex items-center gap-2 mb-5 text-xs text-slate-400">
-          <Calendar className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-          <span>
-            {formatDate(workshop.startDate)} → {formatDate(workshop.endDate)}
-          </span>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            {
-              icon: <Layers className="w-3.5 h-3.5" />,
-              val: workshop._count.labs,
-              label: "Labs",
-            },
-            {
-              icon: <Users className="w-3.5 h-3.5" />,
-              val: workshop._count.enrollments,
-              label: "Students",
-            },
-            {
-              icon: <Trophy className="w-3.5 h-3.5" />,
-              val: workshop._count.assignments,
-              label: "Tasks",
-            },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="flex flex-col items-center p-3 rounded-xl bg-white/4 text-center"
-            >
-              <span className="text-slate-400 mb-1">{stat.icon}</span>
-              <span className="font-display font-bold text-white text-lg leading-none">
-                {stat.val}
-              </span>
-              <span className="text-[10px] text-slate-500 font-mono mt-0.5 uppercase tracking-wide">
-                {stat.label}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* CTA */}
+      {/* Card Action Footer */}
+      <div className="p-5 pt-0">
         {isActive ? (
           <Link
             href="/register"
-            className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-display font-bold text-sm shadow-[0_0_20px_rgba(240,124,39,0.35)] hover:shadow-[0_0_35px_rgba(240,124,39,0.6)] hover:brightness-110 active:scale-98 transition-all"
+            className="neo-btn w-full bg-[#F07C27] text-white py-2.5 text-xs font-black uppercase text-center flex items-center justify-center gap-2"
           >
-            Join Now <ArrowRight className="w-4 h-4" />
+            <span>JOIN ACTIVE COHORT</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
         ) : workshop.status === "COMPLETED" ? (
-          <button
-            disabled
-            className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 text-slate-500 font-semibold text-sm cursor-not-allowed"
-          >
-            <CheckCircle className="w-4 h-4" /> View History
-          </button>
+          <div className="w-full bg-slate-100 border-[2px] border-[#111111] py-2 text-center font-mono text-xs font-bold text-slate-500 uppercase flex items-center justify-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5" />
+            <span>COHORT CONCLUDED</span>
+          </div>
         ) : (
-          <button
-            disabled
-            className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl border border-sky-500/20 text-sky-400 font-semibold text-sm cursor-not-allowed bg-sky-500/5"
-          >
-            <ExternalLink className="w-4 h-4" /> Coming Soon
-          </button>
+          <div className="w-full bg-sky-50 border-[2px] border-[#111111] py-2 text-center font-mono text-xs font-bold text-sky-800 uppercase flex items-center justify-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
+            <span>APPLICATIONS OPENING SOON</span>
+          </div>
         )}
       </div>
     </div>
@@ -234,26 +157,7 @@ function WorkshopCard({ workshop }: { workshop: Workshop }) {
 }
 
 /* ──────────────────────────────────────────────
-   Empty state
-────────────────────────────────────────────── */
-function EmptyState() {
-  return (
-    <div className="text-center py-24">
-      <div className="w-16 h-16 rounded-2xl bg-white/4 border border-white/8 flex items-center justify-center mx-auto mb-5">
-        <Trophy className="w-7 h-7 text-slate-500" />
-      </div>
-      <h3 className="font-display font-bold text-white text-lg mb-2">
-        No workshops yet
-      </h3>
-      <p className="text-sm text-slate-400 max-w-xs mx-auto">
-        Workshop editions will appear here once they are created by the admin team.
-      </p>
-    </div>
-  );
-}
-
-/* ──────────────────────────────────────────────
-   Page
+   Workshops Page
 ────────────────────────────────────────────── */
 export default function WorkshopsPage() {
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
@@ -265,7 +169,7 @@ export default function WorkshopsPage() {
       try {
         const res = await fetch("/api/workshops");
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error?.message || "Failed to load");
+        if (!res.ok) throw new Error(data.error?.message || "Failed to load workshops");
         setWorkshops(data.data?.workshops ?? []);
       } catch (err: any) {
         setError(err.message || "Failed to fetch workshops");
@@ -279,112 +183,196 @@ export default function WorkshopsPage() {
   const rest = workshops.filter((w) => w.status !== "ACTIVE");
 
   return (
-    <div className="relative min-h-screen bg-[#0B1120] text-foreground overflow-x-hidden">
-      {/* Interactive Square Tiles Canvas Background */}
-      <InteractiveTileGrid tileSize={48} />
-
-      <PublicNavbar />
-
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden pt-24 pb-20 px-5">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[600px] h-[350px] rounded-full bg-[#F07C27]/7 blur-[100px]" />
-        </div>
-
-        <div className="relative max-w-3xl mx-auto text-center">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold uppercase tracking-widest text-brand-orange bg-[#F07C27]/10 border border-[#F07C27]/25 mb-5">
-            <Trophy className="w-3 h-3" /> Workshop Editions
+    <div className="relative min-h-screen bg-[#F9F9F9] text-[#111111] overflow-x-hidden">
+      {/* Top Ticker Marquee */}
+      <div className="bg-[#111111] text-white py-2 px-4 border-b-[2px] border-[#111111] overflow-hidden whitespace-nowrap text-[11px] font-mono font-bold tracking-widest uppercase flex items-center select-none">
+        <div className="inline-flex animate-marquee-smooth items-center gap-8">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-[#F07C27]" />
+            [ SKILL UP // COHORT ARCHIVE & RUNTIME EDITIONS ]
           </span>
-          <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-white leading-[1.1] mb-5">
-            Every Year, a New{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFA048] via-[#F07C27] to-[#FFA048]">
-              Cohort
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-emerald-400" />
+            ANNUAL PRODUCTION SPRINT • 60 SELECTED CANDIDATES PER YEAR
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-[#F07C27]" />
+            LIVE LAB PODS • INDUSTRY MENTORS • VERIFIED CREDENTIALS
+          </span>
+        </div>
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white border-b-[3px] border-[#111111] shadow-[0px_4px_0px_#111111]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="bg-[#111111] text-white font-display font-black text-xl px-3 py-1.5 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] uppercase tracking-wider">
+              SUPER 60
+            </div>
+            <div className="bg-[#F07C27] text-white font-mono text-xs font-black px-2 py-1.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+              C++
+            </div>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-6 font-display font-bold text-xs uppercase tracking-wider">
+            <Link href="/" className="text-slate-600 hover:text-[#111111] hover:underline underline-offset-4">
+              Home
+            </Link>
+            <Link href="/curriculum" className="text-slate-600 hover:text-[#111111] hover:underline underline-offset-4">
+              Curriculum
+            </Link>
+            <Link href="/workshops" className="text-[#F07C27] underline underline-offset-8 decoration-[3px]">
+              Editions
+            </Link>
+            <Link href="/about" className="text-slate-600 hover:text-[#111111] hover:underline underline-offset-4">
+              About
+            </Link>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="neo-btn-sm bg-white text-[#111111] px-4 py-2 text-xs font-bold uppercase"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/register"
+              className="neo-btn-sm bg-[#F07C27] text-white px-5 py-2 text-xs font-bold uppercase flex items-center gap-1.5"
+            >
+              <span>Apply Now</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-8 pt-16 pb-12">
+        <div className="flex flex-col items-start gap-4 max-w-3xl">
+          <div className="inline-flex items-center gap-2 bg-[#111111] text-white font-mono text-xs font-bold px-3 py-1.5 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] uppercase tracking-widest">
+            <Trophy className="w-3.5 h-3.5 text-[#F07C27]" />
+            [ ARCHIVE // ANNUAL WORKSHOP EDITIONS ]
+          </div>
+
+          <h1 className="font-display font-black text-4xl sm:text-6xl text-[#111111] tracking-tight uppercase leading-[1.05]">
+            EVERY YEAR, A NEW{" "}
+            <span className="bg-[#F07C27] text-white px-3 py-0.5 border-[3px] border-[#111111] shadow-[5px_5px_0px_#111111] inline-block -rotate-1">
+              COHORT
             </span>{" "}
-            of Engineers
+            OF ENGINEERS
           </h1>
-          <p className="text-slate-400 text-base leading-relaxed max-w-xl mx-auto">
-            Skill Up runs as an annual intensive C++ workshop. Each edition brings
-            a new batch of top students through our structured systems-programming
-            curriculum.
+
+          <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-medium mt-1">
+            Skill Up operates as an annual intensive systems workshop. Each cohort brings
+            the next generation of top engineering minds through our structured, low-latency C++
+            curriculum and live testbench challenges.
           </p>
         </div>
       </section>
 
-      {/* ── Content ── */}
-      <section className="pb-24 px-5">
-        <div className="max-w-6xl mx-auto">
-          {loading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((n) => (
-                <div
-                  key={n}
-                  className="h-72 rounded-2xl bg-white/3 animate-pulse border border-white/6"
-                />
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-20">
-              <p className="text-rose-400 text-sm">{error}</p>
-            </div>
-          ) : workshops.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="space-y-10">
-              {/* Active workshop first — full-width highlight */}
-              {active.length > 0 && (
-                <div>
-                  <h2 className="font-mono text-[11px] uppercase tracking-widest text-brand-orange mb-4 flex items-center gap-2">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Active Workshop
-                  </h2>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {active.map((w) => (
-                      <WorkshopCard key={w.id} workshop={w} />
-                    ))}
-                  </div>
+      {/* Workshop Roster Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 pb-20">
+        {loading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="h-80 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] animate-pulse p-6"
+              />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="bg-rose-50 border-[3px] border-rose-900 shadow-[6px_6px_0px_#111111] p-8 text-center">
+            <p className="font-mono text-sm text-rose-800 font-bold uppercase">{error}</p>
+          </div>
+        ) : workshops.length === 0 ? (
+          <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-12 text-center max-w-md mx-auto">
+            <Trophy className="w-12 h-12 text-[#F07C27] mx-auto mb-4" />
+            <h3 className="font-display font-black text-xl text-[#111111] uppercase mb-2">
+              NO WORKSHOPS FOUND
+            </h3>
+            <p className="text-xs text-slate-600 font-medium">
+              Workshop cohorts will appear here as soon as they are scheduled by the admin engine.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-12">
+            {/* Active Workshop Highlight */}
+            {active.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#111111] uppercase tracking-wider mb-4 border-b-[2px] border-[#111111] pb-2">
+                  <span className="w-2.5 h-2.5 bg-emerald-500 border-[1px] border-[#111111]" />
+                  CURRENT ACTIVE SPRINT ({active.length})
                 </div>
-              )}
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {active.map((w) => (
+                    <WorkshopCard key={w.id} workshop={w} />
+                  ))}
+                </div>
+              </div>
+            )}
 
-              {/* Previous / Upcoming */}
-              {rest.length > 0 && (
-                <div>
-                  <h2 className="font-mono text-[11px] uppercase tracking-widest text-slate-500 mb-4">
-                    All Editions
-                  </h2>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {rest.map((w) => (
-                      <WorkshopCard key={w.id} workshop={w} />
-                    ))}
-                  </div>
+            {/* Past and Upcoming Editions */}
+            {rest.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-600 uppercase tracking-wider mb-4 border-b-[2px] border-[#111111] pb-2">
+                  <span className="w-2.5 h-2.5 bg-slate-400 border-[1px] border-[#111111]" />
+                  HISTORICAL & UPCOMING EDITIONS ({rest.length})
                 </div>
-              )}
-            </div>
-          )}
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {rest.map((w) => (
+                    <WorkshopCard key={w.id} workshop={w} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Bottom CTA Block */}
+        <div className="mt-16 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-left">
+            <span className="bg-[#111111] text-white font-mono text-[10px] font-bold px-2 py-0.5 border-[2px] border-[#111111] uppercase tracking-wider">
+              [ NEXT COHORT ADMISSIONS ]
+            </span>
+            <h2 className="font-display font-black text-2xl sm:text-3xl text-[#111111] uppercase tracking-tight">
+              READY TO JOIN SKILL UP 2026?
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-700 font-medium max-w-xl">
+              Registrations for the upcoming sprint are currently live. Complete your application
+              and take the screening assessment to compete for one of 60 incubator seats.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link
+              href="/register"
+              className="neo-btn bg-[#F07C27] text-white px-7 py-3 text-xs font-black uppercase flex items-center gap-2"
+            >
+              <span>APPLY NOW</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="border-t border-white/6 py-20 px-5 text-center">
-        <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3">
-          Ready to join the next cohort?
-        </h2>
-        <p className="text-slate-400 text-sm mb-7 max-w-md mx-auto">
-          Applications for Skill Up 2026 are open. Submit your application and
-          compete for one of the 60 seats.
-        </p>
-        <Link
-          href="/register"
-          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-brand-orange to-brand-orangeLight text-white font-display font-bold text-sm shadow-[0_0_30px_rgba(240,124,39,0.5)] hover:shadow-[0_0_50px_rgba(240,124,39,0.7)] hover:scale-105 active:scale-95 transition-all"
-        >
-          Apply Now <ArrowRight className="w-4 h-4" />
-        </Link>
-      </section>
-
-      <footer className="border-t border-white/8 py-8 px-5 text-center">
-        <p className="text-xs font-mono text-slate-500">
-          © 2026 Skill Up · Powered by{" "}
-          <span className="text-brand-orange">Super 60</span> · All rights reserved.
-        </p>
+      {/* Footer */}
+      <footer className="bg-[#111111] text-white border-t-[4px] border-[#111111] py-10 px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
+          <div className="flex items-center gap-2">
+            <span className="bg-[#F07C27] text-white px-2 py-0.5 border-[2px] border-white font-bold">
+              S60
+            </span>
+            <span>© 2026 Skill Up · Powered by Super 60</span>
+          </div>
+          <div className="flex items-center gap-4 text-slate-400">
+            <Link href="/" className="hover:text-white">Home</Link>
+            <Link href="/curriculum" className="hover:text-white">Curriculum</Link>
+            <Link href="/workshops" className="text-[#F07C27]">Workshops</Link>
+            <Link href="/about" className="hover:text-white">About</Link>
+          </div>
+        </div>
       </footer>
     </div>
   );
