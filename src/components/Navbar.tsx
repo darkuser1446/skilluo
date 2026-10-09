@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, ArrowRight, Layers, BookOpen, Calendar, ExternalLink } from "lucide-react";
+import { Menu, X, ArrowRight, Layers, BookOpen, Calendar, ExternalLink, FileDown } from "lucide-react";
 
 const NAV_LINKS = [
   { name: "Home", href: "#hero" },
@@ -82,7 +82,23 @@ export default function Navbar() {
           </nav>
 
           {/* Right Action Buttons */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2.5">
+            {/* Highlighted Test Syllabus PDF Download */}
+            <a
+              href="/SkillUp-3.0-Screening-Test-Syllabus.pdf"
+              download="SkillUp-3.0-Screening-Test-Syllabus.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 bg-[#FFB703] hover:bg-[#F07C27] text-[#111111] hover:text-white font-mono text-xs font-black uppercase px-3 py-2 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] hover:shadow-[1px_1px_0px_#111111] hover:translate-x-[1px] hover:translate-y-[1px] transition-all cursor-pointer group"
+              title="Download SkillUp 3.0 Screening Test Syllabus PDF"
+            >
+              <FileDown className="w-3.5 h-3.5 text-[#111111] group-hover:text-white" />
+              <span>TEST SYLLABUS</span>
+              <span className="bg-[#111111] text-white text-[9px] font-mono px-1 py-0.5 uppercase tracking-tighter">
+                PDF
+              </span>
+            </a>
+
             {/* Dedicated Sidebar Trigger Button for Curriculum & Workshops */}
             <button
               onClick={() => setSidebarOpen(true)}
@@ -317,6 +333,24 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
+
+              {/* Highlighted Test Syllabus for Mobile */}
+              <a
+                href="/SkillUp-3.0-Screening-Test-Syllabus.pdf"
+                download="SkillUp-3.0-Screening-Test-Syllabus.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between bg-[#FFB703] text-[#111111] p-3 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] font-mono text-xs font-black uppercase my-1"
+              >
+                <span className="flex items-center gap-2">
+                  <FileDown className="w-4 h-4 text-[#111111]" />
+                  SCREENING TEST SYLLABUS
+                </span>
+                <span className="bg-[#111111] text-white text-[10px] font-mono px-2 py-0.5 uppercase tracking-wider">
+                  PDF ↓
+                </span>
+              </a>
 
               {/* Separated Technical Modules in Mobile View */}
               <div className="p-3 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] my-2 space-y-2">

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, GraduationCap, Users, Calendar, Terminal, Flame, Cpu } from "lucide-react";
+import { ArrowRight, GraduationCap, Users, Calendar, Terminal, Flame, Cpu, FileDown } from "lucide-react";
 import { motion } from "framer-motion";
 import CountUp from "./CountUp";
 import Anime3DHeroScene from "./Anime3DHeroScene";
@@ -64,6 +64,16 @@ export default function Hero() {
               >
                 [ EXPLORE PROGRAM ]
               </Link>
+              <a
+                href="/SkillUp-3.0-Screening-Test-Syllabus.pdf"
+                download="SkillUp-3.0-Screening-Test-Syllabus.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="neo-btn bg-[#FFB703] hover:bg-[#F07C27] text-[#111111] hover:text-white text-xs sm:text-sm font-black uppercase px-4 sm:px-5 py-3.5 sm:py-4 border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0px_#111111] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none transition-all flex items-center gap-2 group cursor-pointer"
+              >
+                <FileDown className="w-4 h-4 text-[#111111] group-hover:text-white" />
+                <span>[ TEST SYLLABUS PDF ↓ ]</span>
+              </a>
             </div>
 
             {/* Technical Quick Specs Grid */}

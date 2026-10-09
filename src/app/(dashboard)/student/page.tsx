@@ -35,6 +35,7 @@ import {
   AlarmClock,
   Play,
   Terminal,
+  Download,
 } from "lucide-react";
 import TestEngine from "@/components/TestEngine";
 import StudentProgressTrend from "@/components/StudentProgressTrend";
@@ -597,6 +598,42 @@ export default function StudentDashboardPage() {
         </div>
       </div>
 
+      {/* ── HIGHLIGHTED TEST SYLLABUS DOWNLOAD BANNER ── */}
+      <div className="bg-[#FFB703] border-[4px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 bg-[#111111] text-[#FFB703] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center flex-shrink-0">
+            <FileText className="w-6 h-6 stroke-[2.5]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="bg-[#111111] text-white font-mono text-[10px] font-black px-2 py-0.5 uppercase tracking-wider">
+                [ OFFICIAL SPECIFICATION // PDF ]
+              </span>
+              <span className="bg-[#F07C27] text-white font-mono text-[10px] font-black px-2 py-0.5 uppercase tracking-wider animate-pulse">
+                ★ MANDATORY TEST SYLLABUS
+              </span>
+            </div>
+            <h2 className="font-display font-black text-xl sm:text-2xl text-[#111111] uppercase tracking-tight">
+              SKILLUP 3.0 SCREENING TEST SYLLABUS
+            </h2>
+            <p className="text-xs font-mono font-bold text-slate-800 mt-1 max-w-2xl leading-relaxed">
+              Official topics, exam pattern, benchmark test structure, and evaluation criteria for the Super 60 selection examination. Download now to prepare for your test.
+            </p>
+          </div>
+        </div>
+
+        <a
+          href="/SkillUp-3.0-Screening-Test-Syllabus.pdf"
+          download="SkillUp-3.0-Screening-Test-Syllabus.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="neo-btn bg-[#111111] hover:bg-white text-white hover:text-[#111111] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] font-mono text-xs font-black uppercase tracking-wider px-5 py-3 flex items-center gap-2.5 flex-shrink-0 cursor-pointer transition-all"
+        >
+          <Download className="w-4 h-4 stroke-[3]" />
+          <span>DOWNLOAD SYLLABUS PDF ↓</span>
+        </a>
+      </div>
+
       {/* ── TWO-COLUMN WORKSPACE: VERTICAL SIDEBAR + ACTIVE TAB WORKSPACE ── */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* ── LEFT VERTICAL SIDEBAR ── */}
@@ -676,7 +713,20 @@ export default function StudentDashboardPage() {
                 <span>TOTAL SCORE:</span>
                 <span className="text-[#F07C27] font-black">{overall} / 100</span>
               </div>
-              <div className="pt-2 border-t border-[#111111]/20">
+              <div className="pt-2 border-t border-[#111111]/20 space-y-1.5">
+                <a
+                  href="/SkillUp-3.0-Screening-Test-Syllabus.pdf"
+                  download="SkillUp-3.0-Screening-Test-Syllabus.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between text-[10px] font-mono font-black text-[#111111] hover:text-white uppercase bg-[#FFB703] hover:bg-[#111111] border border-[#111111] px-2 py-1.5 shadow-[1px_1px_0px_#111111] transition-all cursor-pointer"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Download className="w-3 h-3 text-[#111111]" />
+                    TEST SYLLABUS PDF
+                  </span>
+                  <span className="bg-[#111111] text-white text-[8px] font-mono px-1">↓</span>
+                </a>
                 <Link
                   href="/curriculum"
                   target="_blank"
@@ -1685,6 +1735,41 @@ export default function StudentDashboardPage() {
           <div>
             <h3 className="font-mono font-bold text-[#111111] text-base uppercase tracking-wider">Assessments & Benchmark Tests</h3>
             <p className="text-xs text-slate-600 font-mono mt-0.5">Tests account for <strong className="text-[#F07C27]">35%</strong> of your Super 60 evaluation scorecard</p>
+          </div>
+
+          {/* Screening Test Syllabus Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#FFB703] border-[3px] border-[#111111] p-4 sm:p-5 shadow-[4px_4px_0px_#111111]">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-[#111111] text-[#FFB703] border-[2px] border-[#111111] flex items-center justify-center flex-shrink-0">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="bg-[#111111] text-white text-[9px] font-mono font-black px-1.5 py-0.5 uppercase tracking-wider">
+                    TEST SYLLABUS PDF
+                  </span>
+                  <span className="bg-[#F07C27] text-white text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase">
+                    OFFICIAL SPECIFICATION
+                  </span>
+                </div>
+                <h4 className="font-display font-black text-base uppercase text-[#111111]">
+                  SkillUp 3.0 Screening Test Syllabus
+                </h4>
+                <p className="text-xs text-slate-800 font-mono font-medium mt-0.5">
+                  Prepare for your examination with the official curriculum, test topics, and scoring criteria.
+                </p>
+              </div>
+            </div>
+            <a
+              href="/SkillUp-3.0-Screening-Test-Syllabus.pdf"
+              download="SkillUp-3.0-Screening-Test-Syllabus.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="neo-btn bg-[#111111] hover:bg-white text-white hover:text-[#111111] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-xs font-mono font-black uppercase px-4 py-2.5 flex items-center gap-2 self-start sm:self-auto cursor-pointer transition-all flex-shrink-0"
+            >
+              <Download className="w-4 h-4 stroke-[2.5]" />
+              <span>DOWNLOAD PDF ↓</span>
+            </a>
           </div>
 
           {assessments.length === 0 && (
