@@ -505,14 +505,16 @@ export default function StudentDashboardPage() {
 
             <div className="flex flex-wrap items-center gap-2 font-mono text-xs mb-4">
               <span className="bg-[#f4f3f3] px-2 py-0.5 border-[2px] border-[#111111] text-[#111111] font-bold">
-                ROLL: {user?.rollNumber || "S60-2026-IND"}
+                REG NO: {user?.rollNumber || "2024BTCS111"}
               </span>
               <span className="bg-[#f4f3f3] px-2 py-0.5 border-[2px] border-[#111111] text-[#111111] font-bold">
                 BATCH: {user?.enrollments?.[0]?.workshop?.year || "2026"}-C++
               </span>
-              <span className="bg-[#f4f3f3] px-2 py-0.5 border-[2px] border-[#111111] text-[#111111] font-bold">
-                {user?.college || "IIIT / NIT"}
-              </span>
+              {user?.college && (
+                <span className="bg-[#f4f3f3] px-2 py-0.5 border-[2px] border-[#111111] text-[#111111] font-bold">
+                  {user.college}
+                </span>
+              )}
             </div>
           </div>
 

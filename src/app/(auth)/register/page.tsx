@@ -6,7 +6,6 @@ import {
   User,
   Mail,
   Lock,
-  Building,
   Phone,
   BookOpen,
   Hash,
@@ -22,7 +21,6 @@ type FormData = {
   email: string;
   password: string;
   phone: string;
-  college: string;
   branch: string;
   semester: string;
   rollNumber: string;
@@ -43,7 +41,6 @@ export default function RegisterPage() {
     email: "",
     password: "",
     phone: "",
-    college: "",
     branch: "",
     semester: "",
     rollNumber: "",
@@ -218,7 +215,7 @@ export default function RegisterPage() {
                   <input
                     type="email"
                     required
-                    placeholder="student@college.edu"
+                    placeholder="student@example.com"
                     value={formData.email}
                     onChange={set("email")}
                     className={INPUT_CLS}
@@ -248,22 +245,6 @@ export default function RegisterPage() {
             {/* ── Academic Info ── */}
             <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#111111] pb-1 border-b-[2px] border-[#111111] pt-2">
               [ SECTION 02 // ACADEMIC PROFILE ]
-            </div>
-
-            {/* College */}
-            <div>
-              <label className={LABEL_CLS}>College / University</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. NIT / IIIT / Engineering Institute"
-                  value={formData.college}
-                  onChange={set("college")}
-                  className={INPUT_CLS}
-                />
-                <Building className={ICON_CLS} />
-              </div>
             </div>
 
             {/* Branch + Semester */}
@@ -298,15 +279,15 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Roll Number + Experience */}
+            {/* Registration Number + Experience */}
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className={LABEL_CLS}>Roll Number</label>
+                <label className={LABEL_CLS}>Registration Number</label>
                 <div className="relative">
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 23CS042"
+                    placeholder="2024BTCS111"
                     value={formData.rollNumber}
                     onChange={set("rollNumber")}
                     className={INPUT_CLS}

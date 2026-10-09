@@ -16,6 +16,7 @@ const RegisterSchema = z.object({
   // Extended profile fields — stored in dedicated columns
   branch: z.string().optional(),
   rollNumber: z.string().optional(),
+  registrationNumber: z.string().optional(),
   semester: z.string().optional(),
   programmingExperience: z.string().optional(),
 });
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
         college: data.college?.trim() || undefined,
         phone: data.phone?.trim(),
         branch: data.branch?.trim() || undefined,
-        rollNumber: data.rollNumber?.trim() || undefined,
+        rollNumber: (data.registrationNumber || data.rollNumber)?.trim() || undefined,
         semester: data.semester?.trim() || undefined,
         programmingExperience: data.programmingExperience?.trim() || undefined,
         enrollments: activeWorkshopId

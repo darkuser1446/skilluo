@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { name: "Program", href: "#program" },
   { name: "Mentors", href: "#mentors" },
   { name: "Gallery", href: "#gallery" },
+  { name: "Contact", href: "#contact" },
 ];
 
 export default function Navbar() {
@@ -21,7 +22,7 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ["hero", "about", "program", "mentors", "gallery"];
+      const sections = ["hero", "about", "program", "mentors", "gallery", "contact"];
       const scrollPosition = window.scrollY + 180;
 
       for (const sectionId of sections) {
@@ -46,23 +47,16 @@ export default function Navbar() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] border-b-[3px] border-[#111111]">
         {/* Main Navbar */}
         <div className="h-16 max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between">
-          {/* Logo with Stamped Decals */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0">
-              <Image
-                src="/s60-official-logo.png"
-                alt="Super 60"
-                fill
-                priority
-                className="object-contain"
-              />
-            </div>
-            <div className="bg-[#111111] text-white font-display text-xs sm:text-sm font-extrabold px-2.5 py-1 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] uppercase tracking-wider">
-              SUPER 60
-            </div>
-            <div className="bg-[#F07C27] text-[#111111] font-mono text-[10px] sm:text-xs font-bold px-2 py-0.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] -rotate-2 uppercase">
-              [ C++ ]
-            </div>
+          {/* Super 60 Original Logo */}
+          <Link href="/" className="flex items-center group transition-transform duration-200 hover:scale-105 select-none">
+            <Image
+              src="/s60-official-logo.png"
+              alt="Super 60 Logo"
+              width={150}
+              height={48}
+              priority
+              className="h-10 sm:h-11 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Nav Items (Curriculum & Workshops separated out to dedicated Sidebar) */}

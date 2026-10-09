@@ -229,7 +229,7 @@ export default function StudentProfilePage() {
               )}
               {user?.rollNumber && (
                 <span className="bg-[#F4F3F3] px-2 py-0.5 border-[1.5px] border-[#111111]">
-                  ROLL: {user.rollNumber}
+                  REG NO: {user.rollNumber}
                 </span>
               )}
               {myLab && (

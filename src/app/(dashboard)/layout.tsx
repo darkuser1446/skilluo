@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import NotificationBell from "@/components/NotificationBell";
 import {
@@ -146,12 +147,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4">
           {/* Left: Brand & Cohort Mode */}
           <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="bg-[#111111] text-white font-display font-black text-lg px-2.5 py-1 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] uppercase tracking-wider">
+            <Link href="/" className="flex items-center gap-2.5 group transition-transform hover:scale-105 select-none">
+              <Image
+                src="/s60-official-logo.png"
+                alt="Super 60"
+                width={90}
+                height={36}
+                priority
+                className="h-8 w-auto object-contain"
+              />
+              <div className="bg-[#111111] text-white font-display font-black text-base px-2.5 py-0.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] uppercase tracking-wider">
                 SUPER 60
-              </div>
-              <div className="bg-[#F07C27] text-white font-mono text-xs font-black px-2 py-1 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-                C++
               </div>
             </Link>
 
