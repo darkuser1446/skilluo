@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         lab: true,
         questions: true,
         results: user.role === "STUDENT"
-          ? { where: { studentId: user.sub, status: "COMPLETED" } }
+          ? { where: { studentId: user.sub } }
           : {
               include: {
                 student: { select: { id: true, name: true, email: true } },
@@ -65,6 +65,7 @@ const AssessmentCreateSchema = z.object({
   totalMarks: z.number().int().positive().default(100),
   passingMarks: z.number().min(0).optional(),
   durationMinutes: z.number().int().positive().optional(),
+  allowedViolations: z.number().int().positive().default(3),
   instructions: z.string().optional(),
   startsAt: z.string(),
   endsAt: z.string(),
@@ -90,6 +91,7 @@ export async function POST(req: NextRequest) {
         totalMarks: data.totalMarks,
         passingMarks: data.passingMarks ?? null,
         durationMinutes: data.durationMinutes ?? null,
+        allowedViolations: data.allowedViolations ?? 3,
         instructions: data.instructions ?? null,
         startsAt: new Date(data.startsAt),
         endsAt: new Date(data.endsAt),

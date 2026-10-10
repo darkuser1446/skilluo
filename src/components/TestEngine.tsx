@@ -29,6 +29,7 @@ interface Assessment {
   totalMarks: number;
   passingMarks?: number | null;
   durationMinutes?: number | null;
+  allowedViolations?: number | null;
   instructions?: string | null;
   startsAt: string;
   endsAt: string;
@@ -123,6 +124,10 @@ export default function TestEngine({
 }: TestEngineProps) {
   const questions = assessment.questions || [];
   const totalQuestions = questions.length;
+  const maxAllowedViolations =
+    assessment.allowedViolations && assessment.allowedViolations > 0
+      ? assessment.allowedViolations
+      : 3;
 
   // Timer state: prefer configured duration, else time remaining until endsAt (capped at 90 min)
   const calcInitialTime = () => {
@@ -166,31 +171,35 @@ export default function TestEngine({
 
   const currentQuestion = questions[currentIdx];
 
-  // ── VIOLATION DISPATCHER (Debounced & Auto-submits on strike 3) ──
+  // ── VIOLATION DISPATCHER (Debounced & Auto-submits on strike limit) ──
   const triggerViolation = useCallback(
     (reason: string) => {
       if (!proctorActiveRef.current || isTerminatingRef.current) return;
       const now = Date.now();
-      // 2000ms debounce prevents dual blur & visibilitychange triggers from counting as 2 strikes
-      if (now - lastViolationTimeRef.current < 2000) return;
+      // 1200ms debounce prevents dual blur & visibilitychange or keydown & clipboard triggers from counting as 2 strikes
+      if (now - lastViolationTimeRef.current < 1200) return;
       lastViolationTimeRef.current = now;
 
       setWarningCount((prev) => {
         const nextCount = prev + 1;
-        if (nextCount >= 3) {
+        if (nextCount >= maxAllowedViolations) {
           isTerminatingRef.current = true;
           setIsDisqualified(true);
           playAudioAlert("fatal");
           setProctorModal({
             isOpen: true,
             reason,
-            count: 3,
+            count: maxAllowedViolations,
           });
           // Auto-submit test with violation reason after brief visual acknowledgement
           setTimeout(() => {
-            onSubmit(undefined, `Exceeded 3 proctoring warnings: ${reason}`, 3);
+            onSubmit(
+              undefined,
+              `Exceeded proctoring violation limit (${maxAllowedViolations} strikes): ${reason}`,
+              maxAllowedViolations
+            );
           }, 2200);
-          return 3;
+          return maxAllowedViolations;
         }
 
         playAudioAlert("warning");
@@ -202,7 +211,7 @@ export default function TestEngine({
         return nextCount;
       });
     },
-    [onSubmit]
+    [onSubmit, maxAllowedViolations]
   );
 
   const triggerToast = useCallback((msg: string) => {
@@ -264,43 +273,64 @@ export default function TestEngine({
     }
   }, [showPreflight]);
 
-  // ── CLIPBOARD & SHORTCUT PREVENTION ──
+  // ── CLIPBOARD & SHORTCUT PREVENTION (Triggers Proctoring Violations) ──
   useEffect(() => {
     const handleCopy = (e: ClipboardEvent) => {
       e.preventDefault();
-      triggerToast("🚫 Copying is prohibited during proctored tests!");
+      triggerToast("🚫 Copying (Ctrl+C) is prohibited! Violation logged.");
+      if (proctorActiveRef.current) {
+        triggerViolation("Clipboard Violation: Attempted Copy (Ctrl+C)");
+      }
     };
     const handleCut = (e: ClipboardEvent) => {
       e.preventDefault();
-      triggerToast("🚫 Cutting text is prohibited during proctored tests!");
+      triggerToast("🚫 Cutting (Ctrl+X) is prohibited! Violation logged.");
+      if (proctorActiveRef.current) {
+        triggerViolation("Clipboard Violation: Attempted Cut (Ctrl+X)");
+      }
     };
     const handlePaste = (e: ClipboardEvent) => {
       e.preventDefault();
-      triggerToast("🚫 Pasting is prohibited during proctored tests!");
+      triggerToast("🚫 Pasting (Ctrl+V) is prohibited! Violation logged.");
+      if (proctorActiveRef.current) {
+        triggerViolation("Clipboard Violation: Attempted Paste (Ctrl+V)");
+      }
     };
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      triggerToast("🚫 Right-click context menu is disabled!");
+      triggerToast("🚫 Right-click context menu is prohibited! Violation logged.");
+      if (proctorActiveRef.current) {
+        triggerViolation("Proctoring Violation: Attempted Right-Click Context Menu");
+      }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Intercept Ctrl/Cmd + C, V, X, U, S, P
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        ["c", "v", "x", "u", "s", "p"].includes(e.key.toLowerCase())
-      ) {
+      const key = e.key.toLowerCase();
+      // Intercept Ctrl/Cmd + C, V, X
+      if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(key)) {
         e.preventDefault();
-        triggerToast(`🚫 Shortcut (Ctrl+${e.key.toUpperCase()}) is disabled!`);
+        const action =
+          key === "c"
+            ? "Copy (Ctrl+C)"
+            : key === "v"
+            ? "Paste (Ctrl+V)"
+            : "Cut (Ctrl+X)";
+        triggerToast(`🚫 Prohibited Shortcut: ${action}! Strike recorded.`);
+        if (proctorActiveRef.current) {
+          triggerViolation(`Keyboard Violation: Pressed ${action}`);
+        }
         return;
       }
-      // Intercept Developer tools: F12, Ctrl+Shift+I/J/C
+      // Intercept Developer tools: F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S, Ctrl+P
       if (
         e.key === "F12" ||
-        ((e.ctrlKey || e.metaKey) &&
-          e.shiftKey &&
-          ["i", "j", "c"].includes(e.key.toLowerCase()))
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && ["i", "j", "c"].includes(key)) ||
+        ((e.ctrlKey || e.metaKey) && ["u", "s", "p"].includes(key))
       ) {
         e.preventDefault();
-        triggerToast("🚫 Developer tools are disabled!");
+        triggerToast("🚫 Inspection shortcut / DevTools prohibited! Strike recorded.");
+        if (proctorActiveRef.current) {
+          triggerViolation(`Keyboard Violation: Attempted Inspection Shortcut (${e.key.toUpperCase()})`);
+        }
         return;
       }
     };
@@ -318,7 +348,7 @@ export default function TestEngine({
       document.removeEventListener("contextmenu", handleContextMenu);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [triggerToast]);
+  }, [triggerToast, triggerViolation]);
 
   // ── AUTO-SAVE: persist answers to sessionStorage ──
   useEffect(() => {
@@ -467,7 +497,7 @@ export default function TestEngine({
                 <li className="flex items-start gap-2 bg-[#fde8e8] p-2.5 border-[2px] border-[#111111] text-rose-950 font-bold shadow-[2px_2px_0px_#111111]">
                   <span className="text-rose-700 font-black">4.</span>
                   <span>
-                    <strong>3-Strike Disqualification:</strong> You receive a maximum of 2 warnings. On the 3rd violation, the test is automatically submitted with <strong>0 marks</strong> and an incident report is dispatched to mentors and admins.
+                    <strong>{maxAllowedViolations}-Strike Lockout:</strong> You receive a maximum of {maxAllowedViolations > 1 ? `${maxAllowedViolations - 1} warning${maxAllowedViolations > 2 ? "s" : ""}` : "0 warnings (zero-tolerance)"}. On violation #{maxAllowedViolations}, the test is automatically terminated, locked out, and submitted with <strong>0 marks</strong>.
                   </span>
                 </li>
               </ul>
@@ -509,7 +539,7 @@ export default function TestEngine({
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div
             className={`border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] p-6 sm:p-7 max-w-md w-full space-y-4 ${
-              proctorModal.count >= 3
+              proctorModal.count >= maxAllowedViolations
                 ? "bg-[#fde8e8] text-rose-950"
                 : "bg-white text-[#111111]"
             }`}
@@ -517,12 +547,12 @@ export default function TestEngine({
             <div className="flex items-center gap-3">
               <div
                 className={`w-12 h-12 flex items-center justify-center flex-shrink-0 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] ${
-                  proctorModal.count >= 3
+                  proctorModal.count >= maxAllowedViolations
                     ? "bg-rose-600 text-white"
                     : "bg-amber-400 text-[#111111]"
                 }`}
               >
-                {proctorModal.count >= 3 ? (
+                {proctorModal.count >= maxAllowedViolations ? (
                   <ShieldAlert className="w-7 h-7" />
                 ) : (
                   <AlertTriangle className="w-7 h-7" />
@@ -531,15 +561,15 @@ export default function TestEngine({
               <div>
                 <span
                   className={`text-[10px] font-mono uppercase font-black tracking-wider block ${
-                    proctorModal.count >= 3 ? "text-rose-700" : "text-amber-800"
+                    proctorModal.count >= maxAllowedViolations ? "text-rose-700" : "text-amber-800"
                   }`}
                 >
-                  {proctorModal.count >= 3
-                    ? "[ TERMINATION: DISQUALIFIED ]"
-                    : `[ PROCTORING WARNING ${proctorModal.count} / 3 ]`}
+                  {proctorModal.count >= maxAllowedViolations
+                    ? "[ TERMINATION: LOCKED OUT ]"
+                    : `[ PROCTORING WARNING ${proctorModal.count} / ${maxAllowedViolations} ]`}
                 </span>
                 <h4 className="font-display font-black text-lg uppercase text-[#111111]">
-                  {proctorModal.count >= 3
+                  {proctorModal.count >= maxAllowedViolations
                     ? "Maximum Violations Exceeded"
                     : "Proctoring Violation Detected"}
                 </h4>
@@ -552,17 +582,17 @@ export default function TestEngine({
                 <span className="text-rose-600 font-black">{proctorModal.reason}</span>
               </div>
               <div className="text-slate-700 text-[11px] leading-relaxed font-bold">
-                {proctorModal.count >= 3
-                  ? "You have accumulated 3 proctoring violations. Your test session has been terminated and automatically submitted with a score of 0. An incident notification has been dispatched to your lab mentors and administrators."
-                  : `Warning ${proctorModal.count} of 3 recorded. Please stay focused on the test and maintain full-screen mode. After 3 warnings, your test will be terminated and submitted as disqualified.`}
+                {proctorModal.count >= maxAllowedViolations
+                  ? `You have accumulated ${maxAllowedViolations} proctoring violations. Your test session has been terminated and locked out. An incident report has been dispatched to your lab mentors and administrators.`
+                  : `Warning ${proctorModal.count} of ${maxAllowedViolations} recorded. Please avoid copying, pasting, switching tabs, or exiting full-screen. After ${maxAllowedViolations} warnings, your test session will be locked out.`}
               </div>
             </div>
 
-            {proctorModal.count >= 3 ? (
+            {proctorModal.count >= maxAllowedViolations ? (
               <div className="p-3.5 bg-rose-200 border-[2px] border-[#111111] text-center space-y-2">
                 <div className="inline-block w-5 h-5 border-[3px] border-rose-900 border-t-transparent rounded-full animate-spin" />
                 <p className="text-xs font-mono font-black text-rose-950 uppercase">
-                  Submitting disqualified test and alerting mentors & admins...
+                  Locking test session and alerting mentors & admins...
                 </p>
               </div>
             ) : (
@@ -616,7 +646,9 @@ export default function TestEngine({
             }`}
           >
             <Shield className="w-3 h-3" />
-            {warningCount === 0 ? "PROCTOR (0/3)" : `⚠️ ${warningCount}/3 WARNINGS`}
+            {warningCount === 0
+              ? `PROCTOR (0/${maxAllowedViolations})`
+              : `⚠️ ${warningCount}/${maxAllowedViolations} WARNINGS`}
           </span>
 
           {/* Fullscreen Button if exited */}

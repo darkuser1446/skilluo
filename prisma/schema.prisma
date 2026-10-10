@@ -303,6 +303,7 @@ model Assessment {
   totalMarks      Float          @default(100)
   passingMarks    Float?
   durationMinutes Int?
+  allowedViolations Int         @default(3)
   instructions    String?
   startsAt        DateTime
   endsAt          DateTime
@@ -329,13 +330,18 @@ model AssessmentResult {
   studentId       String
   student         User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   score           Float
-  status          String     @default("COMPLETED") // COMPLETED | PENDING_REVIEW
+  status          String     @default("COMPLETED") // COMPLETED | PENDING_REVIEW | LOCKED | DISQUALIFIED
   answers         Json?      // questionId -> answer (incl. code/text answers)
   correctCount    Int?
   incorrectCount  Int?
   unansweredCount Int?
   durationSec     Int?
   feedback        String?
+  isLocked        Boolean    @default(false)
+  violationCount  Int        @default(0)
+  violationReason String?
+  unlockedAt      DateTime?
+  unlockedBy      String?
   submittedAt     DateTime   @default(now())
 
   @@unique([assessmentId, studentId])

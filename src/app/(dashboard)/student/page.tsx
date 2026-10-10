@@ -36,6 +36,8 @@ import {
   Play,
   Terminal,
   Download,
+  ShieldAlert,
+  Lock,
 } from "lucide-react";
 import TestEngine from "@/components/TestEngine";
 import StudentProgressTrend from "@/components/StudentProgressTrend";
@@ -1783,6 +1785,7 @@ export default function StudentDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {assessments.map((as) => {
               const res = as.results?.[0];
+              const isLocked = Boolean(res?.isLocked || res?.status === "LOCKED");
               const now = new Date();
               const starts = new Date(as.startsAt);
               const ends = new Date(as.endsAt);
@@ -1793,20 +1796,23 @@ export default function StudentDashboardPage() {
 
               return (
                 <div key={as.id} className={`p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] flex flex-col justify-between space-y-4 transition-all ${
-                  isLive && !res ? "bg-[#FFF0E5]" : ""
+                  isLocked ? "border-rose-600 bg-rose-50/20" : isLive && !res ? "bg-[#FFF0E5]" : ""
                 }`}>
                   <div className="space-y-3">
                     {/* Header row */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#e8f0fe] text-blue-900 uppercase">{as.type}</span>
-                        {isLive && !res && <span className="flex items-center gap-1 px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#e6f4ea] text-emerald-800 animate-pulse">● LIVE</span>}
-                        {isUpcoming && <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#f4f3f3] text-slate-700">Upcoming</span>}
-                        {isExpired && !res && <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#fde8e8] text-rose-800">Expired</span>}
+                        {isLocked && <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-black bg-rose-600 text-white animate-pulse">🔒 LOCKED OUT</span>}
+                        {!isLocked && isLive && !res && <span className="flex items-center gap-1 px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#e6f4ea] text-emerald-800 animate-pulse">● LIVE</span>}
+                        {!isLocked && isUpcoming && <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#f4f3f3] text-slate-700">Upcoming</span>}
+                        {!isLocked && isExpired && !res && <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#fde8e8] text-rose-800">Expired</span>}
                       </div>
                       {res && (
-                        <span className="flex-shrink-0 px-2.5 py-0.5 border border-[#111111] text-xs font-mono font-black bg-[#e6f4ea] text-emerald-800 shadow-[2px_2px_0px_#111111]">
-                          {res.score}/{as.totalMarks} PTS
+                        <span className={`flex-shrink-0 px-2.5 py-0.5 border border-[#111111] text-xs font-mono font-black shadow-[2px_2px_0px_#111111] ${
+                          isLocked ? "bg-rose-600 text-white" : "bg-[#e6f4ea] text-emerald-800"
+                        }`}>
+                          {isLocked ? "LOCKED (0 PTS)" : `${res.score}/${as.totalMarks} PTS`}
                         </span>
                       )}
                     </div>
@@ -1820,10 +1826,24 @@ export default function StudentDashboardPage() {
                       <span>{as.totalMarks} marks</span>
                       <span>•</span>
                       <span>Ends {new Date(as.endsAt).toLocaleDateString()}</span>
+                      {as.allowedViolations && <span>• {as.allowedViolations} strikes max</span>}
                     </div>
 
+                    {/* Lockout alert notice */}
+                    {isLocked && (
+                      <div className="p-3 bg-rose-100 border-[2px] border-[#111111] text-rose-950 font-mono text-[11px] space-y-1 shadow-[2px_2px_0px_#111111]">
+                        <div className="font-bold flex items-center gap-1.5 text-rose-900">
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-700 flex-shrink-0" />
+                          <span>Session Locked: {res.violationReason || "Proctoring violation threshold reached"}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-800 font-bold">
+                          Strikes recorded: <strong>{res.violationCount ?? as.allowedViolations ?? 3}</strong>. Contact your Mentor or Admin to unlock.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Result progress bar */}
-                    {res && (
+                    {res && !isLocked && (
                       <div className="space-y-1">
                         <div className="flex justify-between text-[10px] font-mono font-bold text-slate-700">
                           <span>SCORE CONVERSION</span>
@@ -1838,10 +1858,10 @@ export default function StudentDashboardPage() {
 
                   <div className="pt-3 border-t-[2px] border-[#111111] flex items-center justify-between">
                     <span className="text-[10px] font-mono text-slate-600 font-bold">
-                      {res ? `Submitted ${new Date(res.submittedAt).toLocaleDateString()}` : `Opens ${new Date(as.startsAt).toLocaleDateString()}`}
+                      {isLocked ? "Session Locked" : res ? `Submitted ${new Date(res.submittedAt).toLocaleDateString()}` : `Opens ${new Date(as.startsAt).toLocaleDateString()}`}
                     </span>
                     <button
-                      disabled={isUpcoming || (isExpired && !res)}
+                      disabled={!isLocked && (isUpcoming || (isExpired && !res))}
                       onClick={() => {
                         setActiveAssessment(as);
                         if (res) {
@@ -1854,6 +1874,9 @@ export default function StudentDashboardPage() {
                             unansweredCount: res.unansweredCount,
                             durationSec: res.durationSec,
                             status: res.status,
+                            isLocked: isLocked,
+                            violationCount: res.violationCount,
+                            violationReason: res.violationReason,
                             history: true,
                           });
                         } else {
@@ -1864,12 +1887,13 @@ export default function StudentDashboardPage() {
                         }
                       }}
                       className={`px-4 py-1.5 border-[2px] border-[#111111] text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-[2px_2px_0px_#111111] ${
+                        isLocked ? "bg-rose-600 hover:bg-rose-700 text-white" :
                         res ? "bg-white text-[#111111] hover:bg-[#f4f3f3]" :
                         isLive ? "bg-[#F07C27] text-white hover:brightness-110" :
                         "bg-[#f4f3f3] text-slate-400 cursor-not-allowed opacity-50"
                       }`}
                     >
-                      {res ? "📋 View Result" : isLive ? "🚀 Start Test" : isUpcoming ? "⏳ Not Started" : "Expired"}
+                      {isLocked ? "🔒 Locked Out Notice" : res ? "📋 View Result" : isLive ? "🚀 Start Test" : isUpcoming ? "⏳ Not Started" : "Expired"}
                     </button>
                   </div>
                 </div>
@@ -1899,98 +1923,165 @@ export default function StudentDashboardPage() {
         </div>
       )}
 
-      {/* ══ TEST RESULT SCREEN ══ */}
+      {/* ══ TEST RESULT & LOCKOUT SCREEN ══ */}
       {activeTab === "assessments" && activeAssessment && quizResult && (
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className={`p-8 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] text-center space-y-4 ${
-            quizResult.status === "DISQUALIFIED" || quizResult.disqualified
-              ? "border-rose-600 bg-rose-50/40"
-              : ""
-          }`}>
-            {quizResult.status === "DISQUALIFIED" || quizResult.disqualified ? (
-              <div className="w-16 h-16 bg-rose-100 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center mx-auto">
-                <AlertTriangle className="w-8 h-8 text-rose-600" />
+          {quizResult.isLocked || quizResult.status === "LOCKED" || quizResult.status === "DISQUALIFIED" || quizResult.disqualified ? (
+            /* Dedicated Neo-Brutalist Locked Out Screen */
+            <div className="p-7 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] space-y-6 text-left">
+              {/* Header Banner */}
+              <div className="flex items-center gap-4 border-b-[3px] border-[#111111] pb-5">
+                <div className="w-14 h-14 bg-rose-600 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center flex-shrink-0 text-white">
+                  <ShieldAlert className="w-8 h-8 stroke-[2.5]" />
+                </div>
+                <div>
+                  <span className="inline-block px-2 py-0.5 bg-rose-100 text-rose-900 border border-[#111111] font-mono text-[10px] font-black uppercase tracking-wider shadow-[1px_1px_0px_#111111] mb-1">
+                    [ 🔒 PROCTORING LOCKOUT: TEST SESSION TERMINATED ]
+                  </span>
+                  <h3 className="font-display font-black text-2xl uppercase text-[#111111] tracking-tight">
+                    Assessment Session Locked
+                  </h3>
+                </div>
               </div>
-            ) : (
+
+              {/* Candidate Dossier */}
+              <div className="p-4 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] space-y-2.5 font-mono text-xs">
+                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                  <span className="text-slate-600 font-bold">CANDIDATE NAME:</span>
+                  <span className="text-[#111111] font-black">{user?.name}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                  <span className="text-slate-600 font-bold">REGISTRATION / ROLL NO:</span>
+                  <span className="text-[#111111] font-black">{user?.rollNumber || "N/A"}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                  <span className="text-slate-600 font-bold">COLLEGE / INSTITUTE:</span>
+                  <span className="text-[#111111] font-black">{user?.college || "N/A"}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                  <span className="text-slate-600 font-bold">ASSESSMENT:</span>
+                  <span className="text-[#111111] font-black">{activeAssessment.title}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                  <span className="text-slate-600 font-bold">VIOLATION STRIKES:</span>
+                  <span className="text-rose-700 font-black">
+                    {quizResult.violationCount ?? activeAssessment.allowedViolations ?? 3} / {activeAssessment.allowedViolations ?? 3} STRIKES
+                  </span>
+                </div>
+                <div className="flex items-start justify-between pt-0.5">
+                  <span className="text-slate-600 font-bold flex-shrink-0">TRIGGER REASON:</span>
+                  <span className="text-rose-700 font-black text-right ml-2">
+                    {quizResult.violationReason || "Exceeded allowed proctoring violation limit"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Security Lockout Notice */}
+              <div className="p-4 bg-rose-50 border-[2px] border-rose-600 text-rose-950 font-mono text-xs space-y-2 shadow-[3px_3px_0px_#111111]">
+                <div className="font-black text-sm flex items-center gap-2 text-rose-900 uppercase">
+                  <span>🚨 Disciplinary Test Lockout Enforced</span>
+                </div>
+                <p className="leading-relaxed">
+                  You triggered prohibited proctoring actions during your assessment (such as copying/pasting questions via <strong>Ctrl+C / Ctrl+V</strong>, unauthorized clipboard interaction, window/tab switching, or exiting full-screen) exceeding the allowed violation limit.
+                </p>
+                <p className="font-bold">
+                  ⚠️ Per examination protocol, you are <strong>not permitted to retake or resume this assessment</strong> until an Administrator or assigned Mentor unlocks your session or grants an official Retest.
+                </p>
+              </div>
+
+              {/* Instructions to Candidate */}
+              <div className="p-4 bg-[#FFF0E5] border-[2px] border-[#111111] font-mono text-xs space-y-1.5 shadow-[2px_2px_0px_#111111]">
+                <span className="text-[10px] font-black text-[#F07C27] uppercase tracking-wider block">
+                  [ HOW TO RESOLVE THIS LOCKOUT ]
+                </span>
+                <p className="text-slate-800">
+                  1. Contact your assigned <strong>Lab Mentor</strong> or <strong>Administrator</strong>.
+                </p>
+                <p className="text-slate-800">
+                  2. Mentors can inspect your violation log in the <strong>Test Management Console</strong> and choose to either <strong>Unlock</strong> your session or authorize an official <strong>Retest</strong>.
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveAssessment(null);
+                    setQuizResult(null);
+                  }}
+                  className="neo-btn w-full py-3 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2"
+                >
+                  ← Return to Assessments List
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Normal Result Screen */
+            <div className="p-8 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] text-center space-y-4">
               <div className="w-16 h-16 bg-[#e6f4ea] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-8 h-8 text-emerald-700" />
               </div>
-            )}
-            <h3 className="font-display font-black text-2xl uppercase text-[#111111]">
-              {quizResult.status === "DISQUALIFIED" || quizResult.disqualified
-                ? "Assessment Terminated — Disqualified"
-                : quizResult.history
-                ? "Assessment Result Dossier"
-                : "Benchmark Assessment Submitted!"}
-            </h3>
-            <div className="space-y-1">
-              <div className={`font-display font-black text-5xl ${
-                quizResult.status === "DISQUALIFIED" || quizResult.disqualified
-                  ? "text-rose-600"
-                  : "text-[#F07C27]"
-              }`}>
-                {quizResult.score}<span className="text-2xl text-slate-500">/{quizResult.totalMarks}</span>
-              </div>
-              {(() => {
-                if (quizResult.status === "DISQUALIFIED" || quizResult.disqualified) {
-                  return (
-                    <div className="mt-2 p-3 bg-rose-100 border-[2px] border-[#111111] text-rose-900 text-xs font-mono font-bold shadow-[2px_2px_0px_#111111]">
-                      🚨 <strong>Disqualified for Proctoring Violations</strong>: You exceeded the limit of tab switches or window blurs during this test. A disciplinary report was automatically dispatched to your mentors and administrators.
-                    </div>
-                  );
-                }
-                const passMark = quizResult.passingMarks ?? Math.round(quizResult.totalMarks * 0.6);
-                const passed = quizResult.score >= passMark;
-                const pending = quizResult.status === "PENDING_REVIEW";
-                return (
-                  <p className="text-slate-700 text-sm font-mono font-bold">
-                    {Math.round((quizResult.score / quizResult.totalMarks) * 100)}% —{" "}
-                    {pending ? "⏳ Awaiting mentor review" : passed ? "✅ Passed" : "❌ Below passing threshold"}{" "}
-                    <span className="text-slate-500">(pass mark {passMark})</span>
-                  </p>
-                );
-              })()}
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-              {[
-                { label: "Score", val: `${quizResult.score} pts`, color: "text-[#F07C27]" },
-                { label: "Total Marks", val: `${quizResult.totalMarks} pts`, color: "text-[#111111]" },
-                { label: "Percentage", val: `${Math.round((quizResult.score / quizResult.totalMarks) * 100)}%`, color: "text-emerald-800" },
-                ...(quizResult.correctCount != null
-                  ? [
-                      { label: "Correct", val: String(quizResult.correctCount), color: "text-emerald-800" },
-                      { label: "Incorrect", val: String(quizResult.incorrectCount ?? 0), color: "text-rose-800" },
-                      { label: "Unanswered", val: String(quizResult.unansweredCount ?? 0), color: "text-amber-800" },
-                    ]
-                  : []),
-                ...(quizResult.durationSec
-                  ? [
-                      {
-                        label: "Time Taken",
-                        val: `${Math.floor(quizResult.durationSec / 60)}m ${quizResult.durationSec % 60}s`,
-                        color: "text-blue-900",
-                      },
-                    ]
-                  : []),
-              ].map((s) => (
-                <div key={s.label} className="p-3 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-                  <span className="text-[10px] font-mono text-slate-600 uppercase font-bold block">{s.label}</span>
-                  <span className={`font-mono font-black text-lg ${s.color}`}>{s.val}</span>
+              <h3 className="font-display font-black text-2xl uppercase text-[#111111]">
+                {quizResult.history ? "Assessment Result Dossier" : "Benchmark Assessment Submitted!"}
+              </h3>
+              <div className="space-y-1">
+                <div className="font-display font-black text-5xl text-[#F07C27]">
+                  {quizResult.score}<span className="text-2xl text-slate-500">/{quizResult.totalMarks}</span>
                 </div>
-              ))}
+                {(() => {
+                  const passMark = quizResult.passingMarks ?? Math.round(quizResult.totalMarks * 0.6);
+                  const passed = quizResult.score >= passMark;
+                  const pending = quizResult.status === "PENDING_REVIEW";
+                  return (
+                    <p className="text-slate-700 text-sm font-mono font-bold">
+                      {Math.round((quizResult.score / quizResult.totalMarks) * 100)}% —{" "}
+                      {pending ? "⏳ Awaiting mentor review" : passed ? "✅ Passed" : "❌ Below passing threshold"}{" "}
+                      <span className="text-slate-500">(pass mark {passMark})</span>
+                    </p>
+                  );
+                })()}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                {[
+                  { label: "Score", val: `${quizResult.score} pts`, color: "text-[#F07C27]" },
+                  { label: "Total Marks", val: `${quizResult.totalMarks} pts`, color: "text-[#111111]" },
+                  { label: "Percentage", val: `${Math.round((quizResult.score / quizResult.totalMarks) * 100)}%`, color: "text-emerald-800" },
+                  ...(quizResult.correctCount != null
+                    ? [
+                        { label: "Correct", val: String(quizResult.correctCount), color: "text-emerald-800" },
+                        { label: "Incorrect", val: String(quizResult.incorrectCount ?? 0), color: "text-rose-800" },
+                        { label: "Unanswered", val: String(quizResult.unansweredCount ?? 0), color: "text-amber-800" },
+                      ]
+                    : []),
+                  ...(quizResult.durationSec
+                    ? [
+                        {
+                          label: "Time Taken",
+                          val: `${Math.floor(quizResult.durationSec / 60)}m ${quizResult.durationSec % 60}s`,
+                          color: "text-blue-900",
+                        },
+                      ]
+                    : []),
+                ].map((s) => (
+                  <div key={s.label} className="p-3 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                    <span className="text-[10px] font-mono text-slate-600 uppercase font-bold block">{s.label}</span>
+                    <span className={`font-mono font-black text-lg ${s.color}`}>{s.val}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-600 font-mono">
+                {quizResult.status === "PENDING_REVIEW"
+                  ? "Your written/code answers are queued for mentor review — the final score updates after grading."
+                  : "Your result has been saved and is reflected in your scorecard."}
+              </p>
+              <button
+                onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
+                className="px-6 py-2.5 bg-[#F07C27] text-white font-mono text-xs font-black uppercase hover:brightness-110 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111]"
+              >
+                ← Back to All Tests
+              </button>
             </div>
-            <p className="text-xs text-slate-600 font-mono">
-              {quizResult.status === "PENDING_REVIEW"
-                ? "Your written/code answers are queued for mentor review — the final score updates after grading."
-                : "Your result has been saved and is reflected in your scorecard."}
-            </p>
-            <button
-              onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
-              className="px-6 py-2.5 bg-[#F07C27] text-white font-mono text-xs font-black uppercase hover:brightness-110 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111]"
-            >
-              ← Back to All Tests
-            </button>
-          </div>
+          )}
         </div>
       )}
 

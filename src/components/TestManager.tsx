@@ -14,6 +14,10 @@ import {
   X,
   CheckCircle2,
   AlertTriangle,
+  Download,
+  Unlock,
+  RotateCcw,
+  ShieldAlert,
 } from "lucide-react";
 
 /* ───────────────────────── types ───────────────────────── */
@@ -39,9 +43,22 @@ interface BankQuestion {
 interface Result {
   id: string;
   studentId: string;
-  student?: { id: string; name: string; email?: string; college?: string };
+  student?: {
+    id: string;
+    name: string;
+    email?: string;
+    college?: string;
+    rollNumber?: string;
+    phone?: string;
+    branch?: string;
+  };
   score: number;
   status: string;
+  isLocked?: boolean;
+  violationCount?: number;
+  violationReason?: string;
+  unlockedAt?: string | null;
+  unlockedBy?: string | null;
   answers?: Record<string, string> | null;
   correctCount?: number | null;
   incorrectCount?: number | null;
@@ -58,6 +75,7 @@ interface Assessment {
   totalMarks: number;
   passingMarks?: number | null;
   durationMinutes?: number | null;
+  allowedViolations?: number | null;
   instructions?: string | null;
   startsAt: string;
   endsAt: string;
@@ -114,6 +132,7 @@ export default function TestManager({
   const [labId, setLabId] = useState("");
   const [passingMarks, setPassingMarks] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("30");
+  const [allowedViolations, setAllowedViolations] = useState("3");
   const [instructions, setInstructions] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
@@ -160,6 +179,8 @@ export default function TestManager({
     setTitle("");
     setLabId("");
     setPassingMarks("");
+    setDurationMinutes("30");
+    setAllowedViolations("3");
     setInstructions("");
     setStartsAt("");
     setEndsAt("");
@@ -180,6 +201,7 @@ export default function TestManager({
         totalMarks,
         passingMarks: passingMarks ? Number(passingMarks) : Math.round(totalMarks * 0.6),
         durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
+        allowedViolations: allowedViolations ? Number(allowedViolations) : 3,
         instructions: instructions || undefined,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
@@ -272,6 +294,97 @@ export default function TestManager({
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleUnlockCandidate = async (assessmentId: string, studentId: string, studentName: string) => {
+    if (!confirm(`Unlock test session for ${studentName}? This clears the proctoring lock and sets status to PENDING_REVIEW.`)) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, action: "UNLOCK" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Unlock failed");
+      flash(`Candidate ${studentName} unlocked successfully`);
+      if (resultsFor) await openResults(resultsFor);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to unlock candidate", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRetestCandidate = async (assessmentId: string, studentId: string, studentName: string) => {
+    if (!confirm(`Allow RETEST for ${studentName}? This deletes their previous attempt so they can take the test again cleanly.`)) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, action: "RETEST" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to allow retest");
+      flash(`Retest authorized for ${studentName}. Previous attempt cleared.`);
+      if (resultsFor) await openResults(resultsFor);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to allow retest", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleExportResultsCSV = (a: Assessment, resList: Result[]) => {
+    const headers = [
+      "Roll Number",
+      "Student Name",
+      "Email",
+      "Phone",
+      "College",
+      "Branch",
+      "Score",
+      "Total Marks",
+      "Percentage",
+      "Status",
+      "Violations Count",
+      "Violation Reason",
+      "Is Locked",
+      "Submitted At",
+    ];
+    const rows = resList.map((r) => [
+      r.student?.rollNumber || "N/A",
+      r.student?.name || "Student",
+      r.student?.email || "N/A",
+      r.student?.phone || "N/A",
+      r.student?.college || "N/A",
+      r.student?.branch || "N/A",
+      r.score,
+      a.totalMarks,
+      `${Math.round((r.score / a.totalMarks) * 100)}%`,
+      r.status,
+      r.violationCount ?? 0,
+      r.violationReason || "None",
+      r.isLocked ? "YES" : "NO",
+      new Date(r.submittedAt).toLocaleString(),
+    ]);
+
+    const csvContent = [
+      headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(","),
+      ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${a.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_results.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   /* ── question bank ── */
@@ -488,6 +601,19 @@ export default function TestManager({
                 onChange={(e) => setPassingMarks(e.target.value)}
                 placeholder={`default ${Math.round(totalMarks * 0.6)}`}
               />
+            </div>
+            <div>
+              <label className={labelCls}>Proctor Violation Limit</label>
+              <select
+                className={inputCls}
+                value={allowedViolations}
+                onChange={(e) => setAllowedViolations(e.target.value)}
+              >
+                <option value="1">1 Strike (Zero-Tolerance: Lock on 1st Violation)</option>
+                <option value="2">2 Strikes (Strict)</option>
+                <option value="3">3 Strikes (Standard - Recommended)</option>
+                <option value="5">5 Strikes (Lenient)</option>
+              </select>
             </div>
             <div>
               <label className={labelCls}>Starts At *</label>
@@ -719,6 +845,7 @@ export default function TestManager({
                         · {a.questions?.length || 0} Q · {a.totalMarks} marks · pass{" "}
                         {a.passingMarks ?? Math.round(a.totalMarks * 0.6)}
                       </span>
+                      <span>· {a.allowedViolations || 3} strikes max</span>
                     </div>
                   </div>
 
@@ -761,87 +888,179 @@ export default function TestManager({
                         No submissions yet
                       </p>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs font-mono">
-                          <thead>
-                            <tr className="text-[#111111] text-[10px] uppercase font-bold border-b-[2px] border-[#111111] bg-[#FFF0E5]">
-                              <th className="text-left py-2 px-3">Student</th>
-                              <th className="text-right py-2 px-3">Score</th>
-                              <th className="text-right py-2 px-3">%</th>
-                              <th className="text-center py-2 px-3">C / I / U</th>
-                              <th className="text-right py-2 px-3">Time</th>
-                              <th className="text-center py-2 px-3">Status</th>
-                              <th className="text-right py-2 px-3">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[#111111]/20">
-                            {results.map((r) => {
-                              const pct = Math.round((r.score / a.totalMarks) * 100);
-                              const pass = r.score >= (a.passingMarks ?? a.totalMarks * 0.6);
-                              return (
-                                <tr key={r.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
-                                  <td className="py-2.5 px-3 text-[#111111] font-bold">
-                                    {r.student?.name || "Student"}
-                                    <span className="block text-[10px] text-slate-600 font-normal">
-                                      {r.student?.email}
-                                    </span>
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right text-[#111111] font-black">
-                                    {r.score}/{a.totalMarks}
-                                  </td>
-                                  <td
-                                    className={`py-2.5 px-3 text-right font-bold ${
-                                      pass ? "text-emerald-700" : "text-rose-700"
-                                    }`}
-                                  >
-                                    {pct}%
-                                  </td>
-                                  <td className="py-2.5 px-3 text-center text-slate-600">
-                                    {r.correctCount ?? "–"} / {r.incorrectCount ?? "–"} /{" "}
-                                    {r.unansweredCount ?? "–"}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right text-slate-600">
-                                    {r.durationSec
-                                      ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
-                                      : "–"}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-center">
-                                    <span
-                                      className={`px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-bold shadow-[1px_1px_0px_#111111] ${
-                                        r.status === "PENDING_REVIEW"
-                                          ? "bg-amber-100 text-amber-900"
-                                          : pass
-                                          ? "bg-emerald-100 text-emerald-900"
-                                          : "bg-rose-100 text-rose-900"
+                      <div>
+                        {/* Results Drawer Header & CSV Export */}
+                        <div className="flex items-center justify-between pb-3 mb-3 border-b-[2px] border-[#111111] flex-wrap gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-black uppercase text-[#111111]">
+                              Submissions & Proctoring Audit ({results.length})
+                            </span>
+                            {results.some((r) => r.isLocked || r.status === "LOCKED") && (
+                              <span className="px-2 py-0.5 border border-[#111111] bg-rose-600 text-white font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] animate-pulse">
+                                ⚠️ Lockouts Detected
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleExportResultsCSV(a, results)}
+                            className="px-3 py-1 bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
+                            title="Download results and proctoring logs as Excel-compatible CSV"
+                          >
+                            <Download className="w-3.5 h-3.5 text-[#F07C27]" /> Export Results (Excel CSV)
+                          </button>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs font-mono">
+                            <thead>
+                              <tr className="text-[#111111] text-[10px] uppercase font-bold border-b-[2px] border-[#111111] bg-[#FFF0E5]">
+                                <th className="text-left py-2 px-3">Student & Roll No</th>
+                                <th className="text-right py-2 px-3">Score</th>
+                                <th className="text-right py-2 px-3">%</th>
+                                <th className="text-center py-2 px-3">C / I / U</th>
+                                <th className="text-right py-2 px-3">Time</th>
+                                <th className="text-center py-2 px-3">Status & Proctoring</th>
+                                <th className="text-right py-2 px-3">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#111111]/20">
+                              {results.map((r) => {
+                                const pct = Math.round((r.score / a.totalMarks) * 100);
+                                const pass = r.score >= (a.passingMarks ?? a.totalMarks * 0.6);
+                                const isLockedCandidate = r.isLocked || r.status === "LOCKED";
+                                return (
+                                  <tr key={r.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
+                                    <td className="py-2.5 px-3 text-[#111111] font-bold">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span>{r.student?.name || "Student"}</span>
+                                        {r.student?.rollNumber && (
+                                          <span className="px-1.5 py-0.2 bg-[#F4F3F3] border border-[#111111] text-[10px] font-mono text-slate-800 font-bold shadow-[1px_1px_0px_#111111]">
+                                            REG: {r.student.rollNumber}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="block text-[10px] text-slate-600 font-normal">
+                                        {r.student?.email}
+                                      </span>
+                                    </td>
+                                    <td className="py-2.5 px-3 text-right text-[#111111] font-black">
+                                      {r.score}/{a.totalMarks}
+                                    </td>
+                                    <td
+                                      className={`py-2.5 px-3 text-right font-bold ${
+                                        pass ? "text-emerald-700" : "text-rose-700"
                                       }`}
                                     >
-                                      {r.status === "PENDING_REVIEW"
-                                        ? "NEEDS REVIEW"
-                                        : pass
-                                        ? "PASS"
-                                        : "FAIL"}
-                                    </span>
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right">
-                                    <button
-                                      className="px-2.5 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-[11px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer"
-                                      onClick={() =>
-                                        setGrading({
-                                          studentId: r.studentId,
-                                          score: String(r.score),
-                                          feedback: r.feedback || "",
-                                        })
-                                      }
-                                    >
-                                      <Award className="w-3 h-3 inline mr-1" />
-                                      Grade
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                                      {pct}%
+                                    </td>
+                                    <td className="py-2.5 px-3 text-center text-slate-600">
+                                      {r.correctCount ?? "–"} / {r.incorrectCount ?? "–"} /{" "}
+                                      {r.unansweredCount ?? "–"}
+                                    </td>
+                                    <td className="py-2.5 px-3 text-right text-slate-600">
+                                      {r.durationSec
+                                        ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
+                                        : "–"}
+                                    </td>
+                                    <td className="py-2.5 px-3 text-center">
+                                      {isLockedCandidate ? (
+                                        <div className="space-y-0.5">
+                                          <span className="px-2 py-0.5 border-[2px] border-rose-800 text-[10px] font-black bg-rose-600 text-white shadow-[2px_2px_0px_#111111] inline-flex items-center gap-1">
+                                            <ShieldAlert className="w-3 h-3 text-white" />
+                                            LOCKED ({r.violationCount ?? 0} strikes)
+                                          </span>
+                                          {r.violationReason && (
+                                            <span
+                                              className="block text-[9px] font-mono text-rose-800 max-w-[140px] truncate mx-auto font-bold"
+                                              title={r.violationReason}
+                                            >
+                                              {r.violationReason}
+                                            </span>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span
+                                          className={`px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-bold shadow-[1px_1px_0px_#111111] ${
+                                            r.status === "PENDING_REVIEW"
+                                              ? "bg-amber-100 text-amber-900"
+                                              : r.status === "DISQUALIFIED"
+                                              ? "bg-rose-600 text-white"
+                                              : pass
+                                              ? "bg-emerald-100 text-emerald-900"
+                                              : "bg-rose-100 text-rose-900"
+                                          }`}
+                                        >
+                                          {r.status === "PENDING_REVIEW"
+                                            ? "NEEDS REVIEW"
+                                            : r.status === "DISQUALIFIED"
+                                            ? "DISQUALIFIED"
+                                            : pass
+                                            ? "PASS"
+                                            : "FAIL"}
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="py-2.5 px-3 text-right">
+                                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                        {isLockedCandidate ? (
+                                          <>
+                                            <button
+                                              type="button"
+                                              className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                              onClick={() =>
+                                                handleUnlockCandidate(a.id, r.studentId, r.student?.name || "Student")
+                                              }
+                                              title="Clear proctoring lockout and allow review"
+                                            >
+                                              <Unlock className="w-3 h-3" /> Unlock
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="px-2 py-1 border-[2px] border-[#111111] bg-amber-400 hover:bg-amber-300 text-[#111111] font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                              onClick={() =>
+                                                handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
+                                              }
+                                              title="Reset test attempt and grant retest"
+                                            >
+                                              <RotateCcw className="w-3 h-3" /> Retest
+                                            </button>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <button
+                                              type="button"
+                                              className="px-2 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-[10px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                              onClick={() =>
+                                                setGrading({
+                                                  studentId: r.studentId,
+                                                  score: String(r.score),
+                                                  feedback: r.feedback || "",
+                                                })
+                                              }
+                                            >
+                                              <Award className="w-3 h-3 inline" /> Grade
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="px-2 py-1 border border-[#111111] bg-[#F4F3F3] hover:bg-amber-200 text-[#111111] font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
+                                              onClick={() =>
+                                                handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
+                                              }
+                                              title="Allow student a fresh retest"
+                                            >
+                                              <RotateCcw className="w-2.5 h-2.5" /> Retest
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
 
                         {/* grading inspector for the row being graded */}
                         {grading &&

@@ -99,7 +99,7 @@ export async function POST(
       : "COMPLETED";
 
     const feedback = isDisqualified
-      ? `Auto-submitted due to proctoring violation: ${violationReason}. (Total violations recorded: ${warningCount ?? 0})`
+      ? `Test locked out due to proctoring violation: ${violationReason}. (Total violations recorded: ${warningCount ?? 0})`
       : null;
 
     const finalScore = isDisqualified ? 0 : totalScore;
@@ -110,6 +110,9 @@ export async function POST(
         studentId: user.sub,
         score: finalScore,
         status,
+        isLocked: isDisqualified,
+        violationCount: warningCount ?? (isDisqualified ? 1 : 0),
+        violationReason: violationReason || null,
         answers: {
           ...answers,
           _proctoring: isDisqualified
@@ -118,6 +121,7 @@ export async function POST(
                 warningCount: warningCount ?? 0,
                 flaggedAt: new Date().toISOString(),
                 disqualified: true,
+                locked: true,
               }
             : null,
         } as object,

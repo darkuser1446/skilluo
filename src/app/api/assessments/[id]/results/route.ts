@@ -26,7 +26,15 @@ export async function GET(
             : {
                 include: {
                   student: {
-                    select: { id: true, name: true, email: true, college: true },
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      phone: true,
+                      college: true,
+                      rollNumber: true,
+                      branch: true,
+                    },
                   },
                 },
                 orderBy: { score: "desc" },
@@ -106,6 +114,75 @@ export async function PUT(
     );
 
     return successResponse({ result });
+  } catch (err) {
+    return handleApiError(err);
+  }
+}
+
+const UnlockRetestSchema = z.object({
+  studentId: z.string(),
+  action: z.enum(["UNLOCK", "RETEST"]),
+});
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const actor = await requireRole(["MENTOR", "ADMIN"]);
+    const { id: assessmentId } = await params;
+    const body = await req.json();
+    const { studentId, action } = UnlockRetestSchema.parse(body);
+
+    const assessment = await prisma.assessment.findUnique({
+      where: { id: assessmentId },
+      select: { title: true },
+    });
+    if (!assessment) return errorResponse("Assessment not found", "NOT_FOUND", 404);
+
+    const existing = await prisma.assessmentResult.findUnique({
+      where: { assessmentId_studentId: { assessmentId, studentId } },
+    });
+    if (!existing) return errorResponse("Candidate test attempt not found", "NOT_FOUND", 404);
+
+    if (action === "RETEST") {
+      // Delete existing attempt so student can re-attempt test cleanly
+      await prisma.assessmentResult.delete({
+        where: { id: existing.id },
+      });
+
+      await notify(
+        studentId,
+        "Retest Approved",
+        `A retest attempt has been granted for "${assessment.title}" by an instructor. You may now start your test again.`,
+        "ASSESSMENT",
+        "/student"
+      );
+
+      return successResponse({ message: "Candidate test attempt cleared. Candidate may now retake the test." });
+    } else {
+      // UNLOCK action: Remove lockout and restore student status
+      const updated = await prisma.assessmentResult.update({
+        where: { id: existing.id },
+        data: {
+          isLocked: false,
+          status: "PENDING_REVIEW",
+          unlockedAt: new Date(),
+          unlockedBy: actor.sub,
+          feedback: `Unlocked by ${actor.name} on ${new Date().toLocaleDateString()}. Original violations: ${existing.violationCount}.`,
+        },
+      });
+
+      await notify(
+        studentId,
+        "Test Session Unlocked",
+        `Your locked test session for "${assessment.title}" has been reviewed and unlocked by an instructor.`,
+        "ASSESSMENT",
+        "/student"
+      );
+
+      return successResponse({ result: updated, message: "Candidate unlocked successfully." });
+    }
   } catch (err) {
     return handleApiError(err);
   }

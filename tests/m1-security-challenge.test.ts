@@ -205,7 +205,7 @@ describe("Milestone 1 Empirical Security & Access Boundary Challenge Suite", () 
       expect(mockPrisma.assessment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           include: expect.objectContaining({
-            results: { where: { studentId: "usr_student_alice", status: "COMPLETED" } },
+            results: { where: { studentId: "usr_student_alice" } },
           }),
         })
       );
