@@ -22,7 +22,7 @@ export async function GET(
             ? { where: { studentId: session.sub } }
             : {
                 include: {
-                  student: { select: { id: true, name: true, email: true } },
+                  student: { select: { id: true, name: true, email: true, rollNumber: true, branch: true } },
                 },
               },
         _count: { select: { submissions: true } },

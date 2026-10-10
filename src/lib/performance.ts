@@ -12,6 +12,10 @@ export interface PerformanceBreakdown {
   studentId: string;
   studentName: string;
   college?: string | null;
+  rollNumber?: string | null;
+  phone?: string | null;
+  branch?: string | null;
+  semester?: string | null;
   workshopId: string;
   assignmentsScore: number; // 0-100 normalized
   assessmentsScore: number; // 0-100 normalized
@@ -29,7 +33,15 @@ export async function calculateOverallPerformance(
 ): Promise<PerformanceBreakdown> {
   const student = await prisma.user.findUnique({
     where: { id: studentId },
-    select: { id: true, name: true, college: true },
+    select: {
+      id: true,
+      name: true,
+      college: true,
+      rollNumber: true,
+      phone: true,
+      branch: true,
+      semester: true,
+    },
   });
 
   if (!student) {
@@ -168,6 +180,10 @@ export async function calculateOverallPerformance(
     studentId,
     studentName: student.name,
     college: student.college,
+    rollNumber: student.rollNumber,
+    phone: student.phone,
+    branch: student.branch,
+    semester: student.semester,
     workshopId,
     assignmentsScore: Number(assignmentsScore.toFixed(1)),
     assessmentsScore: Number(assessmentsScore.toFixed(1)),

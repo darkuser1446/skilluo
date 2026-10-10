@@ -34,7 +34,16 @@ export async function GET(req: NextRequest) {
         students: {
           include: {
             student: {
-              select: { id: true, name: true, email: true, college: true },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                college: true,
+                rollNumber: true,
+                branch: true,
+                semester: true,
+              },
             },
           },
         },

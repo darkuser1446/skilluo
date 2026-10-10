@@ -28,6 +28,10 @@ export async function GET(req: NextRequest) {
             name: true,
             email: true,
             college: true,
+            phone: true,
+            rollNumber: true,
+            branch: true,
+            semester: true,
             labStudents: {
               where: { lab: { workshopId } },
               include: { lab: { select: { id: true, name: true } } },
@@ -39,10 +43,16 @@ export async function GET(req: NextRequest) {
 
     const candidateSelectionList = leaderboard.map((item) => {
       const enrollment = enrollments.find((e) => e.studentId === item.studentId);
-      const labAssignment = enrollment?.student?.labStudents?.[0];
+      const student = enrollment?.student;
+      const labAssignment = student?.labStudents?.[0];
       return {
         ...item,
-        email: enrollment?.student?.email || "",
+        email: student?.email || "",
+        phone: student?.phone || item.phone || "",
+        rollNumber: student?.rollNumber || item.rollNumber || "",
+        branch: student?.branch || item.branch || "",
+        semester: student?.semester || item.semester || "",
+        college: student?.college || item.college || "",
         labId: labAssignment?.labId || null,
         labName: labAssignment?.lab?.name || "Unassigned",
         status: enrollment?.status || "ENROLLED",

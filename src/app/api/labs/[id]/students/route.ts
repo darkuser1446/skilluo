@@ -41,7 +41,18 @@ export async function POST(
       update: {},
       create: { labId, studentId: data.studentId },
       include: {
-        student: { select: { id: true, name: true, email: true, college: true } },
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            college: true,
+            phone: true,
+            rollNumber: true,
+            branch: true,
+            semester: true,
+          },
+        },
       },
     });
 

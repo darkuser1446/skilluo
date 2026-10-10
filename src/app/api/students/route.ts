@@ -35,6 +35,10 @@ export async function GET(req: NextRequest) {
           email: true,
           college: true,
           phone: true,
+          rollNumber: true,
+          branch: true,
+          semester: true,
+          programmingExperience: true,
           createdAt: true,
           labStudents: {
             include: { lab: { select: { id: true, name: true } } },

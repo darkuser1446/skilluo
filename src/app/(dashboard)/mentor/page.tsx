@@ -37,10 +37,12 @@ import {
   Zap,
   ClipboardList,
   ShieldCheck,
+  Download,
 } from "lucide-react";
 import TestManager from "@/components/TestManager";
 import { SkeletonCard, SkeletonMetric, SkeletonProfile } from "@/components/Skeleton";
 import EmptyState from "@/components/EmptyState";
+import { exportToExcel } from "@/utils/export";
 
 export default function MentorDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -395,6 +397,35 @@ export default function MentorDashboardPage() {
   const activeLab = labs.find((l) => l.id === selectedLabId) || labs[0];
   const profile = user?.mentorProfile;
 
+  const handleExportRoster = () => {
+    const headers = [
+      "Registration Number",
+      "Candidate Name",
+      "Email",
+      "Phone",
+      "Branch",
+      "Semester",
+      "Lab Track",
+      "Enrolled Date",
+    ];
+    const rows = (activeLab?.students || []).map((ls: any) => [
+      ls.student?.rollNumber || "N/A",
+      ls.student?.name || "N/A",
+      ls.student?.email || "N/A",
+      ls.student?.phone || "N/A",
+      ls.student?.branch || "N/A",
+      ls.student?.semester || "N/A",
+      activeLab?.name || "Lab",
+      new Date(ls.enrolledAt).toLocaleDateString(),
+    ]);
+
+    exportToExcel(
+      `skillup_roster_${(activeLab?.name || "lab").replace(/\s+/g, "_")}.csv`,
+      headers,
+      rows
+    );
+  };
+
   const TABS = [
     { id: "roster", label: "Lab Roster", icon: Users, count: activeLab?.students?.length || 0 },
     { id: "review", label: "Grading Queue", icon: FileCode, count: pendingSubmissions.length },
@@ -567,13 +598,23 @@ export default function MentorDashboardPage() {
 
       {activeTab === "roster" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
               Enrolled Candidates — {activeLab?.name}
             </h3>
-            <span className="text-xs font-mono font-bold text-[#111111] bg-[#FFF0E5] px-3 py-1 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-              Total: {activeLab?.students?.length || 0} Engineers
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold text-[#111111] bg-[#FFF0E5] px-3 py-1.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                Total: {activeLab?.students?.length || 0} Engineers
+              </span>
+              <button
+                onClick={handleExportRoster}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#FFF0E5] text-[#111111] font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                title="Download Lab Roster as Excel spreadsheet"
+              >
+                <Download className="w-3.5 h-3.5 text-[#F07C27]" />
+                <span>Export to Excel</span>
+              </button>
+            </div>
           </div>
           <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] overflow-hidden">
             <div className="overflow-x-auto scrollbar-none">
@@ -581,8 +622,9 @@ export default function MentorDashboardPage() {
                 <thead>
                   <tr className="border-b-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] font-mono uppercase font-bold text-[10px] tracking-wider">
                     <th className="sticky left-0 bg-[#FFF0E5] z-10 py-3 px-4 border-r border-[#111111]">Candidate</th>
-                    <th className="py-3 px-4 border-r border-[#111111]">Email</th>
-                    <th className="py-3 px-4 border-r border-[#111111]">Institution</th>
+                    <th className="py-3 px-4 border-r border-[#111111]">Reg. Number</th>
+                    <th className="py-3 px-4 border-r border-[#111111]">Email / Phone</th>
+                    <th className="py-3 px-4 border-r border-[#111111]">Branch & Sem</th>
                     <th className="py-3 px-4 border-r border-[#111111]">Enrolled At</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
@@ -590,7 +632,7 @@ export default function MentorDashboardPage() {
                 <tbody className="divide-y divide-[#111111]/20 font-mono">
                   {(!activeLab?.students || activeLab.students.length === 0) && (
                     <tr>
-                      <td colSpan={5} className="py-8">
+                      <td colSpan={6} className="py-8">
                         <EmptyState
                           icon={Users}
                           title="No Students Enrolled"
@@ -614,9 +656,21 @@ export default function MentorDashboardPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-slate-700 border-r border-[#111111]/20">{st?.email}</td>
-                        <td className="py-3 px-4 text-slate-700 font-mono border-r border-[#111111]/20">{st?.college || "—"}</td>
-                        <td className="py-3 px-4 text-slate-600 border-r border-[#111111]/20">{new Date(ls.enrolledAt).toLocaleDateString()}</td>
+                        <td className="py-3 px-4 whitespace-nowrap border-r border-[#111111]/20">
+                          <span className="px-2 py-0.5 bg-[#FFF0E5] border border-[#111111] text-[#111111] font-bold text-[11px] shadow-[1px_1px_0px_#111111]">
+                            {st?.rollNumber || "—"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-slate-700 border-r border-[#111111]/20">
+                          <div className="font-mono text-xs">{st?.email}</div>
+                          {st?.phone && (
+                            <div className="text-[10px] text-slate-500 font-bold font-mono">{st.phone}</div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-slate-700 font-mono border-r border-[#111111]/20 whitespace-nowrap">
+                          {st?.branch || st?.college || "CSE"} {st?.semester ? `(${st.semester})` : ""}
+                        </td>
+                        <td className="py-3 px-4 text-slate-600 border-r border-[#111111]/20 whitespace-nowrap">{new Date(ls.enrolledAt).toLocaleDateString()}</td>
                         <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => setActiveTab("review")}
@@ -664,7 +718,14 @@ export default function MentorDashboardPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-mono font-bold text-sm text-[#111111]">{s.student?.name || "Student"}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-mono font-bold text-sm text-[#111111]">{s.student?.name || "Student"}</span>
+                        {s.student?.rollNumber && (
+                          <span className="px-1.5 py-0.5 bg-[#FFF0E5] border border-[#111111] font-mono font-bold text-[10px] text-[#111111]">
+                            {s.student.rollNumber}
+                          </span>
+                        )}
+                      </div>
                       {isGraded ? (
                         <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 shadow-[1px_1px_0px_#111111]">
                           {s.score}/{s.maxScore}
@@ -694,9 +755,16 @@ export default function MentorDashboardPage() {
                     <span className="text-[10px] font-mono text-[#F07C27] uppercase font-black tracking-wider">
                       CODE REVIEW PROTOCOL
                     </span>
-                    <h3 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
-                      {selectedSubmission.student?.name}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
+                        {selectedSubmission.student?.name}
+                      </h3>
+                      {selectedSubmission.student?.rollNumber && (
+                        <span className="px-2 py-0.5 bg-[#FFF0E5] border border-[#111111] font-mono font-bold text-xs text-[#111111]">
+                          REG: {selectedSubmission.student.rollNumber}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs text-slate-600 font-mono font-bold">
                       Task: {selectedSubmission.assignmentTitle}
                     </span>
@@ -1167,8 +1235,17 @@ export default function MentorDashboardPage() {
                       className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9] flex items-center justify-between gap-4 shadow-[2px_2px_0px_#111111]"
                     >
                       <div>
-                        <span className="font-mono font-bold text-xs text-[#111111] block">{ls.student?.name}</span>
-                        <span className="text-[10px] text-slate-600 font-mono">{ls.student?.college || "IIIT"}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-xs text-[#111111]">{ls.student?.name}</span>
+                          {ls.student?.rollNumber && (
+                            <span className="bg-[#FFF0E5] border border-[#111111] px-1.5 py-0.5 text-[10px] font-mono font-bold text-[#111111]">
+                              {ls.student.rollNumber}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-600 font-mono">
+                          {ls.student?.branch || "CSE"} {ls.student?.semester ? `• Sem ${ls.student.semester}` : ""}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1.5 font-mono text-[11px]">
                         {(["PRESENT", "LATE", "ABSENT"] as const).map((st) => (
@@ -1314,7 +1391,7 @@ export default function MentorDashboardPage() {
                     </span>
                   </div>
                   <span className="text-[10px] font-mono text-slate-600 block font-bold">
-                    From: {d.student?.name} • {new Date(d.createdAt).toLocaleDateString()}
+                    From: {d.student?.name} {d.student?.rollNumber ? `[${d.student.rollNumber}]` : ""} • {new Date(d.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               ))}
@@ -1326,7 +1403,9 @@ export default function MentorDashboardPage() {
                 <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3 mb-3">
                   <div>
                     <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">{selectedDoubt.title}</h3>
-                    <span className="text-[10px] font-mono text-slate-600 font-bold">Author: {selectedDoubt.student?.name}</span>
+                    <span className="text-[10px] font-mono text-slate-600 font-bold">
+                      Author: {selectedDoubt.student?.name} {selectedDoubt.student?.rollNumber ? `[${selectedDoubt.student.rollNumber}]` : ""}
+                    </span>
                   </div>
                   <button
                     onClick={() => handleToggleDoubtStatus(selectedDoubt.id, selectedDoubt.status)}

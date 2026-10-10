@@ -21,14 +21,38 @@ export async function GET(
               include: { mentor: { select: { id: true, name: true, email: true } } },
             },
             students: {
-              include: { student: { select: { id: true, name: true, email: true, college: true } } },
+              include: {
+                student: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    phone: true,
+                    college: true,
+                    rollNumber: true,
+                    branch: true,
+                    semester: true,
+                  },
+                },
+              },
             },
             _count: { select: { students: true, assignments: true, sessions: true } },
           },
         },
         enrollments: {
           include: {
-            student: { select: { id: true, name: true, email: true, college: true } },
+            student: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                college: true,
+                rollNumber: true,
+                branch: true,
+                semester: true,
+              },
+            },
           },
         },
         _count: { select: { labs: true, enrollments: true, assignments: true, notes: true } },
