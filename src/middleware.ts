@@ -87,8 +87,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const isProtectedPage = PROTECTED_PAGES.some((p) => pathname.startsWith(p));
-  const isProtectedApi = PROTECTED_API.some((p) => pathname.startsWith(p));
+  const isProtectedPage = PROTECTED_PAGES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  const isProtectedApi = PROTECTED_API.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
   if ((isProtectedPage || isProtectedApi) && !token) {
     if (isProtectedApi) {
@@ -109,5 +109,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|public/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf|ico)$).*)"],
 };

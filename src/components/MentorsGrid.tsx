@@ -23,7 +23,7 @@ const MENTORS: Mentor[] = [
     lab: "LAB 1",
     coMentor: "Shanyal",
     specialty: "Low-Latency C++ & Kernel Bypass",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+    image: "/mentors/ayush.webp",
     code: "LEAD-L1",
     tag: "STATION 01",
   },
@@ -33,7 +33,7 @@ const MENTORS: Mentor[] = [
     lab: "LAB 2",
     coMentor: "Nitish",
     specialty: "Cache Hierarchy & Memory Mechanics",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+    image: "/mentors/ranjeet.webp",
     code: "LEAD-L2",
     tag: "STATION 02",
   },
@@ -43,16 +43,16 @@ const MENTORS: Mentor[] = [
     lab: "LAB 3",
     coMentor: "Shubham",
     specialty: "Concurrency & Lock-Free Protocols",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+    image: "/mentors/ramanand.webp",
     code: "LEAD-L3",
     tag: "STATION 03",
   },
   {
-    name: "Shontu",
+    name: "Sontu",
     role: "Mentor (Lead)",
     lab: "LAB 4",
     specialty: "Data Structures & Competitive Algorithms",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80",
+    image: "/mentors/sontu.webp",
     code: "LEAD-L4",
     tag: "STATION 04",
   },
@@ -61,7 +61,7 @@ const MENTORS: Mentor[] = [
     role: "Mentor (Lead)",
     lab: "ONLINE",
     specialty: "Distributed Systems & Remote Profiling",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80",
+    image: "/mentors/kamal.webp",
     code: "LEAD-ON",
     tag: "STATION 05",
   },
@@ -118,13 +118,13 @@ export default function MentorsGrid() {
                 </div>
 
                 {/* Portrait Frame */}
-                <div className="relative h-48 w-full border-[2px] border-[#111111] overflow-hidden mb-3 bg-slate-900 shadow-[2px_2px_0px_#111111]">
+                <div className="relative aspect-[4/5] w-full border-[2px] border-[#111111] overflow-hidden mb-3 bg-[#111111] shadow-[2px_2px_0px_#111111]">
                   <Image
                     src={mentor.image}
                     alt={mentor.name}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute bottom-2 left-2 bg-[#111111]/90 text-white font-mono text-[9px] font-black px-2 py-0.5 border border-white/30 uppercase tracking-wider backdrop-blur-sm">
                     {mentor.role}

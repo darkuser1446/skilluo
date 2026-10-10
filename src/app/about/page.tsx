@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Target,
   BookOpen,
@@ -94,11 +95,11 @@ const WORKSHOP_SCHEDULE_DAYS = [
 ];
 
 const LEAD_MENTORS = [
-  { name: "Ayush Mitra", role: "Lead Systems Architect", lab: "Lab 1", focus: "Architecture & I/O" },
-  { name: "Ranjeet", role: "Algorithm & Memory Specialist", lab: "Lab 2", focus: "Conditionals & Logic" },
-  { name: "Ramanand", role: "Systems Engineer", lab: "Lab 3", focus: "Loops & Accumulators" },
-  { name: "Shontu", role: "Console Software Engineer", lab: "Lab 4", focus: "Pattern Matrices & CLI" },
-  { name: "Kamal", role: "Virtual Lab Coordinator", lab: "Online Track", focus: "Live Debugging & Review" },
+  { name: "Ayush Mitra", role: "Lead Systems Architect", lab: "Lab 1", focus: "Architecture & I/O", image: "/mentors/ayush.webp" },
+  { name: "Ranjeet", role: "Algorithm & Memory Specialist", lab: "Lab 2", focus: "Conditionals & Logic", image: "/mentors/ranjeet.webp" },
+  { name: "Ramanand", role: "Systems Engineer", lab: "Lab 3", focus: "Loops & Accumulators", image: "/mentors/ramanand.webp" },
+  { name: "Sontu", role: "Console Software Engineer", lab: "Lab 4", focus: "Pattern Matrices & CLI", image: "/mentors/sontu.webp" },
+  { name: "Kamal", role: "Virtual Lab Coordinator", lab: "Online Track", focus: "Live Debugging & Review", image: "/mentors/kamal.webp" },
 ];
 
 const ASSESSMENT_BREAKDOWN = [
@@ -349,13 +350,30 @@ export default function AboutPage() {
           {LEAD_MENTORS.map((m) => (
             <div
               key={m.name}
-              className="bg-white border-[3px] border-[#111111] shadow-[5px_5px_0px_#111111] p-4 flex flex-col justify-between"
+              className="bg-white border-[3px] border-[#111111] shadow-[5px_5px_0px_#111111] p-3.5 flex flex-col justify-between group hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#111111] transition-all"
             >
               <div>
-                <div className="bg-[#111111] text-[#F07C27] font-mono text-[10px] font-black px-2 py-0.5 inline-block mb-3 border border-[#111111]">
-                  {m.lab}
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="bg-[#111111] text-[#F07C27] font-mono text-[10px] font-black px-2 py-0.5 border border-[#111111]">
+                    {m.lab}
+                  </span>
+                  <span className="font-mono text-[9px] font-bold text-slate-500 uppercase">
+                    LEAD MENTOR
+                  </span>
                 </div>
-                <h3 className="font-display font-black text-base text-[#111111] uppercase">
+
+                {/* Portrait Frame */}
+                <div className="relative aspect-[4/5] w-full border-[2px] border-[#111111] overflow-hidden mb-3 bg-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <Image
+                    src={m.image}
+                    alt={m.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
+                    className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+
+                <h3 className="font-display font-black text-base text-[#111111] uppercase leading-tight">
                   {m.name}
                 </h3>
                 <div className="text-[11px] font-mono text-slate-600 font-bold mt-0.5">
