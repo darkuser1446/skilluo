@@ -23,6 +23,7 @@ import {
   Calendar,
   Star,
   Sparkles,
+  Check,
 } from "lucide-react";
 
 /* ───────────────────────── types ───────────────────────── */
@@ -561,6 +562,67 @@ export default function TestManager({
       await load();
     } catch (err: any) {
       flash(err.message || "Failed to allow retest", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleUpdateCandidateStatus = async (
+    assessmentId: string,
+    studentId: string,
+    action: "SELECT_ROUND2" | "WAITLIST" | "REJECT" | "CLEAR_SELECTION",
+    studentName: string
+  ) => {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, action }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to update candidate status");
+      flash(
+        `Candidate ${studentName}: ${
+          action === "SELECT_ROUND2"
+            ? "Selected for Round 2"
+            : action === "WAITLIST"
+            ? "Placed on Waitlist"
+            : action === "REJECT"
+            ? "Marked as Not Selected"
+            : "Selection reset"
+        }`
+      );
+      if (resultsFor) await openResults(resultsFor);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to update candidate", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleBatchSelectTop60 = async (assessmentId: string) => {
+    if (
+      !confirm(
+        "Automatically select the Top 60 ranked candidates for Round 2? All selected candidates will be officially designated for Round 2 and notified."
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "BATCH_SELECT_TOP", topCount: 60 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to batch select candidates");
+      flash(data.data?.message || "Top 60 candidates selected for Round 2!");
+      if (resultsFor) await openResults(resultsFor);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to batch select", false);
     } finally {
       setBusy(false);
     }
@@ -1153,6 +1215,14 @@ export default function TestManager({
                           <div className="flex items-center gap-2 flex-wrap">
                             <button
                               type="button"
+                              onClick={() => handleBatchSelectTop60(a.id)}
+                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
+                              title="Officially shortlist and select top 60 candidates for Round 2"
+                            >
+                              <Check className="w-3.5 h-3.5 text-white" /> Quick Select Top 60 (Round 2)
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => handleExportRound2ShortlistCSV(a, results)}
                               className="px-3 py-1 bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
                               title="Download Round 2 Shortlist ranked by Score & Completion Speed (Tie-Breaker)"
@@ -1191,7 +1261,7 @@ export default function TestManager({
                                 <th className="text-right py-2 px-3">%</th>
                                 <th className="text-center py-2 px-3">C / I / U</th>
                                 <th className="text-right py-2 px-3">Time Taken</th>
-                                <th className="text-center py-2 px-3">Status & Round 2</th>
+                                <th className="text-center py-2 px-3">Selection & Round 2</th>
                                 <th className="text-right py-2 px-3">Actions</th>
                               </tr>
                             </thead>
@@ -1277,33 +1347,29 @@ export default function TestManager({
                                               </span>
                                             )}
                                           </div>
-                                        ) : isRound2Qualified ? (
-                                          <span className="px-2 py-0.5 border-[2px] border-emerald-800 bg-emerald-500 text-white text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
-                                            <Star className="w-2.5 h-2.5 fill-white text-white" /> QUALIFIED (R2)
+                                        ) : r.status === "SELECTED_ROUND2" ? (
+                                          <span className="px-2 py-0.5 border-[2px] border-emerald-900 bg-emerald-600 text-white text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
+                                            <Check className="w-3 h-3 text-white" /> SELECTED (R2)
                                           </span>
-                                        ) : isRound2Waitlist ? (
+                                        ) : r.status === "WAITLIST_ROUND2" ? (
                                           <span className="px-2 py-0.5 border border-blue-800 bg-blue-100 text-blue-900 text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
                                             WAITLIST (R2)
                                           </span>
+                                        ) : r.status === "REJECTED" ? (
+                                          <span className="px-2 py-0.5 border border-slate-600 bg-slate-200 text-slate-800 text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
+                                            NOT SELECTED
+                                          </span>
+                                        ) : isRound2Qualified ? (
+                                          <span className="px-2 py-0.5 border-[2px] border-emerald-800 bg-emerald-100 text-emerald-900 text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
+                                            <Star className="w-2.5 h-2.5 fill-emerald-600 text-emerald-600" /> RECOMMENDED (TOP 60)
+                                          </span>
+                                        ) : isRound2Waitlist ? (
+                                          <span className="px-2 py-0.5 border border-blue-400 bg-blue-50 text-blue-800 text-[10px] font-medium shadow-[1px_1px_0px_#111111]">
+                                            WAITLIST POOL
+                                          </span>
                                         ) : (
-                                          <span
-                                            className={`px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-bold shadow-[1px_1px_0px_#111111] ${
-                                              r.status === "PENDING_REVIEW"
-                                                ? "bg-amber-100 text-amber-900"
-                                                : r.status === "DISQUALIFIED"
-                                                ? "bg-rose-600 text-white"
-                                                : pass
-                                                ? "bg-emerald-100 text-emerald-900"
-                                                : "bg-rose-100 text-rose-900"
-                                            }`}
-                                          >
-                                            {r.status === "PENDING_REVIEW"
-                                              ? "NEEDS REVIEW"
-                                              : r.status === "DISQUALIFIED"
-                                              ? "DISQUALIFIED"
-                                              : pass
-                                              ? "PASS"
-                                              : "FAIL"}
+                                          <span className="px-2 py-0.5 border border-slate-300 bg-[#F4F3F3] text-slate-700 text-[10px] font-semibold">
+                                            PENDING DECISION
                                           </span>
                                         )}
                                       </td>
@@ -1334,6 +1400,56 @@ export default function TestManager({
                                           </>
                                         ) : (
                                           <>
+                                            {r.status === "SELECTED_ROUND2" ? (
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  handleUpdateCandidateStatus(
+                                                    a.id,
+                                                    r.studentId,
+                                                    "CLEAR_SELECTION",
+                                                    r.student?.name || "Student"
+                                                  )
+                                                }
+                                                className="px-2 py-1 border border-[#111111] bg-slate-200 hover:bg-slate-300 text-slate-800 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
+                                                title="Revoke Round 2 selection"
+                                              >
+                                                <RotateCcw className="w-2.5 h-2.5" /> Deselect
+                                              </button>
+                                            ) : (
+                                              <>
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    handleUpdateCandidateStatus(
+                                                      a.id,
+                                                      r.studentId,
+                                                      "SELECT_ROUND2",
+                                                      r.student?.name || "Student"
+                                                    )
+                                                  }
+                                                  className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                                  title="Select candidate for Round 2"
+                                                >
+                                                  <Check className="w-3 h-3 text-white" /> Select (R2)
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    handleUpdateCandidateStatus(
+                                                      a.id,
+                                                      r.studentId,
+                                                      "WAITLIST",
+                                                      r.student?.name || "Student"
+                                                    )
+                                                  }
+                                                  className="px-2 py-1 border border-[#111111] bg-blue-100 hover:bg-blue-200 text-blue-900 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer"
+                                                  title="Place on Round 2 waitlist"
+                                                >
+                                                  Waitlist
+                                                </button>
+                                              </>
+                                            )}
                                             <button
                                               type="button"
                                               className="px-2 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-[10px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"

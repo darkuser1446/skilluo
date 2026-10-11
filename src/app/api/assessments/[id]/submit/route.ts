@@ -160,17 +160,19 @@ export async function POST(
     }
 
     return successResponse({
-      result,
-      score: finalScore,
-      totalMarks: assessment.totalMarks,
-      passingMarks: assessment.passingMarks ?? assessment.totalMarks * 0.6,
-      correctCount,
-      incorrectCount,
-      unansweredCount,
+      submitted: true,
+      assessmentId,
+      assessmentTitle: assessment.title,
       durationSec: durationSec ?? null,
-      status,
+      answeredCount: assessment.questions.length - unansweredCount,
+      totalQuestions: assessment.questions.length,
+      submittedAt: result.submittedAt,
+      status: result.status,
+      isLocked: isDisqualified,
       disqualified: isDisqualified,
       violationReason: violationReason || null,
+      message:
+        "Assessment submitted successfully. Results are confidential and under review by mentors and administrators.",
     });
   } catch (err) {
     return handleApiError(err);

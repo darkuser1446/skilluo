@@ -31,7 +31,7 @@ export async function GET(
 
     if (!assessment) return errorResponse("Assessment not found", "NOT_FOUND", 404);
 
-    // SECURITY: only ADMIN and MENTOR may see correctAnswer
+    // SECURITY: only ADMIN and MENTOR may see correctAnswer and student results/scores
     const isPrivileged = user.role === "ADMIN" || user.role === "MENTOR";
     const sanitized = !isPrivileged
       ? {
@@ -40,6 +40,16 @@ export async function GET(
             const { correctAnswer: _hidden, ...rest } = q;
             return rest;
           }),
+          results: assessment.results.map((r) => ({
+            id: r.id,
+            studentId: r.studentId,
+            status: r.status,
+            isLocked: r.isLocked,
+            violationCount: r.violationCount,
+            violationReason: r.violationReason,
+            submittedAt: r.submittedAt,
+            durationSec: r.durationSec,
+          })),
         }
       : assessment;
 

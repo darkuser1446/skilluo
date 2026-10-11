@@ -37,6 +37,7 @@ import {
   Terminal,
   Download,
   ShieldAlert,
+  Shield,
   Lock,
 } from "lucide-react";
 import TestEngine from "@/components/TestEngine";
@@ -377,14 +378,16 @@ export default function StudentDashboardPage() {
               const mine = list.find((a: any) => a.id === activeAssessment.id)?.results?.[0];
               if (mine) {
                 setQuizResult({
-                  score: mine.score,
-                  totalMarks: activeAssessment.totalMarks,
-                  passingMarks: activeAssessment.passingMarks,
-                  correctCount: mine.correctCount,
-                  incorrectCount: mine.incorrectCount,
-                  unansweredCount: mine.unansweredCount,
+                  submitted: true,
+                  assessmentId: activeAssessment.id,
+                  assessmentTitle: activeAssessment.title,
                   durationSec: mine.durationSec,
+                  answeredCount: activeAssessment.questions.length,
+                  totalQuestions: activeAssessment.questions.length,
                   status: mine.status,
+                  isLocked: mine.isLocked,
+                  violationReason: mine.violationReason,
+                  submittedAt: mine.submittedAt,
                 });
                 return;
               }
@@ -1809,10 +1812,22 @@ export default function StudentDashboardPage() {
                         {!isLocked && isExpired && !res && <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold bg-[#fde8e8] text-rose-800">Expired</span>}
                       </div>
                       {res && (
-                        <span className={`flex-shrink-0 px-2.5 py-0.5 border border-[#111111] text-xs font-mono font-black shadow-[2px_2px_0px_#111111] ${
-                          isLocked ? "bg-rose-600 text-white" : "bg-[#e6f4ea] text-emerald-800"
+                        <span className={`flex-shrink-0 px-2.5 py-0.5 border border-[#111111] text-[10px] font-mono font-black shadow-[2px_2px_0px_#111111] uppercase ${
+                          isLocked
+                            ? "bg-rose-600 text-white"
+                            : res.status === "SELECTED" || res.status === "SELECTED_ROUND2"
+                            ? "bg-emerald-500 text-white animate-pulse"
+                            : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2"
+                            ? "bg-blue-100 text-blue-900"
+                            : "bg-[#e6f4ea] text-emerald-900"
                         }`}>
-                          {isLocked ? "LOCKED (0 PTS)" : `${res.score}/${as.totalMarks} PTS`}
+                          {isLocked
+                            ? "🔒 LOCKED OUT"
+                            : res.status === "SELECTED" || res.status === "SELECTED_ROUND2"
+                            ? "★ SELECTED FOR ROUND 2"
+                            : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2"
+                            ? "⏳ WAITLISTED"
+                            : "✓ TEST SUBMITTED"}
                         </span>
                       )}
                     </div>
@@ -1842,16 +1857,26 @@ export default function StudentDashboardPage() {
                       </div>
                     )}
 
-                    {/* Result progress bar */}
+                    {/* Submission status notice */}
                     {res && !isLocked && (
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-[10px] font-mono font-bold text-slate-700">
-                          <span>SCORE CONVERSION</span>
-                          <span className="text-emerald-800 font-bold">{Math.round((res.score / as.totalMarks) * 100)}%</span>
+                      <div className="p-2.5 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] font-mono text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase text-[#111111] flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Test Submitted
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-600">
+                            {new Date(res.submittedAt).toLocaleDateString()}
+                          </span>
                         </div>
-                        <div className="w-full h-2.5 bg-[#f4f3f3] border-[2px] border-[#111111] overflow-hidden">
-                          <div className="h-full bg-emerald-600 transition-all" style={{ width: `${Math.min(100, (res.score / as.totalMarks) * 100)}%` }} />
-                        </div>
+                        <p className="text-[11px] text-slate-700">
+                          {res.status === "SELECTED" || res.status === "SELECTED_ROUND2" ? (
+                            <strong className="text-emerald-800">🎉 Selected for Round 2 by Mentor & Admin Committee!</strong>
+                          ) : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2" ? (
+                            <strong className="text-blue-800">Placed on the Round 2 Waitlist.</strong>
+                          ) : (
+                            <span>Results confidential · Evaluation in progress by Mentors & Admin.</span>
+                          )}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1866,17 +1891,17 @@ export default function StudentDashboardPage() {
                         setActiveAssessment(as);
                         if (res) {
                           setQuizResult({
-                            score: res.score,
-                            totalMarks: as.totalMarks,
-                            passingMarks: as.passingMarks,
-                            correctCount: res.correctCount,
-                            incorrectCount: res.incorrectCount,
-                            unansweredCount: res.unansweredCount,
+                            submitted: true,
+                            assessmentId: as.id,
+                            assessmentTitle: as.title,
                             durationSec: res.durationSec,
+                            answeredCount: as.questions?.length || 0,
+                            totalQuestions: as.questions?.length || 0,
                             status: res.status,
                             isLocked: isLocked,
                             violationCount: res.violationCount,
                             violationReason: res.violationReason,
+                            submittedAt: res.submittedAt,
                             history: true,
                           });
                         } else {
@@ -1893,7 +1918,7 @@ export default function StudentDashboardPage() {
                         "bg-[#f4f3f3] text-slate-400 cursor-not-allowed opacity-50"
                       }`}
                     >
-                      {isLocked ? "🔒 Locked Out Notice" : res ? "📋 View Result" : isLive ? "🚀 Start Test" : isUpcoming ? "⏳ Not Started" : "Expired"}
+                      {isLocked ? "🔒 Locked Out Notice" : res ? "📋 Submission Status" : isLive ? "🚀 Start Test" : isUpcoming ? "⏳ Not Started" : "Expired"}
                     </button>
                   </div>
                 </div>
@@ -2016,84 +2041,91 @@ export default function StudentDashboardPage() {
               </div>
             </div>
           ) : (
-            /* Normal Result Screen */
-            <div className="p-8 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] text-center space-y-4">
-              <div className="w-16 h-16 bg-[#e6f4ea] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8 text-emerald-700" />
-              </div>
-              <h3 className="font-display font-black text-2xl uppercase text-[#111111]">
-                {quizResult.history ? "Assessment Result Dossier" : "Benchmark Assessment Submitted!"}
-              </h3>
-              <div className="space-y-1">
-                <div className="font-display font-black text-5xl text-[#F07C27]">
-                  {quizResult.score}<span className="text-2xl text-slate-500">/{quizResult.totalMarks}</span>
+            /* Confidential Clean Submission Receipt Screen (No Scores Shown to Student) */
+            <div className="p-7 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] text-center space-y-6">
+              {/* Submission Icon & Header */}
+              <div className="space-y-3">
+                <div className="w-16 h-16 bg-emerald-100 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center mx-auto text-emerald-800">
+                  <CheckCircle2 className="w-9 h-9 stroke-[2.5]" />
                 </div>
-                {(() => {
-                  const passMark = quizResult.passingMarks ?? Math.round(quizResult.totalMarks * 0.6);
-                  const passed = quizResult.score >= passMark;
-                  const pending = quizResult.status === "PENDING_REVIEW";
-                  return (
-                    <p className="text-slate-700 text-sm font-mono font-bold">
-                      {Math.round((quizResult.score / quizResult.totalMarks) * 100)}% —{" "}
-                      {pending ? "⏳ Awaiting mentor review" : passed ? "✅ Passed" : "❌ Below passing threshold"}{" "}
-                      <span className="text-slate-500">(pass mark {passMark})</span>
-                    </p>
-                  );
-                })()}
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                {[
-                  { label: "Score", val: `${quizResult.score} pts`, color: "text-[#F07C27]" },
-                  { label: "Total Marks", val: `${quizResult.totalMarks} pts`, color: "text-[#111111]" },
-                  { label: "Percentage", val: `${Math.round((quizResult.score / quizResult.totalMarks) * 100)}%`, color: "text-emerald-800" },
-                  ...(quizResult.correctCount != null
-                    ? [
-                        { label: "Correct", val: String(quizResult.correctCount), color: "text-emerald-800" },
-                        { label: "Incorrect", val: String(quizResult.incorrectCount ?? 0), color: "text-rose-800" },
-                        { label: "Unanswered", val: String(quizResult.unansweredCount ?? 0), color: "text-amber-800" },
-                      ]
-                    : []),
-                  ...(quizResult.durationSec
-                    ? [
-                        {
-                          label: "Time Taken",
-                          val: `${Math.floor(quizResult.durationSec / 60)}m ${quizResult.durationSec % 60}s`,
-                          color: "text-blue-900",
-                        },
-                      ]
-                    : []),
-                ].map((s) => (
-                  <div key={s.label} className="p-3 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-                    <span className="text-[10px] font-mono text-slate-600 uppercase font-bold block">{s.label}</span>
-                    <span className={`font-mono font-black text-lg ${s.color}`}>{s.val}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="p-3.5 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-left font-mono text-xs space-y-1">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="font-black text-[#111111] uppercase flex items-center gap-1.5">
-                    <Trophy className="w-4 h-4 text-[#F07C27]" /> Round 2 Shortlisting Metrics Recorded
-                  </span>
-                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 border border-[#111111] font-bold text-[10px] uppercase shadow-[1px_1px_0px_#111111]">
-                    Saved & Locked
-                  </span>
-                </div>
-                <p className="text-slate-800 text-[11px] leading-relaxed">
-                  Both your <strong>Score ({quizResult.score} pts)</strong> and <strong>Time Taken ({quizResult.durationSec ? `${Math.floor(quizResult.durationSec / 60)}m ${quizResult.durationSec % 60}s` : "Recorded"})</strong> have been securely saved. These metrics determine cohort ranking and tie-breaking for advancement to <strong>Round 2</strong>.
+                <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-900 border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase tracking-wider shadow-[2px_2px_0px_#111111]">
+                  [ ✓ SUBMISSION RECORDED & SECURED ]
+                </span>
+                <h3 className="font-display font-black text-2xl sm:text-3xl uppercase text-[#111111] tracking-tight">
+                  Assessment Submitted Successfully!
+                </h3>
+                <p className="text-slate-600 font-mono text-xs max-w-lg mx-auto">
+                  Your answers and examination session have been securely logged into the evaluation database.
                 </p>
               </div>
 
-              <p className="text-xs text-slate-600 font-mono">
-                {quizResult.status === "PENDING_REVIEW"
-                  ? "Your written/code answers are queued for mentor review — the final score updates after grading."
-                  : "Your result has been saved and is reflected in your scorecard."}
-              </p>
-              <button
-                onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
-                className="px-6 py-2.5 bg-[#F07C27] text-white font-mono text-xs font-black uppercase hover:brightness-110 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111]"
-              >
-                ← Back to All Tests
-              </button>
+              {/* Candidate & Assessment Verification Dossier */}
+              <div className="p-4 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-left font-mono text-xs space-y-2.5">
+                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                  <span className="text-slate-600 font-bold uppercase">Assessment:</span>
+                  <span className="text-[#111111] font-black uppercase text-right ml-2">{activeAssessment.title}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                  <span className="text-slate-600 font-bold uppercase">Candidate Name:</span>
+                  <span className="text-[#111111] font-black">{user?.name}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                  <span className="text-slate-600 font-bold uppercase">Registration / Roll No:</span>
+                  <span className="text-[#111111] font-black">{user?.rollNumber || "N/A"}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                  <span className="text-slate-600 font-bold uppercase">Submitted At:</span>
+                  <span className="text-[#111111] font-bold">
+                    {new Date(quizResult.submittedAt || Date.now()).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-0.5">
+                  <span className="text-slate-600 font-bold uppercase">Selection Status:</span>
+                  <span className="font-black uppercase text-right ml-2">
+                    {quizResult.status === "SELECTED" || quizResult.status === "SELECTED_ROUND2" ? (
+                      <span className="px-2 py-0.5 bg-emerald-500 text-white border border-[#111111] text-[10px] shadow-[1px_1px_0px_#111111]">
+                        ★ SELECTED FOR ROUND 2
+                      </span>
+                    ) : quizResult.status === "WAITLIST" || quizResult.status === "WAITLIST_ROUND2" ? (
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-900 border border-[#111111] text-[10px] shadow-[1px_1px_0px_#111111]">
+                        WAITLISTED FOR ROUND 2
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-amber-100 text-amber-900 border border-[#111111] text-[10px] shadow-[1px_1px_0px_#111111]">
+                        UNDER EVALUATION BY MENTORS & ADMINS
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* Confidential Evaluation Notice */}
+              <div className="p-5 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] text-left space-y-2">
+                <div className="flex items-center gap-2 text-sm font-black uppercase text-[#111111]">
+                  <Shield className="w-4 h-4 text-[#F07C27]" />
+                  <span>Evaluation & Selection Protocol</span>
+                </div>
+                <p className="text-slate-800 font-mono text-xs leading-relaxed">
+                  Per examination guidelines, <strong>individual scores and question keys are strictly confidential</strong> and are accessible exclusively to the <strong>Admin and Mentor Evaluation Panel</strong>.
+                </p>
+                <p className="text-slate-800 font-mono text-xs leading-relaxed">
+                  Mentors and Administrators will review all candidate submissions, evaluate completion metrics and scores, and select the candidates who will advance to <strong>Round 2</strong>.
+                </p>
+                <div className="pt-1 text-[11px] font-mono font-bold text-[#F07C27]">
+                  ● Selected candidates will be notified directly through their student dashboard once the review is finalized.
+                </div>
+              </div>
+
+              {/* Return Button */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
+                  className="neo-btn w-full py-3 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[3px_3px_0px_#111111]"
+                >
+                  ← Return to Assessments List
+                </button>
+              </div>
             </div>
           )}
         </div>

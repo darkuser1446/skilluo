@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       orderBy: { startsAt: "desc" },
     });
 
-    // SECURITY: only ADMIN and MENTOR may see correctAnswer
+    // SECURITY: only ADMIN and MENTOR may see correctAnswer and student results/scores
     const isPrivileged = user.role === "ADMIN" || user.role === "MENTOR";
     const sanitized = !isPrivileged
       ? assessments.map((a) => ({
@@ -41,6 +41,16 @@ export async function GET(req: NextRequest) {
             const { correctAnswer: _hidden, ...rest } = q;
             return rest;
           }),
+          results: a.results.map((r) => ({
+            id: r.id,
+            studentId: r.studentId,
+            status: r.status,
+            isLocked: r.isLocked,
+            violationCount: r.violationCount,
+            violationReason: r.violationReason,
+            submittedAt: r.submittedAt,
+            durationSec: r.durationSec,
+          })),
         }))
       : assessments;
 
