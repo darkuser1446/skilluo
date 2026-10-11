@@ -31,6 +31,12 @@ import {
   Megaphone,
   History,
   Download,
+  Shuffle,
+  Edit2,
+  ArrowRightLeft,
+  UserMinus,
+  RotateCcw,
+  X,
 } from "lucide-react";
 import TestManager from "@/components/TestManager";
 import CohortQuotaMatrix from "@/components/CohortQuotaMatrix";
@@ -168,6 +174,22 @@ export default function AdminDashboardPage() {
   const [labSchedule, setLabSchedule] = useState("");
   const [labCapacity, setLabCapacity] = useState(30);
   const [creatingLab, setCreatingLab] = useState(false);
+
+  // Automated Random Lab Allocation state
+  const [autoStudentsPerLab, setAutoStudentsPerLab] = useState<number>(15);
+  const [autoTargetGroup, setAutoTargetGroup] = useState<"SELECTED" | "ALL">("SELECTED");
+  const [autoLabPrefix, setAutoLabPrefix] = useState<string>("Lab");
+  const [autoClearExisting, setAutoClearExisting] = useState<boolean>(true);
+  const [autoAllocating, setAutoAllocating] = useState<boolean>(false);
+  const [autoAllocateMessage, setAutoAllocateMessage] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Lab inline editor state
+  const [editingLabId, setEditingLabId] = useState<string | null>(null);
+  const [editLabName, setEditLabName] = useState<string>("");
+  const [editLabSchedule, setEditLabSchedule] = useState<string>("");
+  const [editLabCapacity, setEditLabCapacity] = useState<number>(30);
+  const [savingLab, setSavingLab] = useState<boolean>(false);
+  const [quickAddStudentByLab, setQuickAddStudentByLab] = useState<Record<string, string>>({});
 
   // User creation
   const [uName, setUName] = useState("");
@@ -426,7 +448,158 @@ export default function AdminDashboardPage() {
   const handleDeleteLab = async (labId: string) => {
     if (!confirm("Delete this lab? Enrolled students will be unlinked.")) return;
     const res = await fetch(`/api/labs/${labId}`, { method: "DELETE" });
-    if (res.ok) await loadLabs(selectedWorkshopId);
+    if (res.ok) {
+      await loadLabs(selectedWorkshopId);
+      await loadReports(selectedWorkshopId);
+    }
+  };
+
+  const handleAutoAllocate = async () => {
+    const eligibleCount =
+      autoTargetGroup === "SELECTED"
+        ? candidates.filter((c) => c.status === "SELECTED").length
+        : candidates.length;
+
+    if (eligibleCount === 0) {
+      alert(
+        autoTargetGroup === "SELECTED"
+          ? "No candidates currently have 'SELECTED' status in this workshop. Please select candidates in the Selection tab or Test Manager first, or choose 'All Enrolled Students'."
+          : "No students are enrolled in this workshop."
+      );
+      return;
+    }
+
+    const expectedLabs = Math.max(1, Math.ceil(eligibleCount / autoStudentsPerLab));
+    const confirmed = confirm(
+      `🎲 Run Automatic Random Lab Placement?\n\n` +
+        `• Target Students: ${eligibleCount} (${autoTargetGroup === "SELECTED" ? "Selected Candidates" : "All Enrolled"})\n` +
+        `• Capacity per Lab: ${autoStudentsPerLab} students\n` +
+        `• Labs to Create: ${expectedLabs} (${autoLabPrefix} A, ${autoLabPrefix} B...)\n` +
+        `• Clear prior assignments: ${autoClearExisting ? "Yes" : "No"}\n\n` +
+        `Students will be randomized and distributed evenly across tracks. You can freely edit or move them afterwards.`
+    );
+    if (!confirmed) return;
+
+    setAutoAllocating(true);
+    setAutoAllocateMessage(null);
+    try {
+      const res = await fetch("/api/labs/auto-allocate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workshopId: selectedWorkshopId,
+          studentsPerLab: autoStudentsPerLab,
+          targetGroup: autoTargetGroup,
+          mode: "CREATE_AND_ALLOCATE",
+          labPrefix: autoLabPrefix,
+          clearExisting: autoClearExisting,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error?.message || "Auto-allocation failed");
+
+      setAutoAllocateMessage({ text: data.data.message || "Random placement complete!", ok: true });
+      await Promise.all([loadLabs(selectedWorkshopId), loadReports(selectedWorkshopId)]);
+    } catch (err: any) {
+      setAutoAllocateMessage({ text: err.message || "Failed to auto-allocate", ok: false });
+    } finally {
+      setAutoAllocating(false);
+    }
+  };
+
+  const handleStartEditLab = (lab: Lab) => {
+    setEditingLabId(lab.id);
+    setEditLabName(lab.name);
+    setEditLabSchedule(lab.schedule || "");
+    setEditLabCapacity(lab.capacity || 30);
+  };
+
+  const handleSaveEditLab = async (labId: string) => {
+    setSavingLab(true);
+    try {
+      const res = await fetch(`/api/labs/${labId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editLabName,
+          schedule: editLabSchedule,
+          capacity: editLabCapacity,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d?.error?.message || "Failed to update lab");
+      }
+      setEditingLabId(null);
+      await loadLabs(selectedWorkshopId);
+    } catch (err: any) {
+      alert(err.message || "Failed to save lab");
+    } finally {
+      setSavingLab(false);
+    }
+  };
+
+  const handleMoveStudentLab = async (
+    sourceLabId: string,
+    studentId: string,
+    targetLabId: string
+  ) => {
+    if (!targetLabId || targetLabId === sourceLabId) return;
+    try {
+      const res = await fetch(`/api/labs/${sourceLabId}/students`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, targetLabId }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d?.error?.message || "Failed to move student");
+      }
+      await Promise.all([loadLabs(selectedWorkshopId), loadReports(selectedWorkshopId)]);
+    } catch (err: any) {
+      alert(err.message || "Failed to move student");
+    }
+  };
+
+  const handleRemoveStudentFromLab = async (
+    labId: string,
+    studentId: string,
+    studentName: string
+  ) => {
+    if (!confirm(`Remove ${studentName} from this lab track?`)) return;
+    try {
+      const res = await fetch(`/api/labs/${labId}/students?studentId=${studentId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d?.error?.message || "Failed to remove student");
+      }
+      await Promise.all([loadLabs(selectedWorkshopId), loadReports(selectedWorkshopId)]);
+    } catch (err: any) {
+      alert(err.message || "Failed to remove student");
+    }
+  };
+
+  const handleQuickAddStudentToLab = async (labId: string) => {
+    const studentId = quickAddStudentByLab[labId];
+    if (!studentId) return;
+    try {
+      const res = await fetch(`/api/labs/${labId}/students`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, workshopId: selectedWorkshopId }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d?.error?.message || "Failed to add student to lab");
+      }
+      setQuickAddStudentByLab((prev) => ({ ...prev, [labId]: "" }));
+      await Promise.all([loadLabs(selectedWorkshopId), loadReports(selectedWorkshopId)]);
+    } catch (err: any) {
+      alert(err.message || "Failed to add student");
+    }
   };
 
   const handleAssignStudent = async (e: React.FormEvent) => {
@@ -439,7 +612,7 @@ export default function AdminDashboardPage() {
     });
     if (res.ok) {
       setAssignStudentId("");
-      await loadLabs(selectedWorkshopId);
+      await Promise.all([loadLabs(selectedWorkshopId), loadReports(selectedWorkshopId)]);
     }
   };
 
@@ -1399,123 +1572,584 @@ export default function AdminDashboardPage() {
           TAB 3: LABS & ALLOCATION
       ══════════════════════════════════════════════════════════ */}
       {activeTab === "labs" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Lab Cards */}
-          <div className="lg:col-span-8 space-y-4">
-            <h3 className="font-mono font-black text-[#111111] uppercase tracking-wider text-sm flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-[#F07C27] border border-[#111111]"></span>
-              Laboratory Tracks ({labs.length})
-            </h3>
-            {labs.length === 0 && (
-              <EmptyState
-                icon={Layers}
-                title="No laboratory tracks configured"
-                description="Configure lab tracks to organize students and assign dedicated lead mentors."
-              />
-            )}
-            {labs.map((lab) => (
-              <div
-                key={lab.id}
-                className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <h4 className="font-mono font-black text-[#111111] text-base">{lab.name}</h4>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono font-bold text-[#111111] bg-[#FFF0E5] px-2 py-0.5 border border-[#111111] shadow-[1px_1px_0px_#111111]">
-                      Cap: {lab.capacity || 30}
-                    </span>
-                    <button
-                      onClick={() => {
-                        const headers = [
-                          "Registration Number",
-                          "Candidate Name",
-                          "Email",
-                          "Phone",
-                          "Branch",
-                          "Semester",
-                          "Lab Name",
-                        ];
-                        const rows = (lab.students || []).map((s: any) => [
-                          s.student?.rollNumber || "N/A",
-                          s.student?.name || "N/A",
-                          s.student?.email || "N/A",
-                          s.student?.phone || "N/A",
-                          s.student?.branch || "N/A",
-                          s.student?.semester || "N/A",
-                          lab.name,
-                        ]);
-                        exportToExcel(`skillup_lab_${lab.name.replace(/\s+/g, '_')}_roster.csv`, headers, rows);
-                      }}
-                      className="px-2 py-1 border border-[#111111] bg-white hover:bg-[#FFF0E5] text-[#111111] font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] flex items-center gap-1 cursor-pointer transition-colors"
-                      title="Export Lab Roster to Excel"
-                    >
-                      <Download className="w-3 h-3 text-[#F07C27]" />
-                      <span>Export Roster</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteLab(lab.id)}
-                      className="p-1.5 border border-[#111111] bg-rose-50 text-rose-700 hover:bg-rose-100 shadow-[1px_1px_0px_#111111] transition-colors"
-                      title="Delete Laboratory Track"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+        <div className="space-y-6">
+          {/* ══════════════════════════════════════════════════════════
+              AUTOMATED RANDOM LAB PLACEMENT COMMAND CENTER
+          ══════════════════════════════════════════════════════════ */}
+          <div className="bg-white border-[3px] border-[#111111] p-6 shadow-[8px_8px_0px_#111111] space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b-[2px] border-[#111111] pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="w-8 h-8 bg-[#F07C27] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center text-white">
+                    <Shuffle className="w-4 h-4 stroke-[2.5]" />
+                  </span>
+                  <h3 className="font-display font-black text-xl uppercase text-[#111111] tracking-tight">
+                    Automated Random Lab Allocation
+                  </h3>
                 </div>
-
-                <div className="flex flex-wrap gap-2 text-xs font-mono pt-1">
-                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
-                    Enrolled: {lab._count?.students || 0}
-                  </span>
-                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
-                    Assignments: {lab._count?.assignments || 0}
-                  </span>
-                  <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] font-bold text-[11px]">
-                    Sessions: {lab._count?.sessions || 0}
-                  </span>
-                </div>
-
-                {/* Mentors */}
-                {lab.mentors?.length > 0 && (
-                  <div className="space-y-1 pt-1">
-                    <span className="text-[10px] font-mono font-black text-[#111111] uppercase block">
-                      Lead Mentors:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {lab.mentors.map((m: any) => (
-                        <span
-                          key={m.mentor?.id}
-                          className="px-2 py-0.5 text-[10px] bg-sky-100 text-sky-950 border border-[#111111] font-mono font-bold shadow-[1px_1px_0px_#111111]"
-                        >
-                          {m.mentor?.name} {m.isLead ? "(Lead)" : ""}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Students */}
-                {lab.students?.length > 0 && (
-                  <div className="space-y-1 pt-1">
-                    <span className="text-[10px] font-mono font-black text-[#111111] uppercase block">
-                      Enrolled Students:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {lab.students.map((s: any) => (
-                        <span
-                          key={s.student?.id}
-                          className="px-2 py-0.5 text-[10px] bg-[#F4F3F3] text-[#111111] border border-[#111111] font-mono font-bold shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1"
-                        >
-                          <span>{s.student?.name}</span>
-                          {s.student?.rollNumber && (
-                            <span className="text-[#F07C27] font-black">[{s.student.rollNumber}]</span>
-                          )}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <p className="text-slate-600 font-mono text-xs mt-1">
+                  Automatically create laboratory tracks and distribute selected candidates randomly according to max capacity per lab.
+                </p>
               </div>
-            ))}
+
+              {/* Stats Badges */}
+              <div className="flex items-center gap-2 flex-wrap font-mono text-xs">
+                <span className="px-2.5 py-1 bg-emerald-100 text-emerald-950 border-[2px] border-[#111111] font-bold shadow-[2px_2px_0px_#111111]">
+                  ★ {candidates.filter((c) => c.status === "SELECTED").length} Selected Candidates
+                </span>
+                <span className="px-2.5 py-1 bg-[#F4F3F3] text-slate-800 border-[2px] border-[#111111] font-bold shadow-[2px_2px_0px_#111111]">
+                  👥 {candidates.length} Total Enrolled
+                </span>
+                <span className="px-2.5 py-1 bg-amber-100 text-amber-950 border-[2px] border-[#111111] font-bold shadow-[2px_2px_0px_#111111]">
+                  🏛️ {labs.length} Configured Tracks
+                </span>
+              </div>
+            </div>
+
+            {/* Allocation Notification Banner */}
+            {autoAllocateMessage && (
+              <div
+                className={`p-3.5 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] font-mono text-xs flex items-center justify-between ${
+                  autoAllocateMessage.ok
+                    ? "bg-emerald-50 text-emerald-900 border-emerald-900"
+                    : "bg-rose-50 text-rose-900 border-rose-900"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {autoAllocateMessage.ok ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-rose-700 flex-shrink-0" />
+                  )}
+                  <span>{autoAllocateMessage.text}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAutoAllocateMessage(null)}
+                  className="text-[10px] font-black uppercase underline hover:opacity-75 cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* Configuration Form Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Target Candidate Group */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase">
+                  1. Target Candidate Pool
+                </label>
+                <select
+                  value={autoTargetGroup}
+                  onChange={(e) => setAutoTargetGroup(e.target.value as "SELECTED" | "ALL")}
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
+                >
+                  <option value="SELECTED">
+                    Selected Candidates Only ({candidates.filter((c) => c.status === "SELECTED").length}) [Recommended]
+                  </option>
+                  <option value="ALL">
+                    All Enrolled Students ({candidates.length})
+                  </option>
+                </select>
+                <span className="block text-[10px] text-slate-500 font-mono">
+                  Pool of students to randomize & place into labs
+                </span>
+              </div>
+
+              {/* Max Students (Child) Per Lab */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase">
+                  2. Students Per Lab (Capacity)
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={autoStudentsPerLab}
+                    onChange={(e) => setAutoStudentsPerLab(Math.max(1, Number(e.target.value)))}
+                    className="w-24 bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-black text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
+                  />
+                  <div className="flex items-center gap-1">
+                    {[10, 15, 20, 30].map((sz) => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => setAutoStudentsPerLab(sz)}
+                        className={`px-2 py-1.5 border border-[#111111] font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer ${
+                          autoStudentsPerLab === sz
+                            ? "bg-[#F07C27] text-white"
+                            : "bg-white text-slate-700 hover:bg-[#FFF0E5]"
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <span className="block text-[10px] text-slate-500 font-mono">
+                  Maximum students assigned to each laboratory
+                </span>
+              </div>
+
+              {/* Lab Name Prefix */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-mono font-black text-[#111111] uppercase">
+                  3. Lab Track Naming
+                </label>
+                <input
+                  type="text"
+                  value={autoLabPrefix}
+                  onChange={(e) => setAutoLabPrefix(e.target.value)}
+                  placeholder="e.g. Lab, Track, Cohort"
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
+                />
+                <span className="block text-[10px] text-slate-500 font-mono">
+                  Generates: {autoLabPrefix} A, {autoLabPrefix} B, {autoLabPrefix} C...
+                </span>
+              </div>
+
+              {/* Clear Existing Checkbox */}
+              <div className="space-y-1.5 flex flex-col justify-end">
+                <label className="flex items-center gap-2 p-2 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoClearExisting}
+                    onChange={(e) => setAutoClearExisting(e.target.checked)}
+                    className="accent-[#F07C27] w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-[11px] font-mono font-bold text-[#111111]">
+                    Clear existing lab assignments before random shuffle
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Live Calculation Preview Banner & Submit Button */}
+            {(() => {
+              const eligibleCount =
+                autoTargetGroup === "SELECTED"
+                  ? candidates.filter((c) => c.status === "SELECTED").length
+                  : candidates.length;
+              const expectedLabs = Math.max(1, Math.ceil(eligibleCount / Math.max(1, autoStudentsPerLab)));
+              return (
+                <div className="p-4 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[4px_4px_0px_#111111] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1 font-mono text-xs">
+                    <span className="font-black text-[#111111] uppercase flex items-center gap-1.5 text-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-[#F07C27]" />
+                      Allocation Formula Preview:
+                    </span>
+                    <p className="text-slate-800">
+                      <strong>{eligibleCount}</strong> eligible students ÷{" "}
+                      <strong>{autoStudentsPerLab}</strong> students/lab ={" "}
+                      <span className="bg-amber-300 text-amber-950 px-1.5 py-0.5 border border-[#111111] font-black">
+                        {expectedLabs} Laboratory Tracks
+                      </span>{" "}
+                      will be created with ~{Math.floor(eligibleCount / expectedLabs)}–{Math.ceil(eligibleCount / expectedLabs)} students each.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={autoAllocating || eligibleCount === 0}
+                    onClick={handleAutoAllocate}
+                    className="px-6 py-3 bg-[#F07C27] hover:bg-[#d96716] text-white font-mono text-xs font-black uppercase tracking-wider border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 flex-shrink-0"
+                  >
+                    <Shuffle className="w-4 h-4" />
+                    <span>{autoAllocating ? "Placing Students..." : "🎲 Run Random Lab Placement"}</span>
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════
+              UNASSIGNED SELECTED CANDIDATES ALERT TRAY
+          ══════════════════════════════════════════════════════════ */}
+          {(() => {
+            const unassigned = candidates.filter(
+              (c) => c.status === "SELECTED" && (!c.labId || c.labName === "Unassigned")
+            );
+            if (unassigned.length === 0) return null;
+            return (
+              <div className="p-4 bg-amber-50 border-[3px] border-amber-600 shadow-[4px_4px_0px_#111111] space-y-2.5">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span className="font-mono font-black text-amber-950 text-xs uppercase flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 text-amber-700" />
+                    ⚠️ {unassigned.length} Selected Candidates are currently Unassigned to any Lab Track:
+                  </span>
+                  <span className="text-[10px] font-mono text-amber-800 font-bold">
+                    Click any student below or run Random Placement to distribute them automatically.
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {unassigned.slice(0, 15).map((u) => (
+                    <span
+                      key={u.studentId}
+                      className="px-2 py-1 bg-white border border-[#111111] font-mono text-[10px] font-bold text-[#111111] shadow-[1px_1px_0px_#111111] flex items-center gap-1"
+                    >
+                      <span>{u.studentName}</span>
+                      {u.rollNumber && <span className="text-[#F07C27]">[{u.rollNumber}]</span>}
+                    </span>
+                  ))}
+                  {unassigned.length > 15 && (
+                    <span className="px-2 py-1 bg-amber-200 border border-[#111111] font-mono text-[10px] font-black text-amber-950">
+                      +{unassigned.length - 15} more unassigned
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ══════════════════════════════════════════════════════════
+              LABORATORY TRACKS & EDITABLE ROSTERS
+          ══════════════════════════════════════════════════════════ */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Lab Cards */}
+            <div className="lg:col-span-8 space-y-4">
+              <h3 className="font-mono font-black text-[#111111] uppercase tracking-wider text-sm flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-[#F07C27] border border-[#111111]"></span>
+                Laboratory Tracks ({labs.length})
+              </h3>
+              {labs.length === 0 && (
+                <EmptyState
+                  icon={Layers}
+                  title="No laboratory tracks configured"
+                  description="Configure lab tracks to organize students and assign dedicated lead mentors."
+                />
+              )}
+            {labs.map((lab) => {
+              const enrolledCount = lab.students?.length || 0;
+              const capacity = lab.capacity || 30;
+              const isOverCap = enrolledCount > capacity;
+              const isFull = enrolledCount === capacity;
+              const isEditingThisLab = editingLabId === lab.id;
+
+              return (
+                <div
+                  key={lab.id}
+                  className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-4 transition-all"
+                >
+                  {/* Header: Lab Name, Status & Action Toolbar */}
+                  <div className="flex items-start justify-between flex-wrap gap-2 border-b-[2px] border-[#111111]/20 pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-mono font-black text-[#111111] text-lg uppercase tracking-tight">
+                          {lab.name}
+                        </h4>
+                        <span
+                          className={`px-2 py-0.5 border border-[#111111] font-mono text-[10px] font-black shadow-[1px_1px_0px_#111111] uppercase ${
+                            isOverCap
+                              ? "bg-rose-500 text-white"
+                              : isFull
+                              ? "bg-emerald-500 text-white"
+                              : enrolledCount > 0
+                              ? "bg-amber-200 text-amber-950"
+                              : "bg-[#F4F3F3] text-slate-700"
+                          }`}
+                        >
+                          {enrolledCount} / {capacity} Students {isOverCap ? "(OVER CAPACITY)" : isFull ? "(FILLED)" : ""}
+                        </span>
+                      </div>
+                      <span className="block text-[11px] font-mono text-slate-600 mt-0.5">
+                        🕒 Schedule: {lab.schedule || "Schedule TBA"}
+                      </span>
+                    </div>
+
+                    {/* Header Buttons */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* Edit Lab Details Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isEditingThisLab) {
+                            setEditingLabId(null);
+                          } else {
+                            handleStartEditLab(lab);
+                          }
+                        }}
+                        className={`px-2.5 py-1 border border-[#111111] font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] flex items-center gap-1 cursor-pointer transition-colors ${
+                          isEditingThisLab
+                            ? "bg-[#111111] text-white"
+                            : "bg-white hover:bg-[#FFF0E5] text-[#111111]"
+                        }`}
+                        title="Edit Lab Name, Schedule, or Capacity"
+                      >
+                        <Edit2 className="w-3 h-3 text-[#F07C27]" />
+                        <span>{isEditingThisLab ? "Close Editor" : "Edit Lab"}</span>
+                      </button>
+
+                      {/* Export Roster Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const headers = [
+                            "Registration Number",
+                            "Candidate Name",
+                            "Email",
+                            "Phone",
+                            "Branch",
+                            "Semester",
+                            "Lab Name",
+                          ];
+                          const rows = (lab.students || []).map((s: any) => [
+                            s.student?.rollNumber || "N/A",
+                            s.student?.name || "N/A",
+                            s.student?.email || "N/A",
+                            s.student?.phone || "N/A",
+                            s.student?.branch || "N/A",
+                            s.student?.semester || "N/A",
+                            lab.name,
+                          ]);
+                          exportToExcel(
+                            `skillup_lab_${lab.name.replace(/\s+/g, "_")}_roster.csv`,
+                            headers,
+                            rows
+                          );
+                        }}
+                        className="px-2.5 py-1 border border-[#111111] bg-white hover:bg-[#FFF0E5] text-[#111111] font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] flex items-center gap-1 cursor-pointer transition-colors"
+                        title="Export Lab Roster to Excel"
+                      >
+                        <Download className="w-3 h-3 text-[#F07C27]" />
+                        <span>Export CSV</span>
+                      </button>
+
+                      {/* Delete Lab Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteLab(lab.id)}
+                        className="p-1 border border-[#111111] bg-rose-50 text-rose-700 hover:bg-rose-100 shadow-[1px_1px_0px_#111111] transition-colors cursor-pointer"
+                        title="Delete Laboratory Track"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Inline Lab Editor Form (when active) */}
+                  {isEditingThisLab && (
+                    <div className="p-4 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] space-y-3">
+                      <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                        <span className="text-[11px] font-mono font-black uppercase text-[#111111]">
+                          ✏️ Edit Laboratory Track Settings
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingLabId(null)}
+                          className="text-[10px] font-mono font-bold text-slate-700 hover:text-black cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div>
+                          <label className="block text-[10px] font-mono font-bold text-[#111111] uppercase mb-0.5">
+                            Lab Name
+                          </label>
+                          <input
+                            type="text"
+                            value={editLabName}
+                            onChange={(e) => setEditLabName(e.target.value)}
+                            className="w-full bg-white border border-[#111111] px-2.5 py-1.5 text-xs font-mono text-[#111111] shadow-[1px_1px_0px_#111111] focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-mono font-bold text-[#111111] uppercase mb-0.5">
+                            Schedule
+                          </label>
+                          <input
+                            type="text"
+                            value={editLabSchedule}
+                            onChange={(e) => setEditLabSchedule(e.target.value)}
+                            className="w-full bg-white border border-[#111111] px-2.5 py-1.5 text-xs font-mono text-[#111111] shadow-[1px_1px_0px_#111111] focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-mono font-bold text-[#111111] uppercase mb-0.5">
+                            Capacity (Seats)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={editLabCapacity}
+                            onChange={(e) => setEditLabCapacity(Number(e.target.value))}
+                            className="w-full bg-white border border-[#111111] px-2.5 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[1px_1px_0px_#111111] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditingLabId(null)}
+                          className="px-3 py-1 border border-[#111111] bg-white text-[#111111] font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={savingLab}
+                          onClick={() => handleSaveEditLab(lab.id)}
+                          className="px-4 py-1 border-[2px] border-[#111111] bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] cursor-pointer"
+                        >
+                          {savingLab ? "Saving..." : "Save Changes"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mentors Bar */}
+                  {lab.mentors?.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-mono font-black text-[#111111] uppercase block">
+                        Lead Mentors ({lab.mentors.length}):
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {lab.mentors.map((m: any) => (
+                          <span
+                            key={m.mentor?.id}
+                            className="px-2 py-0.5 text-[10px] bg-sky-100 text-sky-950 border border-[#111111] font-mono font-bold shadow-[1px_1px_0px_#111111]"
+                          >
+                            👨‍🏫 {m.mentor?.name} {m.isLead ? "(Lead)" : ""}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ══ EDITABLE ROSTER OF ENROLLED STUDENTS ══ */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-black text-[#111111] uppercase">
+                        Enrolled Students ({enrolledCount}):
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-500">
+                        Use the dropdown to re-assign a student to another lab
+                      </span>
+                    </div>
+
+                    {enrolledCount === 0 ? (
+                      <div className="p-3 bg-[#F9F9F9] border border-dashed border-[#111111]/30 text-center font-mono text-[11px] text-slate-500">
+                        No students currently assigned to this track. Use the Quick Add tool below or run Random Placement.
+                      </div>
+                    ) : (
+                      <div className="border border-[#111111] divide-y divide-[#111111]/15 max-h-72 overflow-y-auto scrollbar-thin">
+                        {lab.students.map((ls: any, idx: number) => {
+                          const student = ls.student;
+                          return (
+                            <div
+                              key={student?.id || idx}
+                              className="p-2 bg-white hover:bg-[#FFF0E5]/40 transition-colors flex items-center justify-between gap-3 text-xs font-mono"
+                            >
+                              {/* Student Info */}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-5 text-center text-[10px] font-bold text-slate-400">
+                                  {idx + 1}.
+                                </span>
+                                <div className="truncate">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <strong className="text-[#111111]">{student?.name || "Candidate"}</strong>
+                                    {student?.rollNumber && (
+                                      <span className="px-1.5 py-0.2 bg-[#F4F3F3] border border-[#111111] text-[9px] font-black text-slate-800 shadow-[1px_1px_0px_#111111]">
+                                        REG: {student.rollNumber}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="block text-[10px] text-slate-500 truncate">
+                                    {student?.email} {student?.branch ? `· ${student.branch}` : ""}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Student Actions: Move to Another Lab & Remove */}
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {/* Move to another lab selector */}
+                                <select
+                                  defaultValue=""
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      handleMoveStudentLab(
+                                        lab.id,
+                                        student.id,
+                                        e.target.value
+                                      );
+                                    }
+                                  }}
+                                  className="px-1.5 py-0.5 bg-[#F4F3F3] border border-[#111111] font-mono text-[10px] font-bold text-[#111111] shadow-[1px_1px_0px_#111111] cursor-pointer"
+                                  title="Move student to another laboratory track"
+                                >
+                                  <option value="" disabled>
+                                    Move to...
+                                  </option>
+                                  {labs
+                                    .filter((otherLab) => otherLab.id !== lab.id)
+                                    .map((otherLab) => (
+                                      <option key={otherLab.id} value={otherLab.id}>
+                                        → {otherLab.name}
+                                      </option>
+                                    ))}
+                                </select>
+
+                                {/* Remove student from lab */}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveStudentFromLab(
+                                      lab.id,
+                                      student.id,
+                                      student.name || "Student"
+                                    )
+                                  }
+                                  className="p-1 border border-[#111111] bg-rose-50 hover:bg-rose-100 text-rose-700 shadow-[1px_1px_0px_#111111] transition-colors cursor-pointer"
+                                  title="Remove student from this lab"
+                                >
+                                  <UserMinus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Add Student to This Lab */}
+                  <div className="pt-2 border-t border-[#111111]/20 flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-mono font-bold text-slate-700 flex-shrink-0">
+                      ➕ Add Candidate to {lab.name}:
+                    </span>
+                    <select
+                      value={quickAddStudentByLab[lab.id] || ""}
+                      onChange={(e) =>
+                        setQuickAddStudentByLab((prev) => ({
+                          ...prev,
+                          [lab.id]: e.target.value,
+                        }))
+                      }
+                      className="flex-1 min-w-[200px] bg-[#F4F3F3] border border-[#111111] px-2 py-1 text-[11px] font-mono text-[#111111] shadow-[1px_1px_0px_#111111]"
+                    >
+                      <option value="">Select candidate to add...</option>
+                      {candidates
+                        .filter((c) => c.labId !== lab.id)
+                        .map((c) => (
+                          <option key={c.studentId} value={c.studentId}>
+                            {c.studentName} {c.rollNumber ? `[${c.rollNumber}]` : ""} ({c.status}) — Currently: {c.labName || "Unassigned"}
+                          </option>
+                        ))}
+                    </select>
+                    <button
+                      type="button"
+                      disabled={!quickAddStudentByLab[lab.id]}
+                      onClick={() => handleQuickAddStudentToLab(lab.id)}
+                      className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[10px] font-black uppercase border border-[#111111] shadow-[1px_1px_0px_#111111] disabled:opacity-40 cursor-pointer"
+                    >
+                      Add to Track
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Allocation Actions Sidebar */}
@@ -1576,12 +2210,18 @@ export default function AdminDashboardPage() {
                     </option>
                   ))}
                 </select>
-                <input
-                  placeholder="Student User ID"
+                <select
                   value={assignStudentId}
                   onChange={(e) => setAssignStudentId(e.target.value)}
-                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
-                />
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
+                >
+                  <option value="">Select Candidate...</option>
+                  {candidates.map((c) => (
+                    <option key={c.studentId} value={c.studentId}>
+                      {c.studentName} {c.rollNumber ? `[${c.rollNumber}]` : ""} ({c.status}) — Currently: {c.labName || "Unassigned"}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="submit"
                   className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
@@ -1632,7 +2272,8 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* ══════════════════════════════════════════════════════════
           TAB 4: PLATFORM USERS & PROVISIONING
