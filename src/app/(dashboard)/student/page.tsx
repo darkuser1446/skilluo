@@ -2069,6 +2069,20 @@ export default function StudentDashboardPage() {
                   </div>
                 ))}
               </div>
+              <div className="p-3.5 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-left font-mono text-xs space-y-1">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span className="font-black text-[#111111] uppercase flex items-center gap-1.5">
+                    <Trophy className="w-4 h-4 text-[#F07C27]" /> Round 2 Shortlisting Metrics Recorded
+                  </span>
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 border border-[#111111] font-bold text-[10px] uppercase shadow-[1px_1px_0px_#111111]">
+                    Saved & Locked
+                  </span>
+                </div>
+                <p className="text-slate-800 text-[11px] leading-relaxed">
+                  Both your <strong>Score ({quizResult.score} pts)</strong> and <strong>Time Taken ({quizResult.durationSec ? `${Math.floor(quizResult.durationSec / 60)}m ${quizResult.durationSec % 60}s` : "Recorded"})</strong> have been securely saved. These metrics determine cohort ranking and tie-breaking for advancement to <strong>Round 2</strong>.
+                </p>
+              </div>
+
               <p className="text-xs text-slate-600 font-mono">
                 {quizResult.status === "PENDING_REVIEW"
                   ? "Your written/code answers are queued for mentor review — the final score updates after grading."

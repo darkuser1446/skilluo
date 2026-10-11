@@ -18,6 +18,11 @@ import {
   Unlock,
   RotateCcw,
   ShieldAlert,
+  Edit3,
+  Copy,
+  Calendar,
+  Star,
+  Sparkles,
 } from "lucide-react";
 
 /* ───────────────────────── types ───────────────────────── */
@@ -139,6 +144,18 @@ export default function TestManager({
   const [questions, setQuestions] = useState<Question[]>([emptyQuestion()]);
   const [bankTopic, setBankTopic] = useState("C++ Basics");
 
+  // edit-test modal state
+  const [editingAssessment, setEditingAssessment] = useState<Assessment | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editType, setEditType] = useState<"TEST" | "QUIZ" | "PROGRAMMING">("TEST");
+  const [editLabId, setEditLabId] = useState("");
+  const [editDurationMinutes, setEditDurationMinutes] = useState("90");
+  const [editPassingMarks, setEditPassingMarks] = useState("50");
+  const [editAllowedViolations, setEditAllowedViolations] = useState("3");
+  const [editInstructions, setEditInstructions] = useState("");
+  const [editStartsAt, setEditStartsAt] = useState("");
+  const [editEndsAt, setEditEndsAt] = useState("");
+
   const totalMarks = questions.reduce((s, q) => s + (Number(q.marks) || 0), 0);
 
   const load = async () => {
@@ -242,6 +259,217 @@ export default function TestManager({
     } catch {
       flash("Failed to delete test", false);
     }
+  };
+
+  const toLocalInput = (dateStr?: string | Date) => {
+    const d = dateStr ? new Date(dateStr) : new Date();
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+  };
+
+  const handleOpenEdit = (a: Assessment) => {
+    setEditingAssessment(a);
+    setEditTitle(a.title);
+    setEditType((a.type as any) || "TEST");
+    setEditLabId(a.lab?.id || "");
+    setEditDurationMinutes(a.durationMinutes ? String(a.durationMinutes) : "90");
+    setEditPassingMarks(a.passingMarks ? String(a.passingMarks) : String(Math.round(a.totalMarks * 0.6)));
+    setEditAllowedViolations(a.allowedViolations ? String(a.allowedViolations) : "3");
+    setEditInstructions(a.instructions || "");
+    setEditStartsAt(toLocalInput(a.startsAt));
+    setEditEndsAt(toLocalInput(a.endsAt));
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAssessment) return;
+    setBusy(true);
+    try {
+      const payload = {
+        title: editTitle,
+        type: editType,
+        labId: editLabId || null,
+        durationMinutes: editDurationMinutes ? Number(editDurationMinutes) : null,
+        passingMarks: editPassingMarks ? Number(editPassingMarks) : null,
+        allowedViolations: editAllowedViolations ? Number(editAllowedViolations) : 3,
+        instructions: editInstructions || null,
+        startsAt: new Date(editStartsAt).toISOString(),
+        endsAt: new Date(editEndsAt).toISOString(),
+      };
+      const res = await fetch(`/api/assessments/${editingAssessment.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to update test");
+      flash(`Test "${editTitle}" updated successfully`);
+      setEditingAssessment(null);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to save test updates", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleQuickSetToday = async (a: Assessment) => {
+    setBusy(true);
+    try {
+      const now = new Date();
+      // Starts 5 minutes ago so it's active immediately
+      const startsAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+      // Ends 24 hours from now
+      const endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+      const res = await fetch(`/api/assessments/${a.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startsAt, endsAt }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to set schedule to today");
+      flash(`Test "${a.title}" schedule updated: LIVE for today`);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to activate test for today", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDuplicate = async (a: Assessment) => {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${a.id}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to fetch test for reuse");
+      const full = data.data?.assessment;
+      if (!full) throw new Error("Assessment not found");
+
+      setTitle(`${full.title} (Reused)`);
+      setType((full.type as any) || "TEST");
+      setLabId(full.labId || "");
+      setDurationMinutes(full.durationMinutes ? String(full.durationMinutes) : "90");
+      setPassingMarks(full.passingMarks ? String(full.passingMarks) : "50");
+      setAllowedViolations(full.allowedViolations ? String(full.allowedViolations) : "3");
+      setInstructions(full.instructions || "");
+
+      const now = new Date();
+      setStartsAt(toLocalInput(now));
+      setEndsAt(toLocalInput(new Date(now.getTime() + 24 * 60 * 60 * 1000)));
+
+      if (full.questions && full.questions.length > 0) {
+        setQuestions(
+          full.questions.map((q: any) => ({
+            prompt: q.prompt,
+            options: Array.isArray(q.options) && q.options.length > 0 ? q.options : ["", ""],
+            correctAnswer: q.correctAnswer || "",
+            marks: Number(q.marks) || 1,
+            kind: Array.isArray(q.options) && q.options.length > 0 ? "choice" : "text",
+          }))
+        );
+      }
+
+      setShowCreate(true);
+      flash(`Reused "${full.title}" with all ${full.questions?.length || 0} questions loaded into draft!`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err: any) {
+      flash(err.message || "Failed to reuse test", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleExportRound2ShortlistCSV = (a: Assessment, resList: Result[]) => {
+    // Sort strictly by Score DESC, and durationSec ASC for tie-breaking
+    const sorted = [...resList].sort((x, y) => {
+      if (y.score !== x.score) return y.score - x.score;
+      const xDur = x.durationSec != null ? x.durationSec : 999999;
+      const yDur = y.durationSec != null ? y.durationSec : 999999;
+      return xDur - yDur;
+    });
+
+    const passMark = a.passingMarks ?? Math.round(a.totalMarks * 0.6);
+
+    const headers = [
+      "Round 2 Rank",
+      "Candidate Name",
+      "Registration / Roll No",
+      "Email Address",
+      "Phone Number",
+      "College / Institute",
+      "Branch",
+      "Score",
+      "Max Marks",
+      "Percentage",
+      "Time Taken (Seconds)",
+      "Time Taken (Formatted)",
+      "Round 2 Shortlist Status",
+      "Qualification Tier",
+      "Proctoring Status",
+      "Violation Strikes",
+      "Submitted At",
+    ];
+
+    const rows = sorted.map((r, idx) => {
+      const isLockedCandidate = r.isLocked || r.status === "LOCKED" || r.status === "DISQUALIFIED";
+      const passed = r.score >= passMark && !isLockedCandidate;
+      const rank = idx + 1;
+      const durSec = r.durationSec ?? 0;
+      const formattedDuration = r.durationSec
+        ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
+        : "N/A";
+
+      const round2Status = isLockedCandidate
+        ? "DISQUALIFIED (PROCTORING LOCKOUT)"
+        : rank <= 60 && passed
+        ? "QUALIFIED FOR ROUND 2 (SUPER 60)"
+        : passed
+        ? "WAITLISTED (PASSED BENCHMARK)"
+        : "DID NOT QUALIFY";
+
+      const tier = isLockedCandidate
+        ? "DISQUALIFIED"
+        : rank <= 10 && passed
+        ? "TIER 1 (ALPHA ACCELERATOR)"
+        : rank <= 60 && passed
+        ? "TIER 2 (SUPER 60 CORE)"
+        : "TIER 3 (GENERAL POOL)";
+
+      return [
+        rank,
+        r.student?.name || "Student",
+        r.student?.rollNumber || "N/A",
+        r.student?.email || "N/A",
+        r.student?.phone || "N/A",
+        r.student?.college || "N/A",
+        r.student?.branch || "N/A",
+        r.score,
+        a.totalMarks,
+        `${Math.round((r.score / a.totalMarks) * 100)}%`,
+        durSec,
+        formattedDuration,
+        round2Status,
+        tier,
+        isLockedCandidate ? `LOCKED (${r.violationCount ?? 0} strikes)` : "CLEAN",
+        r.violationCount ?? 0,
+        new Date(r.submittedAt).toLocaleString(),
+      ];
+    });
+
+    const csvContent = [
+      headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(","),
+      ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${a.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_Round2_Shortlist.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   /* ── results & grading ── */
@@ -858,6 +1086,27 @@ export default function TestManager({
                         <Users className="w-3.5 h-3.5 text-slate-600" /> {submitted} · avg {avg}
                       </span>
                     </div>
+                    <button
+                      onClick={() => handleQuickSetToday(a)}
+                      className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-900 font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
+                      title="Quick Action: Activate test for today (+24h) immediately"
+                    >
+                      <Calendar className="w-3.5 h-3.5 text-emerald-700" /> Set Today
+                    </button>
+                    <button
+                      onClick={() => handleOpenEdit(a)}
+                      className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
+                      title="Edit schedule, duration, passing marks, and strike limits"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-[#F07C27]" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDuplicate(a)}
+                      className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
+                      title="Reuse / Duplicate test with all 100 questions for new cohort"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-blue-600" /> Reuse
+                    </button>
                     <button className={btnGhost} onClick={() => openResults(a)}>
                       {open ? (
                         <ChevronUp className="w-3.5 h-3.5" />
@@ -891,7 +1140,7 @@ export default function TestManager({
                       <div>
                         {/* Results Drawer Header & CSV Export */}
                         <div className="flex items-center justify-between pb-3 mb-3 border-b-[2px] border-[#111111] flex-wrap gap-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-mono text-xs font-black uppercase text-[#111111]">
                               Submissions & Proctoring Audit ({results.length})
                             </span>
@@ -901,106 +1150,163 @@ export default function TestManager({
                               </span>
                             )}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleExportResultsCSV(a, results)}
-                            className="px-3 py-1 bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
-                            title="Download results and proctoring logs as Excel-compatible CSV"
-                          >
-                            <Download className="w-3.5 h-3.5 text-[#F07C27]" /> Export Results (Excel CSV)
-                          </button>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => handleExportRound2ShortlistCSV(a, results)}
+                              className="px-3 py-1 bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
+                              title="Download Round 2 Shortlist ranked by Score & Completion Speed (Tie-Breaker)"
+                            >
+                              <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" /> Export Round 2 Shortlist (Excel CSV)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleExportResultsCSV(a, results)}
+                              className="px-3 py-1 bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
+                              title="Download results and proctoring logs as Excel-compatible CSV"
+                            >
+                              <Download className="w-3.5 h-3.5 text-slate-700" /> Export All (CSV)
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Round 2 Shortlist Criteria Banner */}
+                        <div className="mb-3 p-2.5 bg-amber-50 border border-amber-300 text-amber-950 font-mono text-[11px] flex items-center justify-between flex-wrap gap-2">
+                          <span className="flex items-center gap-1.5 font-bold">
+                            <Sparkles className="w-3.5 h-3.5 text-[#F07C27]" />
+                            <strong>Round 2 Qualification Ranking:</strong> Sorted by Score (Highest First). Candidates tied on score are ranked by Time Taken (Fastest First). Top 60 qualify for Round 2.
+                          </span>
+                          <span className="text-[10px] uppercase font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 border border-amber-400">
+                            Tie-Breaker: Speed
+                          </span>
                         </div>
 
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs font-mono">
                             <thead>
                               <tr className="text-[#111111] text-[10px] uppercase font-bold border-b-[2px] border-[#111111] bg-[#FFF0E5]">
+                                <th className="text-center py-2 px-2 w-14">Rank</th>
                                 <th className="text-left py-2 px-3">Student & Roll No</th>
                                 <th className="text-right py-2 px-3">Score</th>
                                 <th className="text-right py-2 px-3">%</th>
                                 <th className="text-center py-2 px-3">C / I / U</th>
-                                <th className="text-right py-2 px-3">Time</th>
-                                <th className="text-center py-2 px-3">Status & Proctoring</th>
+                                <th className="text-right py-2 px-3">Time Taken</th>
+                                <th className="text-center py-2 px-3">Status & Round 2</th>
                                 <th className="text-right py-2 px-3">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-[#111111]/20">
-                              {results.map((r) => {
-                                const pct = Math.round((r.score / a.totalMarks) * 100);
-                                const pass = r.score >= (a.passingMarks ?? a.totalMarks * 0.6);
-                                const isLockedCandidate = r.isLocked || r.status === "LOCKED";
-                                return (
-                                  <tr key={r.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
-                                    <td className="py-2.5 px-3 text-[#111111] font-bold">
-                                      <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span>{r.student?.name || "Student"}</span>
-                                        {r.student?.rollNumber && (
-                                          <span className="px-1.5 py-0.2 bg-[#F4F3F3] border border-[#111111] text-[10px] font-mono text-slate-800 font-bold shadow-[1px_1px_0px_#111111]">
-                                            REG: {r.student.rollNumber}
-                                          </span>
-                                        )}
-                                      </div>
-                                      <span className="block text-[10px] text-slate-600 font-normal">
-                                        {r.student?.email}
-                                      </span>
-                                    </td>
-                                    <td className="py-2.5 px-3 text-right text-[#111111] font-black">
-                                      {r.score}/{a.totalMarks}
-                                    </td>
-                                    <td
-                                      className={`py-2.5 px-3 text-right font-bold ${
-                                        pass ? "text-emerald-700" : "text-rose-700"
-                                      }`}
-                                    >
-                                      {pct}%
-                                    </td>
-                                    <td className="py-2.5 px-3 text-center text-slate-600">
-                                      {r.correctCount ?? "–"} / {r.incorrectCount ?? "–"} /{" "}
-                                      {r.unansweredCount ?? "–"}
-                                    </td>
-                                    <td className="py-2.5 px-3 text-right text-slate-600">
-                                      {r.durationSec
-                                        ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
-                                        : "–"}
-                                    </td>
-                                    <td className="py-2.5 px-3 text-center">
-                                      {isLockedCandidate ? (
-                                        <div className="space-y-0.5">
-                                          <span className="px-2 py-0.5 border-[2px] border-rose-800 text-[10px] font-black bg-rose-600 text-white shadow-[2px_2px_0px_#111111] inline-flex items-center gap-1">
-                                            <ShieldAlert className="w-3 h-3 text-white" />
-                                            LOCKED ({r.violationCount ?? 0} strikes)
-                                          </span>
-                                          {r.violationReason && (
-                                            <span
-                                              className="block text-[9px] font-mono text-rose-800 max-w-[140px] truncate mx-auto font-bold"
-                                              title={r.violationReason}
-                                            >
-                                              {r.violationReason}
+                              {[...results]
+                                .sort((x, y) => {
+                                  if (y.score !== x.score) return y.score - x.score;
+                                  const xDur = x.durationSec != null ? x.durationSec : 999999;
+                                  const yDur = y.durationSec != null ? y.durationSec : 999999;
+                                  return xDur - yDur;
+                                })
+                                .map((r, idx) => {
+                                  const rank = idx + 1;
+                                  const pct = Math.round((r.score / a.totalMarks) * 100);
+                                  const pass = r.score >= (a.passingMarks ?? a.totalMarks * 0.6);
+                                  const isLockedCandidate = r.isLocked || r.status === "LOCKED";
+                                  const isRound2Qualified = pass && !isLockedCandidate && rank <= 60;
+                                  const isRound2Waitlist = pass && !isLockedCandidate && rank > 60;
+                                  return (
+                                    <tr key={r.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
+                                      <td className="py-2.5 px-2 text-center font-black">
+                                        <span
+                                          className={`inline-block px-1.5 py-0.5 border font-mono text-[10px] font-black ${
+                                            rank === 1
+                                              ? "bg-amber-300 text-amber-950 border-amber-500 shadow-[1px_1px_0px_#111111]"
+                                              : rank === 2
+                                              ? "bg-slate-200 text-slate-900 border-slate-400 shadow-[1px_1px_0px_#111111]"
+                                              : rank === 3
+                                              ? "bg-amber-600 text-white border-amber-800 shadow-[1px_1px_0px_#111111]"
+                                              : rank <= 60
+                                              ? "bg-emerald-50 text-emerald-900 border-emerald-300"
+                                              : "bg-[#F4F3F3] text-slate-700 border-slate-300"
+                                          }`}
+                                        >
+                                          #{rank}
+                                        </span>
+                                      </td>
+                                      <td className="py-2.5 px-3 text-[#111111] font-bold">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span>{r.student?.name || "Student"}</span>
+                                          {r.student?.rollNumber && (
+                                            <span className="px-1.5 py-0.2 bg-[#F4F3F3] border border-[#111111] text-[10px] font-mono text-slate-800 font-bold shadow-[1px_1px_0px_#111111]">
+                                              REG: {r.student.rollNumber}
                                             </span>
                                           )}
                                         </div>
-                                      ) : (
-                                        <span
-                                          className={`px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-bold shadow-[1px_1px_0px_#111111] ${
-                                            r.status === "PENDING_REVIEW"
-                                              ? "bg-amber-100 text-amber-900"
-                                              : r.status === "DISQUALIFIED"
-                                              ? "bg-rose-600 text-white"
-                                              : pass
-                                              ? "bg-emerald-100 text-emerald-900"
-                                              : "bg-rose-100 text-rose-900"
-                                          }`}
-                                        >
-                                          {r.status === "PENDING_REVIEW"
-                                            ? "NEEDS REVIEW"
-                                            : r.status === "DISQUALIFIED"
-                                            ? "DISQUALIFIED"
-                                            : pass
-                                            ? "PASS"
-                                            : "FAIL"}
+                                        <span className="block text-[10px] text-slate-600 font-normal">
+                                          {r.student?.email}
                                         </span>
-                                      )}
-                                    </td>
+                                      </td>
+                                      <td className="py-2.5 px-3 text-right text-[#111111] font-black">
+                                        {r.score}/{a.totalMarks}
+                                      </td>
+                                      <td
+                                        className={`py-2.5 px-3 text-right font-bold ${
+                                          pass ? "text-emerald-700" : "text-rose-700"
+                                        }`}
+                                      >
+                                        {pct}%
+                                      </td>
+                                      <td className="py-2.5 px-3 text-center text-slate-600">
+                                        {r.correctCount ?? "–"} / {r.incorrectCount ?? "–"} /{" "}
+                                        {r.unansweredCount ?? "–"}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-right text-slate-800 font-bold">
+                                        {r.durationSec
+                                          ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
+                                          : "–"}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-center">
+                                        {isLockedCandidate ? (
+                                          <div className="space-y-0.5">
+                                            <span className="px-2 py-0.5 border-[2px] border-rose-800 text-[10px] font-black bg-rose-600 text-white shadow-[2px_2px_0px_#111111] inline-flex items-center gap-1">
+                                              <ShieldAlert className="w-3 h-3 text-white" />
+                                              LOCKED ({r.violationCount ?? 0} strikes)
+                                            </span>
+                                            {r.violationReason && (
+                                              <span
+                                                className="block text-[9px] font-mono text-rose-800 max-w-[140px] truncate mx-auto font-bold"
+                                                title={r.violationReason}
+                                              >
+                                                {r.violationReason}
+                                              </span>
+                                            )}
+                                          </div>
+                                        ) : isRound2Qualified ? (
+                                          <span className="px-2 py-0.5 border-[2px] border-emerald-800 bg-emerald-500 text-white text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
+                                            <Star className="w-2.5 h-2.5 fill-white text-white" /> QUALIFIED (R2)
+                                          </span>
+                                        ) : isRound2Waitlist ? (
+                                          <span className="px-2 py-0.5 border border-blue-800 bg-blue-100 text-blue-900 text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
+                                            WAITLIST (R2)
+                                          </span>
+                                        ) : (
+                                          <span
+                                            className={`px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-bold shadow-[1px_1px_0px_#111111] ${
+                                              r.status === "PENDING_REVIEW"
+                                                ? "bg-amber-100 text-amber-900"
+                                                : r.status === "DISQUALIFIED"
+                                                ? "bg-rose-600 text-white"
+                                                : pass
+                                                ? "bg-emerald-100 text-emerald-900"
+                                                : "bg-rose-100 text-rose-900"
+                                            }`}
+                                          >
+                                            {r.status === "PENDING_REVIEW"
+                                              ? "NEEDS REVIEW"
+                                              : r.status === "DISQUALIFIED"
+                                              ? "DISQUALIFIED"
+                                              : pass
+                                              ? "PASS"
+                                              : "FAIL"}
+                                          </span>
+                                        )}
+                                      </td>
                                     <td className="py-2.5 px-3 text-right">
                                       <div className="flex items-center justify-end gap-1.5 flex-wrap">
                                         {isLockedCandidate ? (
@@ -1141,6 +1447,175 @@ export default function TestManager({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── edit test modal ── */}
+      {editingAssessment && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="border-[4px] border-[#111111] bg-white shadow-[10px_10px_0px_#111111] max-w-xl w-full p-6 space-y-4 my-8">
+            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3">
+              <h4 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-[#F07C27]" /> Edit Test Schedule & Parameters
+              </h4>
+              <button
+                type="button"
+                onClick={() => setEditingAssessment(null)}
+                className="p-1 hover:bg-[#F4F3F3] border border-[#111111] text-[#111111]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <label className={labelCls}>Test Title</label>
+                <input
+                  className={inputCls}
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Type</label>
+                  <select
+                    className={inputCls}
+                    value={editType}
+                    onChange={(e) => setEditType(e.target.value as any)}
+                  >
+                    <option value="TEST">TEST</option>
+                    <option value="QUIZ">QUIZ</option>
+                    <option value="PROGRAMMING">PROGRAMMING</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Target Pod / Lab</label>
+                  <select
+                    className={inputCls}
+                    value={editLabId}
+                    onChange={(e) => setEditLabId(e.target.value)}
+                  >
+                    <option value="">All Pods (Cohort-Wide)</option>
+                    {labs.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className={labelCls}>Duration (Minutes)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className={inputCls}
+                    value={editDurationMinutes}
+                    onChange={(e) => setEditDurationMinutes(e.target.value)}
+                    placeholder="90"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Passing Marks</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className={inputCls}
+                    value={editPassingMarks}
+                    onChange={(e) => setEditPassingMarks(e.target.value)}
+                    placeholder="50"
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Violation Strikes</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    className={inputCls}
+                    value={editAllowedViolations}
+                    onChange={(e) => setEditAllowedViolations(e.target.value)}
+                    placeholder="3"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono font-black uppercase text-[#111111] flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-[#F07C27]" /> Test Availability Window
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const now = new Date();
+                      setEditStartsAt(toLocalInput(new Date(now.getTime() - 5 * 60 * 1000)));
+                      setEditEndsAt(toLocalInput(new Date(now.getTime() + 24 * 60 * 60 * 1000)));
+                      flash("Availability window set to LIVE today (+24h)");
+                    }}
+                    className="px-2 py-0.5 bg-white border border-[#111111] text-[10px] font-mono font-bold hover:bg-[#111111] hover:text-white transition-all shadow-[1px_1px_0px_#111111]"
+                  >
+                    ⚡ Set Today (Live Now +24h)
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Starts At</label>
+                    <input
+                      type="datetime-local"
+                      className={inputCls}
+                      value={editStartsAt}
+                      onChange={(e) => setEditStartsAt(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Ends At</label>
+                    <input
+                      type="datetime-local"
+                      className={inputCls}
+                      value={editEndsAt}
+                      onChange={(e) => setEditEndsAt(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>Instructions / Next Round Guidelines</label>
+                <textarea
+                  className={`${inputCls} h-20 resize-none`}
+                  value={editInstructions}
+                  onChange={(e) => setEditInstructions(e.target.value)}
+                  placeholder="e.g. 100 MCQs. 90 minutes duration. Top 60 candidates by Score & Completion Speed will be shortlisted for Round 2."
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t-[2px] border-[#111111]">
+                <button
+                  type="button"
+                  className={btnGhost}
+                  onClick={() => setEditingAssessment(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className={btnPrimary}
+                >
+                  {busy ? "Saving…" : "Save Test Settings"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

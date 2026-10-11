@@ -20,7 +20,7 @@ export async function GET(
         lab: true,
         results:
           user.role === "STUDENT"
-            ? { where: { studentId: user.sub, status: "COMPLETED" } }
+            ? { where: { studentId: user.sub } }
             : {
                 include: {
                   student: { select: { id: true, name: true, email: true } },
@@ -52,8 +52,13 @@ export async function GET(
 const AssessmentUpdateSchema = z.object({
   title: z.string().min(3).optional(),
   type: z.enum(["TEST", "QUIZ", "PROGRAMMING", "ASSIGNMENT"]).optional(),
+  labId: z.string().nullable().optional(),
   startsAt: z.string().optional(),
   endsAt: z.string().optional(),
+  durationMinutes: z.number().int().positive().nullable().optional(),
+  passingMarks: z.number().min(0).nullable().optional(),
+  allowedViolations: z.number().int().positive().optional(),
+  instructions: z.string().nullable().optional(),
   publishedAt: z.string().nullable().optional(),
   totalMarks: z.number().int().positive().optional(),
 });
@@ -73,8 +78,13 @@ export async function PUT(
       data: {
         ...(data.title && { title: data.title }),
         ...(data.type && { type: data.type }),
+        ...(data.labId !== undefined && { labId: data.labId }),
         ...(data.startsAt && { startsAt: new Date(data.startsAt) }),
         ...(data.endsAt && { endsAt: new Date(data.endsAt) }),
+        ...(data.durationMinutes !== undefined && { durationMinutes: data.durationMinutes }),
+        ...(data.passingMarks !== undefined && { passingMarks: data.passingMarks }),
+        ...(data.allowedViolations !== undefined && { allowedViolations: data.allowedViolations }),
+        ...(data.instructions !== undefined && { instructions: data.instructions }),
         ...(data.totalMarks !== undefined && { totalMarks: data.totalMarks }),
         ...(data.publishedAt !== undefined && {
           publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,

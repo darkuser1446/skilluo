@@ -500,6 +500,12 @@ export default function TestEngine({
                     <strong>{maxAllowedViolations}-Strike Lockout:</strong> You receive a maximum of {maxAllowedViolations > 1 ? `${maxAllowedViolations - 1} warning${maxAllowedViolations > 2 ? "s" : ""}` : "0 warnings (zero-tolerance)"}. On violation #{maxAllowedViolations}, the test is automatically terminated, locked out, and submitted with <strong>0 marks</strong>.
                   </span>
                 </li>
+                <li className="flex items-start gap-2 bg-[#FFF0E5] p-2.5 border-[2px] border-[#111111] text-[#111111] font-bold shadow-[2px_2px_0px_#111111]">
+                  <span className="text-[#F07C27] font-black">5.</span>
+                  <span>
+                    <strong>Score & Completion Speed Recorded:</strong> Both your final score and time taken are recorded upon submission. Time taken serves as the primary tie-breaker for Round 2 shortlisting.
+                  </span>
+                </li>
               </ul>
             </div>
 
