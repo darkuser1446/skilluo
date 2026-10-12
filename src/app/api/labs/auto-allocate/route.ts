@@ -9,7 +9,7 @@ import { z } from "zod";
 const AutoAllocateSchema = z.object({
   workshopId: z.string(),
   studentsPerLab: z.number().int().min(1).max(200).default(15),
-  targetGroup: z.enum(["SELECTED", "ALL", "TOP_60"]).default("ALL"),
+  targetGroup: z.enum(["SELECTED", "ALL", "TOP_60", "TOP_100"]).default("ALL"),
   mode: z.enum(["CREATE_AND_ALLOCATE", "ALLOCATE_EXISTING"]).default("CREATE_AND_ALLOCATE"),
   labPrefix: z.string().min(1).max(50).default("Lab"),
   defaultSchedule: z.string().optional(),
@@ -42,24 +42,25 @@ export async function POST(req: NextRequest) {
     // 1. Gather target eligible students
     let studentIds: string[] = [];
 
-    if (targetGroup === "TOP_60") {
+    if (targetGroup === "TOP_60" || targetGroup === "TOP_100") {
+      const quota = targetGroup === "TOP_100" ? 100 : 60;
       const results = await prisma.assessmentResult.findMany({
         where: { assessment: { workshopId } },
         select: { studentId: true },
         orderBy: [{ score: "desc" }, { submittedAt: "asc" }],
-        take: 60,
+        take: quota,
       });
       studentIds = results.map((r) => r.studentId);
 
-      if (studentIds.length < 60) {
+      if (studentIds.length < quota) {
         const topEnrollments = await prisma.workshopEnrollment.findMany({
           where: { workshopId },
           select: { studentId: true },
           orderBy: { appliedAt: "asc" },
-          take: 60,
+          take: quota,
         });
         const combined = Array.from(new Set([...studentIds, ...topEnrollments.map((e) => e.studentId)]));
-        studentIds = combined.slice(0, 60);
+        studentIds = combined.slice(0, quota);
       }
     } else if (targetGroup === "SELECTED") {
       // Find students marked SELECTED in WorkshopEnrollment
