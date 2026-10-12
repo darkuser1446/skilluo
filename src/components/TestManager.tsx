@@ -1,1748 +1,1767 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import {
-  Plus,
-  Trash2,
-  Clock,
-  Users,
-  Award,
-  ChevronDown,
-  ChevronUp,
-  ClipboardList,
-  BookMarked,
-  X,
-  CheckCircle2,
-  AlertTriangle,
-  Download,
-  Unlock,
-  RotateCcw,
-  ShieldAlert,
-  Edit3,
-  Copy,
-  Calendar,
-  Star,
-  Sparkles,
-  Check,
-} from "lucide-react";
-
-/* ───────────────────────── types ───────────────────────── */
-
-interface Question {
-  prompt: string;
-  options: string[];
-  correctAnswer: string;
-  marks: number;
-  kind: "choice" | "text";
-}
-
-interface BankQuestion {
-  id: string;
-  topic?: string | null;
-  difficulty: string;
-  prompt: string;
-  options?: string[] | null;
-  correctAnswer?: string | null;
-  marks: number;
-}
-
-interface Result {
-  id: string;
-  studentId: string;
-  student?: {
-    id: string;
-    name: string;
-    email?: string;
-    college?: string;
-    rollNumber?: string;
-    phone?: string;
-    branch?: string;
-  };
-  score: number;
-  status: string;
-  isLocked?: boolean;
-  violationCount?: number;
-  violationReason?: string;
-  unlockedAt?: string | null;
-  unlockedBy?: string | null;
-  answers?: Record<string, string> | null;
-  correctCount?: number | null;
-  incorrectCount?: number | null;
-  unansweredCount?: number | null;
-  durationSec?: number | null;
-  feedback?: string | null;
-  submittedAt: string;
-}
-
-interface Assessment {
-  id: string;
-  title: string;
-  type: string;
-  totalMarks: number;
-  passingMarks?: number | null;
-  durationMinutes?: number | null;
-  allowedViolations?: number | null;
-  instructions?: string | null;
-  startsAt: string;
-  endsAt: string;
-  lab?: { id: string; name: string } | null;
-  questions: { id: string; prompt: string; options?: unknown; marks: number }[];
-  results?: Result[];
-}
-
-interface TestManagerProps {
-  workshopId: string;
-  labs: { id: string; name: string }[];
-}
-
-const inputCls =
-  "w-full px-3 py-2 bg-[#F4F3F3] border-[2px] border-[#111111] text-[#111111] text-xs font-mono focus:outline-none focus:bg-white shadow-[2px_2px_0px_#111111] transition-all";
-const labelCls = "block text-[11px] font-mono text-[#111111] uppercase tracking-wider mb-1.5 font-bold";
-const btnPrimary =
-  "px-4 py-2 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 flex items-center gap-1.5 justify-center cursor-pointer";
-const btnGhost =
-  "px-3 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-[2px_2px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 cursor-pointer";
-
-const emptyQuestion = (): Question => ({
-  prompt: "",
-  options: ["", ""],
-  correctAnswer: "",
-  marks: 5,
-  kind: "choice",
-});
-
-/* ───────────────────────── component ───────────────────────── */
-
-export default function TestManager({
-  workshopId,
-  labs,
-}: {
-  workshopId: string;
-  labs: { id: string; name: string }[];
-}) {
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [results, setResults] = useState<Result[] | null>(null);
-  const [resultsFor, setResultsFor] = useState<Assessment | null>(null);
-  const [grading, setGrading] = useState<{ studentId: string; score: string; feedback: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
-  const [bank, setBank] = useState<BankQuestion[]>([]);
-  const [showBank, setShowBank] = useState(false);
-
-  // create-form state
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState<"TEST" | "QUIZ" | "PROGRAMMING">("QUIZ");
-  const [labId, setLabId] = useState("");
-  const [passingMarks, setPassingMarks] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState("30");
-  const [allowedViolations, setAllowedViolations] = useState("3");
-  const [instructions, setInstructions] = useState("");
-  const [startsAt, setStartsAt] = useState("");
-  const [endsAt, setEndsAt] = useState("");
-  const [questions, setQuestions] = useState<Question[]>([emptyQuestion()]);
-  const [bankTopic, setBankTopic] = useState("C++ Basics");
-
-  // edit-test modal state
-  const [editingAssessment, setEditingAssessment] = useState<Assessment | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editType, setEditType] = useState<"TEST" | "QUIZ" | "PROGRAMMING">("TEST");
-  const [editLabId, setEditLabId] = useState("");
-  const [editDurationMinutes, setEditDurationMinutes] = useState("90");
-  const [editPassingMarks, setEditPassingMarks] = useState("50");
-  const [editAllowedViolations, setEditAllowedViolations] = useState("3");
-  const [editInstructions, setEditInstructions] = useState("");
-  const [editStartsAt, setEditStartsAt] = useState("");
-  const [editEndsAt, setEditEndsAt] = useState("");
-
-  const totalMarks = questions.reduce((s, q) => s + (Number(q.marks) || 0), 0);
-
-  const load = async () => {
-    try {
-      const [aRes, bRes] = await Promise.all([
-        fetch(`/api/assessments?workshopId=${workshopId}`),
-        fetch(`/api/question-bank?workshopId=${workshopId}`),
-      ]);
-      if (aRes.ok) {
-        const d = await aRes.json();
-        setAssessments(d.data?.assessments || []);
-      }
-      if (bRes.ok) {
-        const d = await bRes.json();
-        setBank(d.data?.questions || []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (workshopId) {
-      setLoading(true);
-      load();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workshopId]);
-
-  const flash = (text: string, ok = true) => {
-    setMsg({ text, ok });
-    setTimeout(() => setMsg(null), 4000);
-  };
-
-  const resetForm = () => {
-    setTitle("");
-    setLabId("");
-    setPassingMarks("");
-    setDurationMinutes("30");
-    setAllowedViolations("3");
-    setInstructions("");
-    setStartsAt("");
-    setEndsAt("");
-    setQuestions([emptyQuestion()]);
-  };
-
-  /* ── create test ── */
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (questions.length === 0) return flash("Add at least one question", false);
-    setBusy(true);
-    try {
-      const payload = {
-        workshopId,
-        labId: labId || undefined,
-        title,
-        type,
-        totalMarks,
-        passingMarks: passingMarks ? Number(passingMarks) : Math.round(totalMarks * 0.6),
-        durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
-        allowedViolations: allowedViolations ? Number(allowedViolations) : 3,
-        instructions: instructions || undefined,
-        startsAt: new Date(startsAt).toISOString(),
-        endsAt: new Date(endsAt).toISOString(),
-        questions: questions.map((q) => ({
-          prompt: q.prompt,
-          options: q.kind === "choice" ? q.options.filter((o) => o.trim()) : [],
-          correctAnswer: q.correctAnswer || undefined,
-          marks: Number(q.marks) || 1,
-        })),
-      };
-      const res = await fetch("/api/assessments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Failed to create test");
-
-      flash(`Test "${title}" created and students notified`);
-      setShowCreate(false);
-      resetForm();
-      await load();
-    } catch (err: any) {
-      flash(err.message || "Failed to create test", false);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete test "${name}"? This removes all its results too.`)) return;
-    try {
-      const res = await fetch(`/api/assessments/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-      flash("Test deleted");
-      setExpandedId(null);
-      await load();
-    } catch {
-      flash("Failed to delete test", false);
-    }
-  };
-
-  const toLocalInput = (dateStr?: string | Date) => {
-    const d = dateStr ? new Date(dateStr) : new Date();
-    const tzOffset = d.getTimezoneOffset() * 60000;
-    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
-  };
-
-  const handleOpenEdit = (a: Assessment) => {
-    setEditingAssessment(a);
-    setEditTitle(a.title);
-    setEditType((a.type as any) || "TEST");
-    setEditLabId(a.lab?.id || "");
-    setEditDurationMinutes(a.durationMinutes ? String(a.durationMinutes) : "90");
-    setEditPassingMarks(a.passingMarks ? String(a.passingMarks) : String(Math.round(a.totalMarks * 0.6)));
-    setEditAllowedViolations(a.allowedViolations ? String(a.allowedViolations) : "3");
-    setEditInstructions(a.instructions || "");
-    setEditStartsAt(toLocalInput(a.startsAt));
-    setEditEndsAt(toLocalInput(a.endsAt));
-  };
-
-  const handleSaveEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingAssessment) return;
-    setBusy(true);
-    try {
-      const payload = {
-        title: editTitle,
-        type: editType,
-        labId: editLabId || null,
-        durationMinutes: editDurationMinutes ? Number(editDurationMinutes) : null,
-        passingMarks: editPassingMarks ? Number(editPassingMarks) : null,
-        allowedViolations: editAllowedViolations ? Number(editAllowedViolations) : 3,
-        instructions: editInstructions || null,
-        startsAt: new Date(editStartsAt).toISOString(),
-        endsAt: new Date(editEndsAt).toISOString(),
-      };
-      const res = await fetch(`/api/assessments/${editingAssessment.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Failed to update test");
-      flash(`Test "${editTitle}" updated successfully`);
-      setEditingAssessment(null);
-      await load();
-    } catch (err: any) {
-      flash(err.message || "Failed to save test updates", false);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleQuickSetToday = async (a: Assessment) => {
-    setBusy(true);
-    try {
-      const now = new Date();
-      // Starts 5 minutes ago so it's active immediately
-      const startsAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-      // Ends 24 hours from now
-      const endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
-      const res = await fetch(`/api/assessments/${a.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startsAt, endsAt }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Failed to set schedule to today");
-      flash(`Test "${a.title}" schedule updated: LIVE for today`);
-      await load();
-    } catch (err: any) {
-      flash(err.message || "Failed to activate test for today", false);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleDuplicate = async (a: Assessment) => {
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/assessments/${a.id}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Failed to fetch test for reuse");
-      const full = data.data?.assessment;
-      if (!full) throw new Error("Assessment not found");
-
-      setTitle(`${full.title} (Reused)`);
-      setType((full.type as any) || "TEST");
-      setLabId(full.labId || "");
-      setDurationMinutes(full.durationMinutes ? String(full.durationMinutes) : "90");
-      setPassingMarks(full.passingMarks ? String(full.passingMarks) : "50");
-      setAllowedViolations(full.allowedViolations ? String(full.allowedViolations) : "3");
-      setInstructions(full.instructions || "");
-
-      const now = new Date();
-      setStartsAt(toLocalInput(now));
-      setEndsAt(toLocalInput(new Date(now.getTime() + 24 * 60 * 60 * 1000)));
-
-      if (full.questions && full.questions.length > 0) {
-        setQuestions(
-          full.questions.map((q: any) => ({
-            prompt: q.prompt,
-            options: Array.isArray(q.options) && q.options.length > 0 ? q.options : ["", ""],
-            correctAnswer: q.correctAnswer || "",
-            marks: Number(q.marks) || 1,
-            kind: Array.isArray(q.options) && q.options.length > 0 ? "choice" : "text",
-          }))
-        );
-      }
-
-      setShowCreate(true);
-      flash(`Reused "${full.title}" with all ${full.questions?.length || 0} questions loaded into draft!`);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err: any) {
-      flash(err.message || "Failed to reuse test", false);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleExportRound2ShortlistCSV = (a: Assessment, resList: Result[]) => {
-    // Sort strictly by Score DESC, and durationSec ASC for tie-breaking
-    const sorted = [...resList].sort((x, y) => {
-      if (y.score !== x.score) return y.score - x.score;
-      const xDur = x.durationSec != null ? x.durationSec : 999999;
-      const yDur = y.durationSec != null ? y.durationSec : 999999;
-      return xDur - yDur;
-    });
-
-    const passMark = a.passingMarks ?? Math.round(a.totalMarks * 0.6);
-
-    const headers = [
-      "Round 2 Rank",
-      "Candidate Name",
-      "Registration / Roll No",
-      "Email Address",
-      "Phone Number",
-      "College / Institute",
-      "Branch",
-      "Score",
-      "Max Marks",
-      "Percentage",
-      "Time Taken (Seconds)",
-      "Time Taken (Formatted)",
-      "Round 2 Shortlist Status",
-      "Qualification Tier",
-      "Proctoring Status",
-      "Violation Strikes",
-      "Submitted At",
-    ];
-
-    const rows = sorted.map((r, idx) => {
-      const isLockedCandidate = r.isLocked || r.status === "LOCKED" || r.status === "DISQUALIFIED";
-      const passed = r.score >= passMark && !isLockedCandidate;
-      const rank = idx + 1;
-      const durSec = r.durationSec ?? 0;
-      const formattedDuration = r.durationSec
-        ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
-        : "N/A";
-
-      const round2Status = isLockedCandidate
-        ? "DISQUALIFIED (PROCTORING LOCKOUT)"
-        : rank <= 60 && passed
-        ? "QUALIFIED FOR ROUND 2 (SUPER 60)"
-        : passed
-        ? "WAITLISTED (PASSED BENCHMARK)"
-        : "DID NOT QUALIFY";
-
-      const tier = isLockedCandidate
-        ? "DISQUALIFIED"
-        : rank <= 10 && passed
-        ? "TIER 1 (ALPHA ACCELERATOR)"
-        : rank <= 60 && passed
-        ? "TIER 2 (SUPER 60 CORE)"
-        : "TIER 3 (GENERAL POOL)";
-
-      return [
-        rank,
-        r.student?.name || "Student",
-        r.student?.rollNumber || "N/A",
-        r.student?.email || "N/A",
-        r.student?.phone || "N/A",
-        r.student?.college || "N/A",
-        r.student?.branch || "N/A",
-        r.score,
-        a.totalMarks,
-        `${Math.round((r.score / a.totalMarks) * 100)}%`,
-        durSec,
-        formattedDuration,
-        round2Status,
-        tier,
-        isLockedCandidate ? `LOCKED (${r.violationCount ?? 0} strikes)` : "CLEAN",
-        r.violationCount ?? 0,
-        new Date(r.submittedAt).toLocaleString(),
-      ];
-    });
-
-    const csvContent = [
-      headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(","),
-      ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `${a.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_Round2_Shortlist.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  /* ── results & grading ── */
-  const openResults = async (a: Assessment) => {
-    if (expandedId === a.id) {
-      setExpandedId(null);
-      setResults(null);
-      setResultsFor(null);
-      return;
-    }
-    setResultsFor(a);
-    setExpandedId(a.id);
-    setGrading(null);
-    setResults(null);
-    try {
-      const res = await fetch(`/api/assessments/${a.id}/results`);
-      if (res.ok) {
-        const d = await res.json();
-        setResults(d.data?.results || []);
-      }
-    } catch {
-      setResults([]);
-    }
-  };
-
-  const submitGrade = async () => {
-    if (!grading || !resultsFor) return;
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/assessments/${resultsFor.id}/results`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentId: grading.studentId,
-          score: Number(grading.score),
-          feedback: grading.feedback || undefined,
-          status: "COMPLETED",
-        }),
-      });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error?.message || "Grading failed");
-      }
-      flash("Score recorded — student notified");
-      setGrading(null);
-      await openResults(resultsFor);
-      await load();
-    } catch (err: any) {
-      flash(err.message || "Grading failed", false);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleUnlockCandidate = async (assessmentId: string, studentId: string, studentName: string) => {
-    if (!confirm(`Unlock test session for ${studentName}? This clears the proctoring lock and sets status to PENDING_REVIEW.`)) return;
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId, action: "UNLOCK" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Unlock failed");
-      flash(`Candidate ${studentName} unlocked successfully`);
-      if (resultsFor) await openResults(resultsFor);
-      await load();
-    } catch (err: any) {
-      flash(err.message || "Failed to unlock candidate", false);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleRetestCandidate = async (assessmentId: string, studentId: string, studentName: string) => {
-    if (!confirm(`Allow RETEST for ${studentName}? This deletes their previous attempt so they can take the test again cleanly.`)) return;
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId, action: "RETEST" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Failed to allow retest");
-      flash(`Retest authorized for ${studentName}. Previous attempt cleared.`);
-      if (resultsFor) await openResults(resultsFor);
-      await load();
-    } catch (err: any) {
-      flash(err.message || "Failed to allow retest", false);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleUpdateCandidateStatus = async (
-    assessmentId: string,
-    studentId: string,
-    action: "SELECT_ROUND2" | "WAITLIST" | "REJECT" | "CLEAR_SELECTION",
-    studentName: string
-  ) => {
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId, action }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Failed to update candidate status");
-      flash(
-        `Candidate ${studentName}: ${
-          action === "SELECT_ROUND2"
-            ? "Selected for Round 2"
-            : action === "WAITLIST"
-            ? "Placed on Waitlist"
-            : action === "REJECT"
-            ? "Marked as Not Selected"
-            : "Selection reset"
-        }`
-      );
-      if (resultsFor) await openResults(resultsFor);
-      await load();
-    } catch (err: any) {
-      flash(err.message || "Failed to update candidate", false);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleBatchSelectTop60 = async (assessmentId: string) => {
-    if (
-      !confirm(
-        "Automatically select the Top 60 ranked candidates for Round 2? All selected candidates will be officially designated for Round 2 and notified."
-      )
-    )
-      return;
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "BATCH_SELECT_TOP", topCount: 60 }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Failed to batch select candidates");
-      flash(data.data?.message || "Top 60 candidates selected for Round 2!");
-      if (resultsFor) await openResults(resultsFor);
-      await load();
-    } catch (err: any) {
-      flash(err.message || "Failed to batch select", false);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleExportResultsCSV = (a: Assessment, resList: Result[]) => {
-    const headers = [
-      "Roll Number",
-      "Student Name",
-      "Email",
-      "Phone",
-      "College",
-      "Branch",
-      "Score",
-      "Total Marks",
-      "Percentage",
-      "Status",
-      "Violations Count",
-      "Violation Reason",
-      "Is Locked",
-      "Submitted At",
-    ];
-    const rows = resList.map((r) => [
-      r.student?.rollNumber || "N/A",
-      r.student?.name || "Student",
-      r.student?.email || "N/A",
-      r.student?.phone || "N/A",
-      r.student?.college || "N/A",
-      r.student?.branch || "N/A",
-      r.score,
-      a.totalMarks,
-      `${Math.round((r.score / a.totalMarks) * 100)}%`,
-      r.status,
-      r.violationCount ?? 0,
-      r.violationReason || "None",
-      r.isLocked ? "YES" : "NO",
-      new Date(r.submittedAt).toLocaleString(),
-    ]);
-
-    const csvContent = [
-      headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(","),
-      ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `${a.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_results.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  /* ── question bank ── */
-  const saveToBank = async (q: Question) => {
-    if (!q.prompt.trim()) return flash("Write the question first", false);
-    try {
-      const res = await fetch("/api/question-bank", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          workshopId,
-          topic: bankTopic,
-          prompt: q.prompt,
-          options: q.kind === "choice" ? q.options.filter((o) => o.trim()) : [],
-          correctAnswer: q.correctAnswer || undefined,
-          marks: Number(q.marks) || 5,
-        }),
-      });
-      if (!res.ok) throw new Error();
-      flash("Saved to question bank");
-      const bRes = await fetch(`/api/question-bank?workshopId=${workshopId}`);
-      if (bRes.ok) setBank((await bRes.json()).data?.questions || []);
-    } catch {
-      flash("Could not save to bank", false);
-    }
-  };
-
-  const useBankQuestion = (b: BankQuestion) => {
-    const opts = Array.isArray(b.options) ? (b.options as string[]) : [];
-    setQuestions((prev) => [
-      ...prev,
-      {
-        prompt: b.prompt,
-        options: opts.length >= 2 ? [...opts] : ["", ""],
-        correctAnswer: b.correctAnswer || "",
-        marks: b.marks,
-        kind: opts.length >= 2 ? "choice" : "text",
-      },
-    ]);
-    flash("Question added to the test draft");
-  };
-
-  const deleteBankQuestion = async (id: string) => {
-    try {
-      await fetch(`/api/question-bank/${id}`, { method: "DELETE" });
-      setBank((prev) => prev.filter((b) => b.id !== id));
-    } catch {
-      /* ignore */
-    }
-  };
-
-  const updateQ = (idx: number, patch: Partial<Question>) =>
-    setQuestions((prev) => prev.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
-
-  /* ───────────────────────── render ───────────────────────── */
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-40">
-        <div className="w-8 h-8 border-2 border-brand-orange border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6 text-[#111111]">
-      {/* header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-[#F07C27]" /> Tests & Quizzes Management
-          </h3>
-          <p className="text-xs text-slate-700 font-mono mt-0.5">
-            Create online tests, monitor live submissions and grade student answers
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button className={btnGhost} onClick={() => setShowBank((v) => !v)}>
-            <BookMarked className="w-3.5 h-3.5" /> Question Bank ({bank.length})
-          </button>
-          <button className={btnPrimary} onClick={() => setShowCreate((v) => !v)}>
-            {showCreate ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-            {showCreate ? "Cancel" : "New Test"}
-          </button>
-        </div>
-      </div>
-
-      {msg && (
-        <div
-          className={`p-3 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-xs font-mono font-bold flex items-center gap-2 ${
-            msg.ok
-              ? "bg-emerald-100 text-emerald-900"
-              : "bg-rose-100 text-rose-900"
-          }`}
-        >
-          {msg.ok ? <CheckCircle2 className="w-4 h-4 text-emerald-700" /> : <AlertTriangle className="w-4 h-4 text-rose-700" />}
-          {msg.text}
-        </div>
-      )}
-
-      {/* ── question bank drawer ── */}
-      {showBank && (
-        <div className="border-[3px] border-[#111111] p-5 bg-white shadow-[6px_6px_0px_#111111] space-y-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <h4 className="font-display font-black text-[#111111] text-sm uppercase tracking-tight flex items-center gap-2">
-              <BookMarked className="w-4 h-4 text-[#F07C27]" /> Shared Question Bank
-            </h4>
-            <div className="flex items-center gap-2">
-              <input
-                value={bankTopic}
-                onChange={(e) => setBankTopic(e.target.value)}
-                className="px-2 py-1 bg-[#F4F3F3] border-[2px] border-[#111111] text-[11px] font-mono text-[#111111] w-36 shadow-[1px_1px_0px_#111111]"
-                placeholder="Topic"
-              />
-              <span className="text-[10px] font-mono text-slate-500 font-bold uppercase">topic tag</span>
-            </div>
-          </div>
-          {bank.length === 0 && (
-            <p className="text-xs text-slate-600 font-mono">
-              Bank is empty — click “Save to bank” next to any question while building a test.
-            </p>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-            {bank.map((b) => (
-              <div
-                key={b.id}
-                className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9] shadow-[2px_2px_0px_#111111] flex items-start justify-between gap-2"
-              >
-                <div className="min-w-0">
-                  <p className="text-xs text-[#111111] font-mono font-bold truncate">{b.prompt}</p>
-                  <p className="text-[10px] font-mono text-slate-600 mt-1">
-                    {b.topic || "General"} · {b.difficulty} · {b.marks} pts
-                  </p>
-                </div>
-                <div className="flex gap-1 flex-shrink-0">
-                  <button
-                    onClick={() => useBankQuestion(b)}
-                    className="px-2 py-1 border-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] text-[10px] font-mono font-bold hover:bg-[#F07C27] hover:text-white shadow-[1px_1px_0px_#111111] cursor-pointer"
-                  >
-                    Use
-                  </button>
-                  <button
-                    onClick={() => deleteBankQuestion(b.id)}
-                    className="px-2 py-1 border-[2px] border-[#111111] bg-rose-100 text-rose-800 text-[10px] font-mono font-bold hover:bg-rose-600 hover:text-white shadow-[1px_1px_0px_#111111] cursor-pointer"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── create form ── */}
-      {showCreate && (
-        <form
-          onSubmit={handleCreate}
-          className="border-[3px] border-[#111111] p-6 bg-white shadow-[6px_6px_0px_#111111] space-y-5"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="sm:col-span-2">
-              <label className={labelCls}>Test Title *</label>
-              <input
-                className={inputCls}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Unit Test 3 — Pointers & References"
-                required
-                minLength={3}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Type</label>
-              <select
-                className={inputCls}
-                value={type}
-                onChange={(e) => setType(e.target.value as any)}
-              >
-                <option value="QUIZ">Quiz</option>
-                <option value="TEST">Test</option>
-                <option value="PROGRAMMING">Programming (code answers, manual review)</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Assign to Lab</label>
-              <select className={inputCls} value={labId} onChange={(e) => setLabId(e.target.value)}>
-                <option value="">All labs</option>
-                {labs.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Duration (minutes)</label>
-              <input
-                type="number"
-                min={1}
-                max={300}
-                className={inputCls}
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Passing Marks</label>
-              <input
-                type="number"
-                min={0}
-                className={inputCls}
-                value={passingMarks}
-                onChange={(e) => setPassingMarks(e.target.value)}
-                placeholder={`default ${Math.round(totalMarks * 0.6)}`}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Proctor Violation Limit</label>
-              <select
-                className={inputCls}
-                value={allowedViolations}
-                onChange={(e) => setAllowedViolations(e.target.value)}
-              >
-                <option value="1">1 Strike (Zero-Tolerance: Lock on 1st Violation)</option>
-                <option value="2">2 Strikes (Strict)</option>
-                <option value="3">3 Strikes (Standard - Recommended)</option>
-                <option value="5">5 Strikes (Lenient)</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Starts At *</label>
-              <input
-                type="datetime-local"
-                className={inputCls}
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Ends At *</label>
-              <input
-                type="datetime-local"
-                className={inputCls}
-                value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
-                required
-              />
-            </div>
-            <div className="sm:col-span-2 lg:col-span-3">
-              <label className={labelCls}>Instructions (optional)</label>
-              <textarea
-                className={inputCls}
-                rows={2}
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                placeholder="Read every question carefully. One attempt only — the timer auto-submits."
-              />
-            </div>
-          </div>
-
-          {/* questions */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-2">
-              <h4 className="font-mono font-black text-[#111111] text-sm uppercase">
-                Questions ({questions.length}) — total {totalMarks} marks
-              </h4>
-              <button
-                type="button"
-                className={btnGhost}
-                onClick={() => setQuestions((p) => [...p, emptyQuestion()])}
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Question
-              </button>
-            </div>
-
-            {questions.map((q, idx) => (
-              <div
-                key={idx}
-                className="p-4 bg-[#F4F3F3] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] space-y-3"
-              >
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-mono font-black text-[#F07C27] bg-[#FFF0E5] px-2 py-0.5 border border-[#111111] shadow-[1px_1px_0px_#111111]">
-                    Q{idx + 1}
-                  </span>
-                  <select
-                    className="px-2 py-1 bg-white border-[2px] border-[#111111] text-[11px] font-mono font-bold text-[#111111] shadow-[1px_1px_0px_#111111]"
-                    value={q.kind}
-                    onChange={(e) => updateQ(idx, { kind: e.target.value as any })}
-                  >
-                    <option value="choice">Multiple choice</option>
-                    <option value="text">Text / Code (manual review)</option>
-                  </select>
-                  <input
-                    type="number"
-                    min={1}
-                    value={q.marks}
-                    onChange={(e) => updateQ(idx, { marks: Number(e.target.value) })}
-                    className="w-16 px-2 py-1 bg-white border-[2px] border-[#111111] text-[11px] font-mono font-bold text-[#111111] shadow-[1px_1px_0px_#111111]"
-                    title="Marks"
-                  />
-                  <span className="text-[10px] font-mono font-bold text-slate-600">pts</span>
-                  <button
-                    type="button"
-                    onClick={() => saveToBank(q)}
-                    className="ml-auto px-2 py-1 bg-white text-purple-900 border border-[#111111] text-[10px] font-mono font-bold hover:bg-[#FFF0E5] flex items-center gap-1 shadow-[1px_1px_0px_#111111]"
-                  >
-                    <BookMarked className="w-3 h-3" /> Save to bank
-                  </button>
-                  {questions.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setQuestions((p) => p.filter((_, i) => i !== idx))}
-                      className="px-2 py-1 bg-rose-100 text-rose-900 border border-[#111111] text-[10px] font-mono font-bold hover:bg-rose-200 shadow-[1px_1px_0px_#111111]"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-
-                <textarea
-                  className={inputCls}
-                  rows={2}
-                  value={q.prompt}
-                  onChange={(e) => updateQ(idx, { prompt: e.target.value })}
-                  placeholder="Question prompt…"
-                  required
-                />
-
-                {q.kind === "choice" ? (
-                  <div className="space-y-2">
-                    {q.options.map((opt, oi) => (
-                      <div key={oi} className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={`correct-${idx}`}
-                          checked={q.correctAnswer === opt && opt.trim() !== ""}
-                          onChange={() => updateQ(idx, { correctAnswer: opt })}
-                          disabled={!opt.trim()}
-                          title="Mark as correct answer"
-                          className="accent-emerald-500"
-                        />
-                        <input
-                          className={inputCls}
-                          value={opt}
-                          onChange={(e) => {
-                            const old = q.options[oi];
-                            const next = [...q.options];
-                            next[oi] = e.target.value;
-                            const patch: Partial<Question> = { options: next };
-                            if (q.correctAnswer === old) patch.correctAnswer = e.target.value;
-                            updateQ(idx, patch);
-                          }}
-                          placeholder={`Option ${oi + 1}${oi < 2 ? " *" : ""}`}
-                        />
-                        {q.options.length > 2 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateQ(idx, {
-                                options: q.options.filter((_, i) => i !== oi),
-                                correctAnswer:
-                                  q.correctAnswer === q.options[oi] ? "" : q.correctAnswer,
-                              })
-                            }
-                            className="text-rose-400 hover:text-rose-300 text-xs"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="text-[11px] font-mono text-brand-orange hover:underline"
-                      onClick={() => updateQ(idx, { options: [...q.options, ""] })}
-                    >
-                      + add option
-                    </button>
-                    {!q.correctAnswer && (
-                      <p className="text-[10px] font-mono text-amber-400">
-                        Select the radio next to the correct option.
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-[10px] font-mono text-slate-500">
-                    Students answer with text/code here — you grade it manually from the results
-                    panel.
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <button type="submit" className={`${btnPrimary} w-full sm:w-auto`} disabled={busy}>
-            {busy ? "Creating…" : `Publish Test (${totalMarks} marks)`}
-          </button>
-        </form>
-      )}
-
-      {/* ── tests list ── */}
-      {assessments.length === 0 ? (
-        <div className="py-16 border-[3px] border-[#111111] bg-white shadow-[6px_6px_0px_#111111] text-center">
-          <ClipboardList className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-          <p className="text-[#111111] text-sm font-mono font-bold uppercase">No tests created yet</p>
-          <p className="text-slate-600 text-xs font-mono mt-1">
-            Use “New Test” to schedule a quiz, test or programming task
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {assessments.map((a) => {
-            const now = Date.now();
-            const isLive =
-              now >= new Date(a.startsAt).getTime() && now <= new Date(a.endsAt).getTime();
-            const submitted = a.results?.length || 0;
-            const avg =
-              submitted > 0
-                ? ((a.results || []).reduce((s, r) => s + r.score, 0) / submitted).toFixed(1)
-                : "—";
-            const open = expandedId === a.id;
-
-            return (
-              <div
-                key={a.id}
-                className="border-[3px] border-[#111111] bg-white shadow-[4px_4px_0px_#111111] overflow-hidden"
-              >
-                <div className="p-4 flex flex-wrap items-center gap-3 justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-[#FFF0E5] text-[#111111] uppercase shadow-[1px_1px_0px_#111111]">
-                        {a.type}
-                      </span>
-                      {isLive && (
-                        <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 shadow-[1px_1px_0px_#111111] animate-pulse">
-                          ● LIVE
-                        </span>
-                      )}
-                      {a.lab && (
-                        <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold text-[#111111] bg-[#F4F3F3]">
-                          {a.lab.name}
-                        </span>
-                      )}
-                    </div>
-                    <h4 className="font-mono font-bold text-[#111111] text-sm mt-1 truncate uppercase">
-                      {a.title}
-                    </h4>
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-600 mt-1 flex-wrap font-bold">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-[#F07C27]" />
-                        {new Date(a.startsAt).toLocaleString()} →{" "}
-                        {new Date(a.endsAt).toLocaleString()}
-                      </span>
-                      {a.durationMinutes && <span>· {a.durationMinutes} min</span>}
-                      <span>
-                        · {a.questions?.length || 0} Q · {a.totalMarks} marks · pass{" "}
-                        {a.passingMarks ?? Math.round(a.totalMarks * 0.6)}
-                      </span>
-                      <span>· {a.allowedViolations || 3} strikes max</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="text-right px-3">
-                      <span className="text-[10px] font-mono text-slate-500 uppercase block font-bold">
-                        Submissions
-                      </span>
-                      <span className="text-sm font-mono font-black text-[#111111] flex items-center gap-1 justify-end">
-                        <Users className="w-3.5 h-3.5 text-slate-600" /> {submitted} · avg {avg}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleQuickSetToday(a)}
-                      className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-900 font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
-                      title="Quick Action: Activate test for today (+24h) immediately"
-                    >
-                      <Calendar className="w-3.5 h-3.5 text-emerald-700" /> Set Today
-                    </button>
-                    <button
-                      onClick={() => handleOpenEdit(a)}
-                      className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
-                      title="Edit schedule, duration, passing marks, and strike limits"
-                    >
-                      <Edit3 className="w-3.5 h-3.5 text-[#F07C27]" /> Edit
-                    </button>
-                    <button
-                      onClick={() => handleDuplicate(a)}
-                      className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
-                      title="Reuse / Duplicate test with all 100 questions for new cohort"
-                    >
-                      <Copy className="w-3.5 h-3.5 text-blue-600" /> Reuse
-                    </button>
-                    <button className={btnGhost} onClick={() => openResults(a)}>
-                      {open ? (
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      )}
-                      Results
-                    </button>
-                    <button
-                      onClick={() => handleDelete(a.id, a.title)}
-                      className="p-1.5 border-[2px] border-[#111111] bg-rose-100 hover:bg-rose-600 hover:text-white text-rose-800 shadow-[2px_2px_0px_#111111] transition-all cursor-pointer"
-                      title="Delete test"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* results drawer */}
-                {open && (
-                  <div className="border-t-[2px] border-[#111111] p-4 bg-[#FFF0E5]/20">
-                    {!results || resultsFor?.id !== a.id ? (
-                      <p className="text-xs font-mono text-slate-600 py-4 text-center font-bold">
-                        Loading results…
-                      </p>
-                    ) : results.length === 0 ? (
-                      <p className="text-xs font-mono text-slate-600 py-4 text-center font-bold">
-                        No submissions yet
-                      </p>
-                    ) : (
-                      <div>
-                        {/* Results Drawer Header & CSV Export */}
-                        <div className="flex items-center justify-between pb-3 mb-3 border-b-[2px] border-[#111111] flex-wrap gap-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-mono text-xs font-black uppercase text-[#111111]">
-                              Submissions & Proctoring Audit ({results.length})
-                            </span>
-                            {results.some((r) => r.isLocked || r.status === "LOCKED") && (
-                              <span className="px-2 py-0.5 border border-[#111111] bg-rose-600 text-white font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] animate-pulse">
-                                ⚠️ Lockouts Detected
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <button
-                              type="button"
-                              onClick={() => handleBatchSelectTop60(a.id)}
-                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
-                              title="Officially shortlist and select top 60 candidates for Round 2"
-                            >
-                              <Check className="w-3.5 h-3.5 text-white" /> Quick Select Top 60 (Round 2)
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleExportRound2ShortlistCSV(a, results)}
-                              className="px-3 py-1 bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
-                              title="Download Round 2 Shortlist ranked by Score & Completion Speed (Tie-Breaker)"
-                            >
-                              <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" /> Export Round 2 Shortlist (Excel CSV)
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleExportResultsCSV(a, results)}
-                              className="px-3 py-1 bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
-                              title="Download results and proctoring logs as Excel-compatible CSV"
-                            >
-                              <Download className="w-3.5 h-3.5 text-slate-700" /> Export All (CSV)
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Round 2 Shortlist Criteria Banner */}
-                        <div className="mb-3 p-2.5 bg-amber-50 border border-amber-300 text-amber-950 font-mono text-[11px] flex items-center justify-between flex-wrap gap-2">
-                          <span className="flex items-center gap-1.5 font-bold">
-                            <Sparkles className="w-3.5 h-3.5 text-[#F07C27]" />
-                            <strong>Round 2 Qualification Ranking:</strong> Sorted by Score (Highest First). Candidates tied on score are ranked by Time Taken (Fastest First). Top 60 qualify for Round 2.
-                          </span>
-                          <span className="text-[10px] uppercase font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 border border-amber-400">
-                            Tie-Breaker: Speed
-                          </span>
-                        </div>
-
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-xs font-mono">
-                            <thead>
-                              <tr className="text-[#111111] text-[10px] uppercase font-bold border-b-[2px] border-[#111111] bg-[#FFF0E5]">
-                                <th className="text-center py-2 px-2 w-14">Rank</th>
-                                <th className="text-left py-2 px-3">Student & Roll No</th>
-                                <th className="text-right py-2 px-3">Score</th>
-                                <th className="text-right py-2 px-3">%</th>
-                                <th className="text-center py-2 px-3">C / I / U</th>
-                                <th className="text-right py-2 px-3">Time Taken</th>
-                                <th className="text-center py-2 px-3">Selection & Round 2</th>
-                                <th className="text-right py-2 px-3">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#111111]/20">
-                              {[...results]
-                                .sort((x, y) => {
-                                  if (y.score !== x.score) return y.score - x.score;
-                                  const xDur = x.durationSec != null ? x.durationSec : 999999;
-                                  const yDur = y.durationSec != null ? y.durationSec : 999999;
-                                  return xDur - yDur;
-                                })
-                                .map((r, idx) => {
-                                  const rank = idx + 1;
-                                  const pct = Math.round((r.score / a.totalMarks) * 100);
-                                  const pass = r.score >= (a.passingMarks ?? a.totalMarks * 0.6);
-                                  const isLockedCandidate = r.isLocked || r.status === "LOCKED";
-                                  const isRound2Qualified = pass && !isLockedCandidate && rank <= 60;
-                                  const isRound2Waitlist = pass && !isLockedCandidate && rank > 60;
-                                  return (
-                                    <tr key={r.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
-                                      <td className="py-2.5 px-2 text-center font-black">
-                                        <span
-                                          className={`inline-block px-1.5 py-0.5 border font-mono text-[10px] font-black ${
-                                            rank === 1
-                                              ? "bg-amber-300 text-amber-950 border-amber-500 shadow-[1px_1px_0px_#111111]"
-                                              : rank === 2
-                                              ? "bg-slate-200 text-slate-900 border-slate-400 shadow-[1px_1px_0px_#111111]"
-                                              : rank === 3
-                                              ? "bg-amber-600 text-white border-amber-800 shadow-[1px_1px_0px_#111111]"
-                                              : rank <= 60
-                                              ? "bg-emerald-50 text-emerald-900 border-emerald-300"
-                                              : "bg-[#F4F3F3] text-slate-700 border-slate-300"
-                                          }`}
-                                        >
-                                          #{rank}
-                                        </span>
-                                      </td>
-                                      <td className="py-2.5 px-3 text-[#111111] font-bold">
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                          <span>{r.student?.name || "Student"}</span>
-                                          {r.student?.rollNumber && (
-                                            <span className="px-1.5 py-0.2 bg-[#F4F3F3] border border-[#111111] text-[10px] font-mono text-slate-800 font-bold shadow-[1px_1px_0px_#111111]">
-                                              REG: {r.student.rollNumber}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <span className="block text-[10px] text-slate-600 font-normal">
-                                          {r.student?.email}
-                                        </span>
-                                      </td>
-                                      <td className="py-2.5 px-3 text-right text-[#111111] font-black">
-                                        {r.score}/{a.totalMarks}
-                                      </td>
-                                      <td
-                                        className={`py-2.5 px-3 text-right font-bold ${
-                                          pass ? "text-emerald-700" : "text-rose-700"
-                                        }`}
-                                      >
-                                        {pct}%
-                                      </td>
-                                      <td className="py-2.5 px-3 text-center text-slate-600">
-                                        {r.correctCount ?? "–"} / {r.incorrectCount ?? "–"} /{" "}
-                                        {r.unansweredCount ?? "–"}
-                                      </td>
-                                      <td className="py-2.5 px-3 text-right text-slate-800 font-bold">
-                                        {r.durationSec
-                                          ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
-                                          : "–"}
-                                      </td>
-                                      <td className="py-2.5 px-3 text-center">
-                                        {isLockedCandidate ? (
-                                          <div className="space-y-0.5">
-                                            <span className="px-2 py-0.5 border-[2px] border-rose-800 text-[10px] font-black bg-rose-600 text-white shadow-[2px_2px_0px_#111111] inline-flex items-center gap-1">
-                                              <ShieldAlert className="w-3 h-3 text-white" />
-                                              LOCKED ({r.violationCount ?? 0} strikes)
-                                            </span>
-                                            {r.violationReason && (
-                                              <span
-                                                className="block text-[9px] font-mono text-rose-800 max-w-[140px] truncate mx-auto font-bold"
-                                                title={r.violationReason}
-                                              >
-                                                {r.violationReason}
-                                              </span>
-                                            )}
-                                          </div>
-                                        ) : r.status === "SELECTED_ROUND2" ? (
-                                          <span className="px-2 py-0.5 border-[2px] border-emerald-900 bg-emerald-600 text-white text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
-                                            <Check className="w-3 h-3 text-white" /> SELECTED (R2)
-                                          </span>
-                                        ) : r.status === "WAITLIST_ROUND2" ? (
-                                          <span className="px-2 py-0.5 border border-blue-800 bg-blue-100 text-blue-900 text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
-                                            WAITLIST (R2)
-                                          </span>
-                                        ) : r.status === "REJECTED" ? (
-                                          <span className="px-2 py-0.5 border border-slate-600 bg-slate-200 text-slate-800 text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
-                                            NOT SELECTED
-                                          </span>
-                                        ) : isRound2Qualified ? (
-                                          <span className="px-2 py-0.5 border-[2px] border-emerald-800 bg-emerald-100 text-emerald-900 text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
-                                            <Star className="w-2.5 h-2.5 fill-emerald-600 text-emerald-600" /> RECOMMENDED (TOP 60)
-                                          </span>
-                                        ) : isRound2Waitlist ? (
-                                          <span className="px-2 py-0.5 border border-blue-400 bg-blue-50 text-blue-800 text-[10px] font-medium shadow-[1px_1px_0px_#111111]">
-                                            WAITLIST POOL
-                                          </span>
-                                        ) : (
-                                          <span className="px-2 py-0.5 border border-slate-300 bg-[#F4F3F3] text-slate-700 text-[10px] font-semibold">
-                                            PENDING DECISION
-                                          </span>
-                                        )}
-                                      </td>
-                                    <td className="py-2.5 px-3 text-right">
-                                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                                        {isLockedCandidate ? (
-                                          <>
-                                            <button
-                                              type="button"
-                                              className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                              onClick={() =>
-                                                handleUnlockCandidate(a.id, r.studentId, r.student?.name || "Student")
-                                              }
-                                              title="Clear proctoring lockout and allow review"
-                                            >
-                                              <Unlock className="w-3 h-3" /> Unlock
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="px-2 py-1 border-[2px] border-[#111111] bg-amber-400 hover:bg-amber-300 text-[#111111] font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                              onClick={() =>
-                                                handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
-                                              }
-                                              title="Reset test attempt and grant retest"
-                                            >
-                                              <RotateCcw className="w-3 h-3" /> Retest
-                                            </button>
-                                          </>
-                                        ) : (
-                                          <>
-                                            {r.status === "SELECTED_ROUND2" ? (
-                                              <button
-                                                type="button"
-                                                onClick={() =>
-                                                  handleUpdateCandidateStatus(
-                                                    a.id,
-                                                    r.studentId,
-                                                    "CLEAR_SELECTION",
-                                                    r.student?.name || "Student"
-                                                  )
-                                                }
-                                                className="px-2 py-1 border border-[#111111] bg-slate-200 hover:bg-slate-300 text-slate-800 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
-                                                title="Revoke Round 2 selection"
-                                              >
-                                                <RotateCcw className="w-2.5 h-2.5" /> Deselect
-                                              </button>
-                                            ) : (
-                                              <>
-                                                <button
-                                                  type="button"
-                                                  onClick={() =>
-                                                    handleUpdateCandidateStatus(
-                                                      a.id,
-                                                      r.studentId,
-                                                      "SELECT_ROUND2",
-                                                      r.student?.name || "Student"
-                                                    )
-                                                  }
-                                                  className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                                  title="Select candidate for Round 2"
-                                                >
-                                                  <Check className="w-3 h-3 text-white" /> Select (R2)
-                                                </button>
-                                                <button
-                                                  type="button"
-                                                  onClick={() =>
-                                                    handleUpdateCandidateStatus(
-                                                      a.id,
-                                                      r.studentId,
-                                                      "WAITLIST",
-                                                      r.student?.name || "Student"
-                                                    )
-                                                  }
-                                                  className="px-2 py-1 border border-[#111111] bg-blue-100 hover:bg-blue-200 text-blue-900 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer"
-                                                  title="Place on Round 2 waitlist"
-                                                >
-                                                  Waitlist
-                                                </button>
-                                              </>
-                                            )}
-                                            <button
-                                              type="button"
-                                              className="px-2 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-[10px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                              onClick={() =>
-                                                setGrading({
-                                                  studentId: r.studentId,
-                                                  score: String(r.score),
-                                                  feedback: r.feedback || "",
-                                                })
-                                              }
-                                            >
-                                              <Award className="w-3 h-3 inline" /> Grade
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="px-2 py-1 border border-[#111111] bg-[#F4F3F3] hover:bg-amber-200 text-[#111111] font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
-                                              onClick={() =>
-                                                handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
-                                              }
-                                              title="Allow student a fresh retest"
-                                            >
-                                              <RotateCcw className="w-2.5 h-2.5" /> Retest
-                                            </button>
-                                          </>
-                                        )}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-
-                        {/* grading inspector for the row being graded */}
-                        {grading &&
-                          results
-                            ?.filter((r) => r.studentId === grading.studentId)
-                            .map((r) => (
-                              <div
-                                key={r.id}
-                                className="mt-4 p-4 border-[2px] border-[#111111] bg-white shadow-[4px_4px_0px_#111111] space-y-3"
-                              >
-                                <h5 className="text-xs font-mono font-bold text-[#111111] uppercase">
-                                  Answers — {r.student?.name}
-                                  {r.status === "PENDING_REVIEW" && (
-                                    <span className="ml-2 px-2 py-0.5 border border-[#111111] bg-amber-100 text-amber-900 text-[10px] font-mono font-bold">
-                                      NEEDS REVIEW
-                                    </span>
-                                  )}
-                                </h5>
-                                <div className="space-y-2 max-h-64 overflow-y-auto">
-                                  {a.questions?.map((q, qi) => {
-                                    const ans = r.answers?.[q.id];
-                                    return (
-                                      <div
-                                        key={q.id}
-                                        className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9]"
-                                      >
-                                        <p className="text-[11px] text-[#111111] font-mono font-bold">
-                                          <span className="text-[#F07C27]">
-                                            Q{qi + 1}.
-                                          </span>{" "}
-                                          {q.prompt}
-                                        </p>
-                                        <p className="text-[11px] text-emerald-800 mt-1 font-mono whitespace-pre-wrap bg-white p-2 border border-[#111111]/30">
-                                          Answer: {ans || "(not answered)"}
-                                        </p>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                                <div className="flex flex-wrap items-end gap-3 pt-2">
-                                  <div>
-                                    <label className={labelCls}>Score (0–{a.totalMarks})</label>
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      max={a.totalMarks}
-                                      className={`${inputCls} w-28`}
-                                      value={grading.score}
-                                      onChange={(e) =>
-                                        setGrading({ ...grading, score: e.target.value })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-[200px]">
-                                    <label className={labelCls}>Feedback</label>
-                                    <input
-                                      className={inputCls}
-                                      value={grading.feedback}
-                                      onChange={(e) =>
-                                        setGrading({ ...grading, feedback: e.target.value })
-                                      }
-                                      placeholder="Nice pointer arithmetic — watch the dangling refs."
-                                    />
-                                  </div>
-                                  <button className={btnPrimary} disabled={busy} onClick={submitGrade}>
-                                    {busy ? "Saving…" : "Save Grade"}
-                                  </button>
-                                  <button className={btnGhost} onClick={() => setGrading(null)}>
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── edit test modal ── */}
-      {editingAssessment && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="border-[4px] border-[#111111] bg-white shadow-[10px_10px_0px_#111111] max-w-xl w-full p-6 space-y-4 my-8">
-            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3">
-              <h4 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
-                <Edit3 className="w-5 h-5 text-[#F07C27]" /> Edit Test Schedule & Parameters
-              </h4>
-              <button
-                type="button"
-                onClick={() => setEditingAssessment(null)}
-                className="p-1 hover:bg-[#F4F3F3] border border-[#111111] text-[#111111]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveEdit} className="space-y-4">
-              <div>
-                <label className={labelCls}>Test Title</label>
-                <input
-                  className={inputCls}
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className={labelCls}>Type</label>
-                  <select
-                    className={inputCls}
-                    value={editType}
-                    onChange={(e) => setEditType(e.target.value as any)}
-                  >
-                    <option value="TEST">TEST</option>
-                    <option value="QUIZ">QUIZ</option>
-                    <option value="PROGRAMMING">PROGRAMMING</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelCls}>Target Pod / Lab</label>
-                  <select
-                    className={inputCls}
-                    value={editLabId}
-                    onChange={(e) => setEditLabId(e.target.value)}
-                  >
-                    <option value="">All Pods (Cohort-Wide)</option>
-                    {labs.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className={labelCls}>Duration (Minutes)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className={inputCls}
-                    value={editDurationMinutes}
-                    onChange={(e) => setEditDurationMinutes(e.target.value)}
-                    placeholder="90"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className={labelCls}>Passing Marks</label>
-                  <input
-                    type="number"
-                    min="0"
-                    className={inputCls}
-                    value={editPassingMarks}
-                    onChange={(e) => setEditPassingMarks(e.target.value)}
-                    placeholder="50"
-                  />
-                </div>
-                <div>
-                  <label className={labelCls}>Violation Strikes</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    className={inputCls}
-                    value={editAllowedViolations}
-                    onChange={(e) => setEditAllowedViolations(e.target.value)}
-                    placeholder="3"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono font-black uppercase text-[#111111] flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-[#F07C27]" /> Test Availability Window
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const now = new Date();
-                      setEditStartsAt(toLocalInput(new Date(now.getTime() - 5 * 60 * 1000)));
-                      setEditEndsAt(toLocalInput(new Date(now.getTime() + 24 * 60 * 60 * 1000)));
-                      flash("Availability window set to LIVE today (+24h)");
-                    }}
-                    className="px-2 py-0.5 bg-white border border-[#111111] text-[10px] font-mono font-bold hover:bg-[#111111] hover:text-white transition-all shadow-[1px_1px_0px_#111111]"
-                  >
-                    ⚡ Set Today (Live Now +24h)
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelCls}>Starts At</label>
-                    <input
-                      type="datetime-local"
-                      className={inputCls}
-                      value={editStartsAt}
-                      onChange={(e) => setEditStartsAt(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Ends At</label>
-                    <input
-                      type="datetime-local"
-                      className={inputCls}
-                      value={editEndsAt}
-                      onChange={(e) => setEditEndsAt(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className={labelCls}>Instructions / Next Round Guidelines</label>
-                <textarea
-                  className={`${inputCls} h-20 resize-none`}
-                  value={editInstructions}
-                  onChange={(e) => setEditInstructions(e.target.value)}
-                  placeholder="e.g. 100 MCQs. 90 minutes duration. Top 60 candidates by Score & Completion Speed will be shortlisted for Round 2."
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t-[2px] border-[#111111]">
-                <button
-                  type="button"
-                  className={btnGhost}
-                  onClick={() => setEditingAssessment(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className={btnPrimary}
-                >
-                  {busy ? "Saving…" : "Save Test Settings"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-
-
-
-
-
-
-
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  Plus,
+  Trash2,
+  Clock,
+  Users,
+  Award,
+  ChevronDown,
+  ChevronUp,
+  ClipboardList,
+  BookMarked,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  Download,
+  Unlock,
+  RotateCcw,
+  ShieldAlert,
+  Edit3,
+  Copy,
+  Calendar,
+  Star,
+  Sparkles,
+  Check,
+} from "lucide-react";
+
+/* ───────────────────────── types ───────────────────────── */
+
+interface Question {
+  prompt: string;
+  options: string[];
+  correctAnswer: string;
+  marks: number;
+  kind: "choice" | "text";
+}
+
+interface BankQuestion {
+  id: string;
+  topic?: string | null;
+  difficulty: string;
+  prompt: string;
+  options?: string[] | null;
+  correctAnswer?: string | null;
+  marks: number;
+}
+
+interface Result {
+  id: string;
+  studentId: string;
+  student?: {
+    id: string;
+    name: string;
+    email?: string;
+    college?: string;
+    rollNumber?: string;
+    phone?: string;
+    branch?: string;
+  };
+  score: number;
+  status: string;
+  isLocked?: boolean;
+  violationCount?: number;
+  violationReason?: string;
+  unlockedAt?: string | null;
+  unlockedBy?: string | null;
+  answers?: Record<string, string> | null;
+  correctCount?: number | null;
+  incorrectCount?: number | null;
+  unansweredCount?: number | null;
+  durationSec?: number | null;
+  feedback?: string | null;
+  submittedAt: string;
+}
+
+interface Assessment {
+  id: string;
+  title: string;
+  type: string;
+  totalMarks: number;
+  passingMarks?: number | null;
+  durationMinutes?: number | null;
+  allowedViolations?: number | null;
+  instructions?: string | null;
+  startsAt: string;
+  endsAt: string;
+  lab?: { id: string; name: string } | null;
+  questions: { id: string; prompt: string; options?: unknown; marks: number }[];
+  results?: Result[];
+}
+
+interface TestManagerProps {
+  workshopId: string;
+  labs: { id: string; name: string }[];
+}
+
+const inputCls =
+  "w-full px-3 py-2 bg-[#F4F3F3] border-[2px] border-[#111111] text-[#111111] text-xs font-mono focus:outline-none focus:bg-white shadow-[2px_2px_0px_#111111] transition-all";
+const labelCls = "block text-[11px] font-mono text-[#111111] uppercase tracking-wider mb-1.5 font-bold";
+const btnPrimary =
+  "px-4 py-2 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 flex items-center gap-1.5 justify-center cursor-pointer";
+const btnGhost =
+  "px-3 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-[2px_2px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 cursor-pointer";
+
+const emptyQuestion = (): Question => ({
+  prompt: "",
+  options: ["", ""],
+  correctAnswer: "",
+  marks: 5,
+  kind: "choice",
+});
+
+/* ───────────────────────── component ───────────────────────── */
+
+export default function TestManager({
+  workshopId,
+  labs,
+}: {
+  workshopId: string;
+  labs: { id: string; name: string }[];
+}) {
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [results, setResults] = useState<Result[] | null>(null);
+  const [resultsFor, setResultsFor] = useState<Assessment | null>(null);
+  const [grading, setGrading] = useState<{ studentId: string; score: string; feedback: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [bank, setBank] = useState<BankQuestion[]>([]);
+  const [showBank, setShowBank] = useState(false);
+
+  // create-form state
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState<"TEST" | "QUIZ" | "PROGRAMMING">("QUIZ");
+  const [labId, setLabId] = useState("");
+  const [passingMarks, setPassingMarks] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("30");
+  const [allowedViolations, setAllowedViolations] = useState("3");
+  const [instructions, setInstructions] = useState("");
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [questions, setQuestions] = useState<Question[]>([emptyQuestion()]);
+  const [bankTopic, setBankTopic] = useState("C++ Basics");
+
+  // edit-test modal state
+  const [editingAssessment, setEditingAssessment] = useState<Assessment | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editType, setEditType] = useState<"TEST" | "QUIZ" | "PROGRAMMING">("TEST");
+  const [editLabId, setEditLabId] = useState("");
+  const [editDurationMinutes, setEditDurationMinutes] = useState("90");
+  const [editPassingMarks, setEditPassingMarks] = useState("50");
+  const [editAllowedViolations, setEditAllowedViolations] = useState("3");
+  const [editInstructions, setEditInstructions] = useState("");
+  const [editStartsAt, setEditStartsAt] = useState("");
+  const [editEndsAt, setEditEndsAt] = useState("");
+
+  const totalMarks = questions.reduce((s, q) => s + (Number(q.marks) || 0), 0);
+
+  const load = async () => {
+    try {
+      const [aRes, bRes] = await Promise.all([
+        fetch(`/api/assessments?workshopId=${workshopId}`),
+        fetch(`/api/question-bank?workshopId=${workshopId}`),
+      ]);
+      if (aRes.ok) {
+        const d = await aRes.json();
+        setAssessments(d.data?.assessments || []);
+      }
+      if (bRes.ok) {
+        const d = await bRes.json();
+        setBank(d.data?.questions || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (workshopId) {
+      setLoading(true);
+      load();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workshopId]);
+
+  const flash = (text: string, ok = true) => {
+    setMsg({ text, ok });
+    setTimeout(() => setMsg(null), 4000);
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setLabId("");
+    setPassingMarks("");
+    setDurationMinutes("30");
+    setAllowedViolations("3");
+    setInstructions("");
+    setStartsAt("");
+    setEndsAt("");
+    setQuestions([emptyQuestion()]);
+  };
+
+  /* ── create test ── */
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (questions.length === 0) return flash("Add at least one question", false);
+    setBusy(true);
+    try {
+      const payload = {
+        workshopId,
+        labId: labId || undefined,
+        title,
+        type,
+        totalMarks,
+        passingMarks: passingMarks ? Number(passingMarks) : Math.round(totalMarks * 0.6),
+        durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
+        allowedViolations: allowedViolations ? Number(allowedViolations) : 3,
+        instructions: instructions || undefined,
+        startsAt: new Date(startsAt).toISOString(),
+        endsAt: new Date(endsAt).toISOString(),
+        questions: questions.map((q) => ({
+          prompt: q.prompt,
+          options: q.kind === "choice" ? q.options.filter((o) => o.trim()) : [],
+          correctAnswer: q.correctAnswer || undefined,
+          marks: Number(q.marks) || 1,
+        })),
+      };
+      const res = await fetch("/api/assessments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to create test");
+
+      flash(`Test "${title}" created and students notified`);
+      setShowCreate(false);
+      resetForm();
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to create test", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Delete test "${name}"? This removes all its results too.`)) return;
+    try {
+      const res = await fetch(`/api/assessments/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      flash("Test deleted");
+      setExpandedId(null);
+      await load();
+    } catch {
+      flash("Failed to delete test", false);
+    }
+  };
+
+  const toLocalInput = (dateStr?: string | Date) => {
+    const d = dateStr ? new Date(dateStr) : new Date();
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+  };
+
+  const handleOpenEdit = (a: Assessment) => {
+    setEditingAssessment(a);
+    setEditTitle(a.title);
+    setEditType((a.type as any) || "TEST");
+    setEditLabId(a.lab?.id || "");
+    setEditDurationMinutes(a.durationMinutes ? String(a.durationMinutes) : "90");
+    setEditPassingMarks(a.passingMarks ? String(a.passingMarks) : String(Math.round(a.totalMarks * 0.6)));
+    setEditAllowedViolations(a.allowedViolations ? String(a.allowedViolations) : "3");
+    setEditInstructions(a.instructions || "");
+    setEditStartsAt(toLocalInput(a.startsAt));
+    setEditEndsAt(toLocalInput(a.endsAt));
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAssessment) return;
+    setBusy(true);
+    try {
+      const payload = {
+        title: editTitle,
+        type: editType,
+        labId: editLabId || null,
+        durationMinutes: editDurationMinutes ? Number(editDurationMinutes) : null,
+        passingMarks: editPassingMarks ? Number(editPassingMarks) : null,
+        allowedViolations: editAllowedViolations ? Number(editAllowedViolations) : 3,
+        instructions: editInstructions || null,
+        startsAt: new Date(editStartsAt).toISOString(),
+        endsAt: new Date(editEndsAt).toISOString(),
+      };
+      const res = await fetch(`/api/assessments/${editingAssessment.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to update test");
+      flash(`Test "${editTitle}" updated successfully`);
+      setEditingAssessment(null);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to save test updates", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleToggleLive = async (a: Assessment, makeLive: boolean) => {
+    setBusy(true);
+    try {
+      const now = new Date();
+      let startsAt: string;
+      let endsAt: string;
+      if (makeLive) {
+        // Starts 5 minutes ago so it's active immediately
+        startsAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+        // Ends 24 hours from now
+        endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+      } else {
+        // Postpone to 7 days later so it becomes offline / draft
+        startsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        endsAt = new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString();
+      }
+      const res = await fetch(`/api/assessments/${a.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startsAt, endsAt }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to update test schedule");
+      flash(makeLive ? `Test "${a.title}" is now LIVE!` : `Test "${a.title}" has been taken offline.`);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to update test schedule", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleQuickSetToday = (a: Assessment) => handleToggleLive(a, true);
+
+  const handleDuplicate = async (a: Assessment) => {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${a.id}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to fetch test for reuse");
+      const full = data.data?.assessment;
+      if (!full) throw new Error("Assessment not found");
+
+      setTitle(`${full.title} (Reused)`);
+      setType((full.type as any) || "TEST");
+      setLabId(full.labId || "");
+      setDurationMinutes(full.durationMinutes ? String(full.durationMinutes) : "90");
+      setPassingMarks(full.passingMarks ? String(full.passingMarks) : "50");
+      setAllowedViolations(full.allowedViolations ? String(full.allowedViolations) : "3");
+      setInstructions(full.instructions || "");
+
+      const now = new Date();
+      setStartsAt(toLocalInput(now));
+      setEndsAt(toLocalInput(new Date(now.getTime() + 24 * 60 * 60 * 1000)));
+
+      if (full.questions && full.questions.length > 0) {
+        setQuestions(
+          full.questions.map((q: any) => ({
+            prompt: q.prompt,
+            options: Array.isArray(q.options) && q.options.length > 0 ? q.options : ["", ""],
+            correctAnswer: q.correctAnswer || "",
+            marks: Number(q.marks) || 1,
+            kind: Array.isArray(q.options) && q.options.length > 0 ? "choice" : "text",
+          }))
+        );
+      }
+
+      setShowCreate(true);
+      flash(`Reused "${full.title}" with all ${full.questions?.length || 0} questions loaded into draft!`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err: any) {
+      flash(err.message || "Failed to reuse test", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleExportRound2ShortlistCSV = (a: Assessment, resList: Result[]) => {
+    // Sort strictly by Score DESC, and durationSec ASC for tie-breaking
+    const sorted = [...resList].sort((x, y) => {
+      if (y.score !== x.score) return y.score - x.score;
+      const xDur = x.durationSec != null ? x.durationSec : 999999;
+      const yDur = y.durationSec != null ? y.durationSec : 999999;
+      return xDur - yDur;
+    });
+
+    const passMark = a.passingMarks ?? Math.round(a.totalMarks * 0.6);
+
+    const headers = [
+      "Round 2 Rank",
+      "Candidate Name",
+      "Registration / Roll No",
+      "Email Address",
+      "Phone Number",
+      "College / Institute",
+      "Branch",
+      "Score",
+      "Max Marks",
+      "Percentage",
+      "Time Taken (Seconds)",
+      "Time Taken (Formatted)",
+      "Round 2 Shortlist Status",
+      "Qualification Tier",
+      "Proctoring Status",
+      "Violation Strikes",
+      "Submitted At",
+    ];
+
+    const rows = sorted.map((r, idx) => {
+      const isLockedCandidate = r.isLocked || r.status === "LOCKED" || r.status === "DISQUALIFIED";
+      const passed = r.score >= passMark && !isLockedCandidate;
+      const rank = idx + 1;
+      const durSec = r.durationSec ?? 0;
+      const formattedDuration = r.durationSec
+        ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
+        : "N/A";
+
+      const round2Status = isLockedCandidate
+        ? "DISQUALIFIED (PROCTORING LOCKOUT)"
+        : rank <= 60 && passed
+        ? "QUALIFIED FOR ROUND 2 (SUPER 60)"
+        : passed
+        ? "WAITLISTED (PASSED BENCHMARK)"
+        : "DID NOT QUALIFY";
+
+      const tier = isLockedCandidate
+        ? "DISQUALIFIED"
+        : rank <= 10 && passed
+        ? "TIER 1 (ALPHA ACCELERATOR)"
+        : rank <= 60 && passed
+        ? "TIER 2 (SUPER 60 CORE)"
+        : "TIER 3 (GENERAL POOL)";
+
+      return [
+        rank,
+        r.student?.name || "Student",
+        r.student?.rollNumber || "N/A",
+        r.student?.email || "N/A",
+        r.student?.phone || "N/A",
+        r.student?.college || "N/A",
+        r.student?.branch || "N/A",
+        r.score,
+        a.totalMarks,
+        `${Math.round((r.score / a.totalMarks) * 100)}%`,
+        durSec,
+        formattedDuration,
+        round2Status,
+        tier,
+        isLockedCandidate ? `LOCKED (${r.violationCount ?? 0} strikes)` : "CLEAN",
+        r.violationCount ?? 0,
+        new Date(r.submittedAt).toLocaleString(),
+      ];
+    });
+
+    const csvContent = [
+      headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(","),
+      ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${a.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_Round2_Shortlist.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  /* ── results & grading ── */
+  const openResults = async (a: Assessment) => {
+    if (expandedId === a.id) {
+      setExpandedId(null);
+      setResults(null);
+      setResultsFor(null);
+      return;
+    }
+    setResultsFor(a);
+    setExpandedId(a.id);
+    setGrading(null);
+    setResults(null);
+    try {
+      const res = await fetch(`/api/assessments/${a.id}/results`);
+      if (res.ok) {
+        const d = await res.json();
+        setResults(d.data?.results || []);
+      }
+    } catch {
+      setResults([]);
+    }
+  };
+
+  const submitGrade = async () => {
+    if (!grading || !resultsFor) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${resultsFor.id}/results`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: grading.studentId,
+          score: Number(grading.score),
+          feedback: grading.feedback || undefined,
+          status: "COMPLETED",
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error?.message || "Grading failed");
+      }
+      flash("Score recorded — student notified");
+      setGrading(null);
+      await openResults(resultsFor);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Grading failed", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleUnlockCandidate = async (assessmentId: string, studentId: string, studentName: string) => {
+    if (!confirm(`Unlock test session for ${studentName}? This clears the proctoring lock and sets status to PENDING_REVIEW.`)) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, action: "UNLOCK" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Unlock failed");
+      flash(`Candidate ${studentName} unlocked successfully`);
+      if (resultsFor) await openResults(resultsFor);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to unlock candidate", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRetestCandidate = async (assessmentId: string, studentId: string, studentName: string) => {
+    if (!confirm(`Allow RETEST for ${studentName}? This deletes their previous attempt so they can take the test again cleanly.`)) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, action: "RETEST" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to allow retest");
+      flash(`Retest authorized for ${studentName}. Previous attempt cleared.`);
+      if (resultsFor) await openResults(resultsFor);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to allow retest", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleUpdateCandidateStatus = async (
+    assessmentId: string,
+    studentId: string,
+    action: "SELECT_ROUND2" | "WAITLIST" | "REJECT" | "CLEAR_SELECTION",
+    studentName: string
+  ) => {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, action }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to update candidate status");
+      flash(
+        `Candidate ${studentName}: ${
+          action === "SELECT_ROUND2"
+            ? "Selected for Round 2"
+            : action === "WAITLIST"
+            ? "Placed on Waitlist"
+            : action === "REJECT"
+            ? "Marked as Not Selected"
+            : "Selection reset"
+        }`
+      );
+      if (resultsFor) await openResults(resultsFor);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to update candidate", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleBatchSelectTop60 = async (assessmentId: string) => {
+    if (
+      !confirm(
+        "Automatically select the Top 60 ranked candidates for Round 2? All selected candidates will be officially designated for Round 2 and notified."
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/assessments/${assessmentId}/results`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "BATCH_SELECT_TOP", topCount: 60 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Failed to batch select candidates");
+      flash(data.data?.message || "Top 60 candidates selected for Round 2!");
+      if (resultsFor) await openResults(resultsFor);
+      await load();
+    } catch (err: any) {
+      flash(err.message || "Failed to batch select", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleExportResultsCSV = (a: Assessment, resList: Result[]) => {
+    const headers = [
+      "Roll Number",
+      "Student Name",
+      "Email",
+      "Phone",
+      "College",
+      "Branch",
+      "Score",
+      "Total Marks",
+      "Percentage",
+      "Status",
+      "Violations Count",
+      "Violation Reason",
+      "Is Locked",
+      "Submitted At",
+    ];
+    const rows = resList.map((r) => [
+      r.student?.rollNumber || "N/A",
+      r.student?.name || "Student",
+      r.student?.email || "N/A",
+      r.student?.phone || "N/A",
+      r.student?.college || "N/A",
+      r.student?.branch || "N/A",
+      r.score,
+      a.totalMarks,
+      `${Math.round((r.score / a.totalMarks) * 100)}%`,
+      r.status,
+      r.violationCount ?? 0,
+      r.violationReason || "None",
+      r.isLocked ? "YES" : "NO",
+      new Date(r.submittedAt).toLocaleString(),
+    ]);
+
+    const csvContent = [
+      headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(","),
+      ...rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${a.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_results.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  /* ── question bank ── */
+  const saveToBank = async (q: Question) => {
+    if (!q.prompt.trim()) return flash("Write the question first", false);
+    try {
+      const res = await fetch("/api/question-bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workshopId,
+          topic: bankTopic,
+          prompt: q.prompt,
+          options: q.kind === "choice" ? q.options.filter((o) => o.trim()) : [],
+          correctAnswer: q.correctAnswer || undefined,
+          marks: Number(q.marks) || 5,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      flash("Saved to question bank");
+      const bRes = await fetch(`/api/question-bank?workshopId=${workshopId}`);
+      if (bRes.ok) setBank((await bRes.json()).data?.questions || []);
+    } catch {
+      flash("Could not save to bank", false);
+    }
+  };
+
+  const useBankQuestion = (b: BankQuestion) => {
+    const opts = Array.isArray(b.options) ? (b.options as string[]) : [];
+    setQuestions((prev) => [
+      ...prev,
+      {
+        prompt: b.prompt,
+        options: opts.length >= 2 ? [...opts] : ["", ""],
+        correctAnswer: b.correctAnswer || "",
+        marks: b.marks,
+        kind: opts.length >= 2 ? "choice" : "text",
+      },
+    ]);
+    flash("Question added to the test draft");
+  };
+
+  const deleteBankQuestion = async (id: string) => {
+    try {
+      await fetch(`/api/question-bank/${id}`, { method: "DELETE" });
+      setBank((prev) => prev.filter((b) => b.id !== id));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const updateQ = (idx: number, patch: Partial<Question>) =>
+    setQuestions((prev) => prev.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
+
+  /* ───────────────────────── render ───────────────────────── */
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-40">
+        <div className="w-8 h-8 border-2 border-brand-orange border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 text-[#111111]">
+      {/* header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-[#F07C27]" /> Tests & Quizzes Management
+          </h3>
+          <p className="text-xs text-slate-700 font-mono mt-0.5">
+            Create online tests, monitor live submissions and grade student answers
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button className={btnGhost} onClick={() => setShowBank((v) => !v)}>
+            <BookMarked className="w-3.5 h-3.5" /> Question Bank ({bank.length})
+          </button>
+          <button className={btnPrimary} onClick={() => setShowCreate((v) => !v)}>
+            {showCreate ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+            {showCreate ? "Cancel" : "New Test"}
+          </button>
+        </div>
+      </div>
+
+      {msg && (
+        <div
+          className={`p-3 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-xs font-mono font-bold flex items-center gap-2 ${
+            msg.ok
+              ? "bg-emerald-100 text-emerald-900"
+              : "bg-rose-100 text-rose-900"
+          }`}
+        >
+          {msg.ok ? <CheckCircle2 className="w-4 h-4 text-emerald-700" /> : <AlertTriangle className="w-4 h-4 text-rose-700" />}
+          {msg.text}
+        </div>
+      )}
+
+      {/* ── question bank drawer ── */}
+      {showBank && (
+        <div className="border-[3px] border-[#111111] p-5 bg-white shadow-[6px_6px_0px_#111111] space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h4 className="font-display font-black text-[#111111] text-sm uppercase tracking-tight flex items-center gap-2">
+              <BookMarked className="w-4 h-4 text-[#F07C27]" /> Shared Question Bank
+            </h4>
+            <div className="flex items-center gap-2">
+              <input
+                value={bankTopic}
+                onChange={(e) => setBankTopic(e.target.value)}
+                className="px-2 py-1 bg-[#F4F3F3] border-[2px] border-[#111111] text-[11px] font-mono text-[#111111] w-36 shadow-[1px_1px_0px_#111111]"
+                placeholder="Topic"
+              />
+              <span className="text-[10px] font-mono text-slate-500 font-bold uppercase">topic tag</span>
+            </div>
+          </div>
+          {bank.length === 0 && (
+            <p className="text-xs text-slate-600 font-mono">
+              Bank is empty — click “Save to bank” next to any question while building a test.
+            </p>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+            {bank.map((b) => (
+              <div
+                key={b.id}
+                className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9] shadow-[2px_2px_0px_#111111] flex items-start justify-between gap-2"
+              >
+                <div className="min-w-0">
+                  <p className="text-xs text-[#111111] font-mono font-bold truncate">{b.prompt}</p>
+                  <p className="text-[10px] font-mono text-slate-600 mt-1">
+                    {b.topic || "General"} · {b.difficulty} · {b.marks} pts
+                  </p>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => useBankQuestion(b)}
+                    className="px-2 py-1 border-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] text-[10px] font-mono font-bold hover:bg-[#F07C27] hover:text-white shadow-[1px_1px_0px_#111111] cursor-pointer"
+                  >
+                    Use
+                  </button>
+                  <button
+                    onClick={() => deleteBankQuestion(b.id)}
+                    className="px-2 py-1 border-[2px] border-[#111111] bg-rose-100 text-rose-800 text-[10px] font-mono font-bold hover:bg-rose-600 hover:text-white shadow-[1px_1px_0px_#111111] cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── create form ── */}
+      {showCreate && (
+        <form
+          onSubmit={handleCreate}
+          className="border-[3px] border-[#111111] p-6 bg-white shadow-[6px_6px_0px_#111111] space-y-5"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Test Title *</label>
+              <input
+                className={inputCls}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Unit Test 3 — Pointers & References"
+                required
+                minLength={3}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Type</label>
+              <select
+                className={inputCls}
+                value={type}
+                onChange={(e) => setType(e.target.value as any)}
+              >
+                <option value="QUIZ">Quiz</option>
+                <option value="TEST">Test</option>
+                <option value="PROGRAMMING">Programming (code answers, manual review)</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Assign to Lab</label>
+              <select className={inputCls} value={labId} onChange={(e) => setLabId(e.target.value)}>
+                <option value="">All labs</option>
+                {labs.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Duration (minutes)</label>
+              <input
+                type="number"
+                min={1}
+                max={300}
+                className={inputCls}
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Passing Marks</label>
+              <input
+                type="number"
+                min={0}
+                className={inputCls}
+                value={passingMarks}
+                onChange={(e) => setPassingMarks(e.target.value)}
+                placeholder={`default ${Math.round(totalMarks * 0.6)}`}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Proctor Violation Limit</label>
+              <select
+                className={inputCls}
+                value={allowedViolations}
+                onChange={(e) => setAllowedViolations(e.target.value)}
+              >
+                <option value="1">1 Strike (Zero-Tolerance: Lock on 1st Violation)</option>
+                <option value="2">2 Strikes (Strict)</option>
+                <option value="3">3 Strikes (Standard - Recommended)</option>
+                <option value="5">5 Strikes (Lenient)</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Starts At *</label>
+              <input
+                type="datetime-local"
+                className={inputCls}
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Ends At *</label>
+              <input
+                type="datetime-local"
+                className={inputCls}
+                value={endsAt}
+                onChange={(e) => setEndsAt(e.target.value)}
+                required
+              />
+            </div>
+            <div className="sm:col-span-2 lg:col-span-3">
+              <label className={labelCls}>Instructions (optional)</label>
+              <textarea
+                className={inputCls}
+                rows={2}
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder="Read every question carefully. One attempt only — the timer auto-submits."
+              />
+            </div>
+          </div>
+
+          {/* questions */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-2">
+              <h4 className="font-mono font-black text-[#111111] text-sm uppercase">
+                Questions ({questions.length}) — total {totalMarks} marks
+              </h4>
+              <button
+                type="button"
+                className={btnGhost}
+                onClick={() => setQuestions((p) => [...p, emptyQuestion()])}
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Question
+              </button>
+            </div>
+
+            {questions.map((q, idx) => (
+              <div
+                key={idx}
+                className="p-4 bg-[#F4F3F3] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] space-y-3"
+              >
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono font-black text-[#F07C27] bg-[#FFF0E5] px-2 py-0.5 border border-[#111111] shadow-[1px_1px_0px_#111111]">
+                    Q{idx + 1}
+                  </span>
+                  <select
+                    className="px-2 py-1 bg-white border-[2px] border-[#111111] text-[11px] font-mono font-bold text-[#111111] shadow-[1px_1px_0px_#111111]"
+                    value={q.kind}
+                    onChange={(e) => updateQ(idx, { kind: e.target.value as any })}
+                  >
+                    <option value="choice">Multiple choice</option>
+                    <option value="text">Text / Code (manual review)</option>
+                  </select>
+                  <input
+                    type="number"
+                    min={1}
+                    value={q.marks}
+                    onChange={(e) => updateQ(idx, { marks: Number(e.target.value) })}
+                    className="w-16 px-2 py-1 bg-white border-[2px] border-[#111111] text-[11px] font-mono font-bold text-[#111111] shadow-[1px_1px_0px_#111111]"
+                    title="Marks"
+                  />
+                  <span className="text-[10px] font-mono font-bold text-slate-600">pts</span>
+                  <button
+                    type="button"
+                    onClick={() => saveToBank(q)}
+                    className="ml-auto px-2 py-1 bg-white text-purple-900 border border-[#111111] text-[10px] font-mono font-bold hover:bg-[#FFF0E5] flex items-center gap-1 shadow-[1px_1px_0px_#111111]"
+                  >
+                    <BookMarked className="w-3 h-3" /> Save to bank
+                  </button>
+                  {questions.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setQuestions((p) => p.filter((_, i) => i !== idx))}
+                      className="px-2 py-1 bg-rose-100 text-rose-900 border border-[#111111] text-[10px] font-mono font-bold hover:bg-rose-200 shadow-[1px_1px_0px_#111111]"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                <textarea
+                  className={inputCls}
+                  rows={2}
+                  value={q.prompt}
+                  onChange={(e) => updateQ(idx, { prompt: e.target.value })}
+                  placeholder="Question prompt…"
+                  required
+                />
+
+                {q.kind === "choice" ? (
+                  <div className="space-y-2">
+                    {q.options.map((opt, oi) => (
+                      <div key={oi} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name={`correct-${idx}`}
+                          checked={q.correctAnswer === opt && opt.trim() !== ""}
+                          onChange={() => updateQ(idx, { correctAnswer: opt })}
+                          disabled={!opt.trim()}
+                          title="Mark as correct answer"
+                          className="accent-emerald-500"
+                        />
+                        <input
+                          className={inputCls}
+                          value={opt}
+                          onChange={(e) => {
+                            const old = q.options[oi];
+                            const next = [...q.options];
+                            next[oi] = e.target.value;
+                            const patch: Partial<Question> = { options: next };
+                            if (q.correctAnswer === old) patch.correctAnswer = e.target.value;
+                            updateQ(idx, patch);
+                          }}
+                          placeholder={`Option ${oi + 1}${oi < 2 ? " *" : ""}`}
+                        />
+                        {q.options.length > 2 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateQ(idx, {
+                                options: q.options.filter((_, i) => i !== oi),
+                                correctAnswer:
+                                  q.correctAnswer === q.options[oi] ? "" : q.correctAnswer,
+                              })
+                            }
+                            className="text-rose-400 hover:text-rose-300 text-xs"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="text-[11px] font-mono text-brand-orange hover:underline"
+                      onClick={() => updateQ(idx, { options: [...q.options, ""] })}
+                    >
+                      + add option
+                    </button>
+                    {!q.correctAnswer && (
+                      <p className="text-[10px] font-mono text-amber-400">
+                        Select the radio next to the correct option.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[10px] font-mono text-slate-500">
+                    Students answer with text/code here — you grade it manually from the results
+                    panel.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <button type="submit" className={`${btnPrimary} w-full sm:w-auto`} disabled={busy}>
+            {busy ? "Creating…" : `Publish Test (${totalMarks} marks)`}
+          </button>
+        </form>
+      )}
+
+      {/* ── tests list ── */}
+      {assessments.length === 0 ? (
+        <div className="py-16 border-[3px] border-[#111111] bg-white shadow-[6px_6px_0px_#111111] text-center">
+          <ClipboardList className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <p className="text-[#111111] text-sm font-mono font-bold uppercase">No tests created yet</p>
+          <p className="text-slate-600 text-xs font-mono mt-1">
+            Use “New Test” to schedule a quiz, test or programming task
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {assessments.map((a) => {
+            const now = Date.now();
+            const isLive =
+              now >= new Date(a.startsAt).getTime() && now <= new Date(a.endsAt).getTime();
+            const submitted = a.results?.length || 0;
+            const avg =
+              submitted > 0
+                ? ((a.results || []).reduce((s, r) => s + r.score, 0) / submitted).toFixed(1)
+                : "—";
+            const open = expandedId === a.id;
+
+            return (
+              <div
+                key={a.id}
+                className="border-[3px] border-[#111111] bg-white shadow-[4px_4px_0px_#111111] overflow-hidden"
+              >
+                <div className="p-4 flex flex-wrap items-center gap-3 justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-[#FFF0E5] text-[#111111] uppercase shadow-[1px_1px_0px_#111111]">
+                        {a.type}
+                      </span>
+                      {isLive ? (
+                        <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 shadow-[1px_1px_0px_#111111] animate-pulse">
+                          ● LIVE
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 border-[2px] border-[#111111] text-[10px] font-mono font-bold bg-amber-100 text-amber-950 shadow-[1px_1px_0px_#111111]">
+                          ⏳ NOT LIVE (SCHEDULED: {new Date(a.startsAt).toLocaleDateString()})
+                        </span>
+                      )}
+                      {a.lab && (
+                        <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold text-[#111111] bg-[#F4F3F3]">
+                          {a.lab.name}
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-mono font-bold text-[#111111] text-sm mt-1 truncate uppercase">
+                      {a.title}
+                    </h4>
+                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-600 mt-1 flex-wrap font-bold">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-[#F07C27]" />
+                        {new Date(a.startsAt).toLocaleString()} →{" "}
+                        {new Date(a.endsAt).toLocaleString()}
+                      </span>
+                      {a.durationMinutes && <span>· {a.durationMinutes} min</span>}
+                      <span>
+                        · {a.questions?.length || 0} Q · {a.totalMarks} marks · pass{" "}
+                        {a.passingMarks ?? Math.round(a.totalMarks * 0.6)}
+                      </span>
+                      <span>· {a.allowedViolations || 3} strikes max</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="text-right px-3">
+                      <span className="text-[10px] font-mono text-slate-500 uppercase block font-bold">
+                        Submissions
+                      </span>
+                      <span className="text-sm font-mono font-black text-[#111111] flex items-center gap-1 justify-end">
+                        <Users className="w-3.5 h-3.5 text-slate-600" /> {submitted} · avg {avg}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleToggleLive(a, !isLive)}
+                      className={`px-2.5 py-1.5 border-[2px] border-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer ${
+                        !isLive
+                          ? "bg-emerald-400 hover:bg-emerald-500 text-[#111111] font-black"
+                          : "bg-amber-100 hover:bg-amber-200 text-amber-950"
+                      }`}
+                      title={!isLive ? "Make test live immediately (+24h)" : "Pause test and take offline"}
+                    >
+                      <Calendar className="w-3.5 h-3.5 text-[#111111]" />
+                      {!isLive ? "⚡ Make Live Now" : "⏸️ Take Offline"}
+                    </button>
+                    <button
+                      onClick={() => handleOpenEdit(a)}
+                      className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
+                      title="Edit schedule, duration, passing marks, and strike limits"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-[#F07C27]" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDuplicate(a)}
+                      className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
+                      title="Reuse / Duplicate test with all 100 questions for new cohort"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-blue-600" /> Reuse
+                    </button>
+                    <button className={btnGhost} onClick={() => openResults(a)}>
+                      {open ? (
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      )}
+                      Results
+                    </button>
+                    <button
+                      onClick={() => handleDelete(a.id, a.title)}
+                      className="p-1.5 border-[2px] border-[#111111] bg-rose-100 hover:bg-rose-600 hover:text-white text-rose-800 shadow-[2px_2px_0px_#111111] transition-all cursor-pointer"
+                      title="Delete test"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* results drawer */}
+                {open && (
+                  <div className="border-t-[2px] border-[#111111] p-4 bg-[#FFF0E5]/20">
+                    {!results || resultsFor?.id !== a.id ? (
+                      <p className="text-xs font-mono text-slate-600 py-4 text-center font-bold">
+                        Loading results…
+                      </p>
+                    ) : results.length === 0 ? (
+                      <p className="text-xs font-mono text-slate-600 py-4 text-center font-bold">
+                        No submissions yet
+                      </p>
+                    ) : (
+                      <div>
+                        {/* Results Drawer Header & CSV Export */}
+                        <div className="flex items-center justify-between pb-3 mb-3 border-b-[2px] border-[#111111] flex-wrap gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-xs font-black uppercase text-[#111111]">
+                              Submissions & Proctoring Audit ({results.length})
+                            </span>
+                            {results.some((r) => r.isLocked || r.status === "LOCKED") && (
+                              <span className="px-2 py-0.5 border border-[#111111] bg-rose-600 text-white font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] animate-pulse">
+                                ⚠️ Lockouts Detected
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => handleBatchSelectTop60(a.id)}
+                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
+                              title="Officially shortlist and select top 60 candidates for Round 2"
+                            >
+                              <Check className="w-3.5 h-3.5 text-white" /> Quick Select Top 60 (Round 2)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleExportRound2ShortlistCSV(a, results)}
+                              className="px-3 py-1 bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
+                              title="Download Round 2 Shortlist ranked by Score & Completion Speed (Tie-Breaker)"
+                            >
+                              <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" /> Export Round 2 Shortlist (Excel CSV)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleExportResultsCSV(a, results)}
+                              className="px-3 py-1 bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
+                              title="Download results and proctoring logs as Excel-compatible CSV"
+                            >
+                              <Download className="w-3.5 h-3.5 text-slate-700" /> Export All (CSV)
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Round 2 Shortlist Criteria Banner */}
+                        <div className="mb-3 p-2.5 bg-amber-50 border border-amber-300 text-amber-950 font-mono text-[11px] flex items-center justify-between flex-wrap gap-2">
+                          <span className="flex items-center gap-1.5 font-bold">
+                            <Sparkles className="w-3.5 h-3.5 text-[#F07C27]" />
+                            <strong>Round 2 Qualification Ranking:</strong> Sorted by Score (Highest First). Candidates tied on score are ranked by Time Taken (Fastest First). Top 60 qualify for Round 2.
+                          </span>
+                          <span className="text-[10px] uppercase font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 border border-amber-400">
+                            Tie-Breaker: Speed
+                          </span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs font-mono">
+                            <thead>
+                              <tr className="text-[#111111] text-[10px] uppercase font-bold border-b-[2px] border-[#111111] bg-[#FFF0E5]">
+                                <th className="text-center py-2 px-2 w-14">Rank</th>
+                                <th className="text-left py-2 px-3">Student & Roll No</th>
+                                <th className="text-right py-2 px-3">Score</th>
+                                <th className="text-right py-2 px-3">%</th>
+                                <th className="text-center py-2 px-3">C / I / U</th>
+                                <th className="text-right py-2 px-3">Time Taken</th>
+                                <th className="text-center py-2 px-3">Selection & Round 2</th>
+                                <th className="text-right py-2 px-3">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#111111]/20">
+                              {[...results]
+                                .sort((x, y) => {
+                                  if (y.score !== x.score) return y.score - x.score;
+                                  const xDur = x.durationSec != null ? x.durationSec : 999999;
+                                  const yDur = y.durationSec != null ? y.durationSec : 999999;
+                                  return xDur - yDur;
+                                })
+                                .map((r, idx) => {
+                                  const rank = idx + 1;
+                                  const pct = Math.round((r.score / a.totalMarks) * 100);
+                                  const pass = r.score >= (a.passingMarks ?? a.totalMarks * 0.6);
+                                  const isLockedCandidate = r.isLocked || r.status === "LOCKED";
+                                  const isRound2Qualified = pass && !isLockedCandidate && rank <= 60;
+                                  const isRound2Waitlist = pass && !isLockedCandidate && rank > 60;
+                                  return (
+                                    <tr key={r.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
+                                      <td className="py-2.5 px-2 text-center font-black">
+                                        <span
+                                          className={`inline-block px-1.5 py-0.5 border font-mono text-[10px] font-black ${
+                                            rank === 1
+                                              ? "bg-amber-300 text-amber-950 border-amber-500 shadow-[1px_1px_0px_#111111]"
+                                              : rank === 2
+                                              ? "bg-slate-200 text-slate-900 border-slate-400 shadow-[1px_1px_0px_#111111]"
+                                              : rank === 3
+                                              ? "bg-amber-600 text-white border-amber-800 shadow-[1px_1px_0px_#111111]"
+                                              : rank <= 60
+                                              ? "bg-emerald-50 text-emerald-900 border-emerald-300"
+                                              : "bg-[#F4F3F3] text-slate-700 border-slate-300"
+                                          }`}
+                                        >
+                                          #{rank}
+                                        </span>
+                                      </td>
+                                      <td className="py-2.5 px-3 text-[#111111] font-bold">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span>{r.student?.name || "Student"}</span>
+                                          {r.student?.rollNumber && (
+                                            <span className="px-1.5 py-0.2 bg-[#F4F3F3] border border-[#111111] text-[10px] font-mono text-slate-800 font-bold shadow-[1px_1px_0px_#111111]">
+                                              REG: {r.student.rollNumber}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className="block text-[10px] text-slate-600 font-normal">
+                                          {r.student?.email}
+                                        </span>
+                                      </td>
+                                      <td className="py-2.5 px-3 text-right text-[#111111] font-black">
+                                        {r.score}/{a.totalMarks}
+                                      </td>
+                                      <td
+                                        className={`py-2.5 px-3 text-right font-bold ${
+                                          pass ? "text-emerald-700" : "text-rose-700"
+                                        }`}
+                                      >
+                                        {pct}%
+                                      </td>
+                                      <td className="py-2.5 px-3 text-center text-slate-600">
+                                        {r.correctCount ?? "–"} / {r.incorrectCount ?? "–"} /{" "}
+                                        {r.unansweredCount ?? "–"}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-right text-slate-800 font-bold">
+                                        {r.durationSec
+                                          ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
+                                          : "–"}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-center">
+                                        {isLockedCandidate ? (
+                                          <div className="space-y-0.5">
+                                            <span className="px-2 py-0.5 border-[2px] border-rose-800 text-[10px] font-black bg-rose-600 text-white shadow-[2px_2px_0px_#111111] inline-flex items-center gap-1">
+                                              <ShieldAlert className="w-3 h-3 text-white" />
+                                              LOCKED ({r.violationCount ?? 0} strikes)
+                                            </span>
+                                            {r.violationReason && (
+                                              <span
+                                                className="block text-[9px] font-mono text-rose-800 max-w-[140px] truncate mx-auto font-bold"
+                                                title={r.violationReason}
+                                              >
+                                                {r.violationReason}
+                                              </span>
+                                            )}
+                                          </div>
+                                        ) : r.status === "SELECTED_ROUND2" ? (
+                                          <span className="px-2 py-0.5 border-[2px] border-emerald-900 bg-emerald-600 text-white text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
+                                            <Check className="w-3 h-3 text-white" /> SELECTED (R2)
+                                          </span>
+                                        ) : r.status === "WAITLIST_ROUND2" ? (
+                                          <span className="px-2 py-0.5 border border-blue-800 bg-blue-100 text-blue-900 text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
+                                            WAITLIST (R2)
+                                          </span>
+                                        ) : r.status === "REJECTED" ? (
+                                          <span className="px-2 py-0.5 border border-slate-600 bg-slate-200 text-slate-800 text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
+                                            NOT SELECTED
+                                          </span>
+                                        ) : isRound2Qualified ? (
+                                          <span className="px-2 py-0.5 border-[2px] border-emerald-800 bg-emerald-100 text-emerald-900 text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
+                                            <Star className="w-2.5 h-2.5 fill-emerald-600 text-emerald-600" /> RECOMMENDED (TOP 60)
+                                          </span>
+                                        ) : isRound2Waitlist ? (
+                                          <span className="px-2 py-0.5 border border-blue-400 bg-blue-50 text-blue-800 text-[10px] font-medium shadow-[1px_1px_0px_#111111]">
+                                            WAITLIST POOL
+                                          </span>
+                                        ) : (
+                                          <span className="px-2 py-0.5 border border-slate-300 bg-[#F4F3F3] text-slate-700 text-[10px] font-semibold">
+                                            PENDING DECISION
+                                          </span>
+                                        )}
+                                      </td>
+                                    <td className="py-2.5 px-3 text-right">
+                                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                        {isLockedCandidate ? (
+                                          <>
+                                            <button
+                                              type="button"
+                                              className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                              onClick={() =>
+                                                handleUnlockCandidate(a.id, r.studentId, r.student?.name || "Student")
+                                              }
+                                              title="Clear proctoring lockout and allow review"
+                                            >
+                                              <Unlock className="w-3 h-3" /> Unlock
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="px-2 py-1 border-[2px] border-[#111111] bg-amber-400 hover:bg-amber-300 text-[#111111] font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                              onClick={() =>
+                                                handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
+                                              }
+                                              title="Reset test attempt and grant retest"
+                                            >
+                                              <RotateCcw className="w-3 h-3" /> Retest
+                                            </button>
+                                          </>
+                                        ) : (
+                                          <>
+                                            {r.status === "SELECTED_ROUND2" ? (
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  handleUpdateCandidateStatus(
+                                                    a.id,
+                                                    r.studentId,
+                                                    "CLEAR_SELECTION",
+                                                    r.student?.name || "Student"
+                                                  )
+                                                }
+                                                className="px-2 py-1 border border-[#111111] bg-slate-200 hover:bg-slate-300 text-slate-800 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
+                                                title="Revoke Round 2 selection"
+                                              >
+                                                <RotateCcw className="w-2.5 h-2.5" /> Deselect
+                                              </button>
+                                            ) : (
+                                              <>
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    handleUpdateCandidateStatus(
+                                                      a.id,
+                                                      r.studentId,
+                                                      "SELECT_ROUND2",
+                                                      r.student?.name || "Student"
+                                                    )
+                                                  }
+                                                  className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                                  title="Select candidate for Round 2"
+                                                >
+                                                  <Check className="w-3 h-3 text-white" /> Select (R2)
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    handleUpdateCandidateStatus(
+                                                      a.id,
+                                                      r.studentId,
+                                                      "WAITLIST",
+                                                      r.student?.name || "Student"
+                                                    )
+                                                  }
+                                                  className="px-2 py-1 border border-[#111111] bg-blue-100 hover:bg-blue-200 text-blue-900 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer"
+                                                  title="Place on Round 2 waitlist"
+                                                >
+                                                  Waitlist
+                                                </button>
+                                              </>
+                                            )}
+                                            <button
+                                              type="button"
+                                              className="px-2 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-[10px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                              onClick={() =>
+                                                setGrading({
+                                                  studentId: r.studentId,
+                                                  score: String(r.score),
+                                                  feedback: r.feedback || "",
+                                                })
+                                              }
+                                            >
+                                              <Award className="w-3 h-3 inline" /> Grade
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="px-2 py-1 border border-[#111111] bg-[#F4F3F3] hover:bg-amber-200 text-[#111111] font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
+                                              onClick={() =>
+                                                handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
+                                              }
+                                              title="Allow student a fresh retest"
+                                            >
+                                              <RotateCcw className="w-2.5 h-2.5" /> Retest
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* grading inspector for the row being graded */}
+                        {grading &&
+                          results
+                            ?.filter((r) => r.studentId === grading.studentId)
+                            .map((r) => (
+                              <div
+                                key={r.id}
+                                className="mt-4 p-4 border-[2px] border-[#111111] bg-white shadow-[4px_4px_0px_#111111] space-y-3"
+                              >
+                                <h5 className="text-xs font-mono font-bold text-[#111111] uppercase">
+                                  Answers — {r.student?.name}
+                                  {r.status === "PENDING_REVIEW" && (
+                                    <span className="ml-2 px-2 py-0.5 border border-[#111111] bg-amber-100 text-amber-900 text-[10px] font-mono font-bold">
+                                      NEEDS REVIEW
+                                    </span>
+                                  )}
+                                </h5>
+                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                                  {a.questions?.map((q, qi) => {
+                                    const ans = r.answers?.[q.id];
+                                    return (
+                                      <div
+                                        key={q.id}
+                                        className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9]"
+                                      >
+                                        <p className="text-[11px] text-[#111111] font-mono font-bold">
+                                          <span className="text-[#F07C27]">
+                                            Q{qi + 1}.
+                                          </span>{" "}
+                                          {q.prompt}
+                                        </p>
+                                        <p className="text-[11px] text-emerald-800 mt-1 font-mono whitespace-pre-wrap bg-white p-2 border border-[#111111]/30">
+                                          Answer: {ans || "(not answered)"}
+                                        </p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                <div className="flex flex-wrap items-end gap-3 pt-2">
+                                  <div>
+                                    <label className={labelCls}>Score (0–{a.totalMarks})</label>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={a.totalMarks}
+                                      className={`${inputCls} w-28`}
+                                      value={grading.score}
+                                      onChange={(e) =>
+                                        setGrading({ ...grading, score: e.target.value })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-[200px]">
+                                    <label className={labelCls}>Feedback</label>
+                                    <input
+                                      className={inputCls}
+                                      value={grading.feedback}
+                                      onChange={(e) =>
+                                        setGrading({ ...grading, feedback: e.target.value })
+                                      }
+                                      placeholder="Nice pointer arithmetic — watch the dangling refs."
+                                    />
+                                  </div>
+                                  <button className={btnPrimary} disabled={busy} onClick={submitGrade}>
+                                    {busy ? "Saving…" : "Save Grade"}
+                                  </button>
+                                  <button className={btnGhost} onClick={() => setGrading(null)}>
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── edit test modal ── */}
+      {editingAssessment && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="border-[4px] border-[#111111] bg-white shadow-[10px_10px_0px_#111111] max-w-xl w-full p-6 space-y-4 my-8">
+            <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3">
+              <h4 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-[#F07C27]" /> Edit Test Schedule & Parameters
+              </h4>
+              <button
+                type="button"
+                onClick={() => setEditingAssessment(null)}
+                className="p-1 hover:bg-[#F4F3F3] border border-[#111111] text-[#111111]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <label className={labelCls}>Test Title</label>
+                <input
+                  className={inputCls}
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Type</label>
+                  <select
+                    className={inputCls}
+                    value={editType}
+                    onChange={(e) => setEditType(e.target.value as any)}
+                  >
+                    <option value="TEST">TEST</option>
+                    <option value="QUIZ">QUIZ</option>
+                    <option value="PROGRAMMING">PROGRAMMING</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Target Pod / Lab</label>
+                  <select
+                    className={inputCls}
+                    value={editLabId}
+                    onChange={(e) => setEditLabId(e.target.value)}
+                  >
+                    <option value="">All Pods (Cohort-Wide)</option>
+                    {labs.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className={labelCls}>Duration (Minutes)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className={inputCls}
+                    value={editDurationMinutes}
+                    onChange={(e) => setEditDurationMinutes(e.target.value)}
+                    placeholder="90"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Passing Marks</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className={inputCls}
+                    value={editPassingMarks}
+                    onChange={(e) => setEditPassingMarks(e.target.value)}
+                    placeholder="50"
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Violation Strikes</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    className={inputCls}
+                    value={editAllowedViolations}
+                    onChange={(e) => setEditAllowedViolations(e.target.value)}
+                    placeholder="3"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono font-black uppercase text-[#111111] flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-[#F07C27]" /> Test Availability Window
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const now = new Date();
+                      setEditStartsAt(toLocalInput(new Date(now.getTime() - 5 * 60 * 1000)));
+                      setEditEndsAt(toLocalInput(new Date(now.getTime() + 24 * 60 * 60 * 1000)));
+                      flash("Availability window set to LIVE today (+24h)");
+                    }}
+                    className="px-2 py-0.5 bg-white border border-[#111111] text-[10px] font-mono font-bold hover:bg-[#111111] hover:text-white transition-all shadow-[1px_1px_0px_#111111]"
+                  >
+                    ⚡ Set Today (Live Now +24h)
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Starts At</label>
+                    <input
+                      type="datetime-local"
+                      className={inputCls}
+                      value={editStartsAt}
+                      onChange={(e) => setEditStartsAt(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Ends At</label>
+                    <input
+                      type="datetime-local"
+                      className={inputCls}
+                      value={editEndsAt}
+                      onChange={(e) => setEditEndsAt(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>Instructions / Next Round Guidelines</label>
+                <textarea
+                  className={`${inputCls} h-20 resize-none`}
+                  value={editInstructions}
+                  onChange={(e) => setEditInstructions(e.target.value)}
+                  placeholder="e.g. 100 MCQs. 90 minutes duration. Top 60 candidates by Score & Completion Speed will be shortlisted for Round 2."
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t-[2px] border-[#111111]">
+                <button
+                  type="button"
+                  className={btnGhost}
+                  onClick={() => setEditingAssessment(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className={btnPrimary}
+                >
+                  {busy ? "Saving…" : "Save Test Settings"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+
+
+
+
+
+

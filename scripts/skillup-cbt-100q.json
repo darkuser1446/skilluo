@@ -1,0 +1,1302 @@
+[
+  {
+    "number": 1,
+    "prompt": "Find the next number: 3, 8, 15, 24, 35, __.",
+    "options": [
+      "44",
+      "46",
+      "48",
+      "50"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "48",
+    "marks": 1
+  },
+  {
+    "number": 2,
+    "prompt": "Find the next letter: B, E, I, N, T, __.",
+    "options": [
+      "X",
+      "Y",
+      "Z",
+      "A"
+    ],
+    "correctOption": "D",
+    "correctAnswer": "A",
+    "marks": 1
+  },
+  {
+    "number": 3,
+    "prompt": "Choose the word that does not belong.",
+    "options": [
+      "Copper",
+      "Iron",
+      "Silver",
+      "Plastic"
+    ],
+    "correctOption": "D",
+    "correctAnswer": "Plastic",
+    "marks": 1
+  },
+  {
+    "number": 4,
+    "prompt": "If all Nors are Lems and all Lems are Taks, which statement must be true?",
+    "options": [
+      "All Taks are Nors",
+      "All Nors are Taks",
+      "No Nors are Taks",
+      "Some Lems are not Nors"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "All Nors are Taks",
+    "marks": 1
+  },
+  {
+    "number": 5,
+    "prompt": "A is taller than B. C is taller than A. D is shorter than B. Who is tallest?",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "C",
+    "marks": 1
+  },
+  {
+    "number": 6,
+    "prompt": "If TABLE is coded as UBCMF, how is CHAIR coded?",
+    "options": [
+      "DIBJS",
+      "DIBIR",
+      "BGZHQ",
+      "DHBJS"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "DIBJS",
+    "marks": 1
+  },
+  {
+    "number": 7,
+    "prompt": "Arrange in a logical order: 1. Adult 2. Infant 3. Teenager 4. Child 5. Young adult.",
+    "options": [
+      "2,4,3,5,1",
+      "4,2,3,1,5",
+      "2,3,4,5,1",
+      "1,5,3,4,2"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "2,4,3,5,1",
+    "marks": 1
+  },
+  {
+    "number": 8,
+    "prompt": "Some artists are engineers. All engineers are logical. Which conclusion follows?",
+    "options": [
+      "All artists are logical",
+      "Some artists are logical",
+      "No artists are logical",
+      "All logical people are artists"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Some artists are logical",
+    "marks": 1
+  },
+  {
+    "number": 9,
+    "prompt": "If yesterday was Thursday, what day will it be 3 days after tomorrow?",
+    "options": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Tuesday",
+    "marks": 1
+  },
+  {
+    "number": 10,
+    "prompt": "Choose the pair with the same relationship: Thermometer : Temperature",
+    "options": [
+      "Clock : Time",
+      "Scale : Height only",
+      "Compass : Speed",
+      "Ruler : Weight"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Clock : Time",
+    "marks": 1
+  },
+  {
+    "number": 11,
+    "prompt": "A person faces north, turns right, then turns 180° left, then turns right. Which direction now?",
+    "options": [
+      "North",
+      "South",
+      "East",
+      "West"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "North",
+    "marks": 1
+  },
+  {
+    "number": 12,
+    "prompt": "Find the missing number: 2, 6, 18, 54, __.",
+    "options": [
+      "108",
+      "126",
+      "162",
+      "216"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "162",
+    "marks": 1
+  },
+  {
+    "number": 13,
+    "prompt": "If 1 January is a Monday, what day is 15 January?",
+    "options": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Monday",
+    "marks": 1
+  },
+  {
+    "number": 14,
+    "prompt": "Which number is different from the others?",
+    "options": [
+      "16",
+      "25",
+      "36",
+      "48"
+    ],
+    "correctOption": "D",
+    "correctAnswer": "48",
+    "marks": 1
+  },
+  {
+    "number": 15,
+    "prompt": "Statement: The library will remain open late during exams. Assumption: Students may need extra study time during exams.",
+    "options": [
+      "Assumption is implicit",
+      "Assumption is not implicit",
+      "Statement contradicts assumption",
+      "No relation"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Assumption is implicit",
+    "marks": 1
+  },
+  {
+    "number": 16,
+    "prompt": "Statement: Use a helmet while riding a two-wheeler. Conclusion: Helmets can reduce risk of head injury.",
+    "options": [
+      "Conclusion follows",
+      "Conclusion does not follow",
+      "Both are unrelated",
+      "Statement proves helmets prevent all injuries"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Conclusion follows",
+    "marks": 1
+  },
+  {
+    "number": 17,
+    "prompt": "In a group, Riya is 7th from the left and 12th from the right. How many people are there?",
+    "options": [
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "18",
+    "marks": 1
+  },
+  {
+    "number": 18,
+    "prompt": "Find the next term: AZ, BY, CX, DW, __.",
+    "options": [
+      "EV",
+      "EU",
+      "FV",
+      "EX"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "EV",
+    "marks": 1
+  },
+  {
+    "number": 19,
+    "prompt": "If 5 machines make 5 parts in 5 minutes, how long will 100 machines take to make 100 parts at the same rate?",
+    "options": [
+      "5 minutes",
+      "20 minutes",
+      "100 minutes",
+      "500 minutes"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "5 minutes",
+    "marks": 1
+  },
+  {
+    "number": 20,
+    "prompt": "Which is the strongest reason to verify a claim before sharing it?",
+    "options": [
+      "It is written confidently",
+      "It has many likes",
+      "It is supported by reliable evidence",
+      "A friend shared it"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "It is supported by reliable evidence",
+    "marks": 1
+  },
+  {
+    "number": 21,
+    "prompt": "Complete the sequence: 1, 4, 10, 22, 46, __.",
+    "options": [
+      "82",
+      "90",
+      "94",
+      "96"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "94",
+    "marks": 1
+  },
+  {
+    "number": 22,
+    "prompt": "All roses are flowers. Which statement follows directly?",
+    "options": [
+      "Every rose is a flower",
+      "Every flower is a rose",
+      "Some roses are not flowers",
+      "No flowers are roses"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Every rose is a flower",
+    "marks": 1
+  },
+  {
+    "number": 23,
+    "prompt": "If MONDAY is written as 123456 with one digit per letter, and M=1, O=2, N=3, what is the code for NOM?",
+    "options": [
+      "321",
+      "231",
+      "312",
+      "213"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "321",
+    "marks": 1
+  },
+  {
+    "number": 24,
+    "prompt": "Choose the next pair: (2,4), (3,9), (4,16), (5,25), __.",
+    "options": [
+      "(6,30)",
+      "(6,36)",
+      "(7,35)",
+      "(5,30)"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "(6,36)",
+    "marks": 1
+  },
+  {
+    "number": 25,
+    "prompt": "A claim says every student who studies late scores highly. Which observation most directly weakens it?",
+    "options": [
+      "Some high scorers study late",
+      "Some students who study late score poorly",
+      "Many students study",
+      "Exams are difficult"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Some students who study late score poorly",
+    "marks": 1
+  },
+  {
+    "number": 26,
+    "prompt": "A price rises from ₹800 to ₹920. What is the percentage increase?",
+    "options": [
+      "12%",
+      "15%",
+      "18%",
+      "20%"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "15%",
+    "marks": 1
+  },
+  {
+    "number": 27,
+    "prompt": "An article bought for ₹1,200 is sold at a 15% loss. What is the selling price?",
+    "options": [
+      "₹980",
+      "₹1,000",
+      "₹1,020",
+      "₹1,080"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "₹1,020",
+    "marks": 1
+  },
+  {
+    "number": 28,
+    "prompt": "The ratio of boys to girls is 5:7. If there are 48 students, how many are girls?",
+    "options": [
+      "20",
+      "24",
+      "28",
+      "30"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "28",
+    "marks": 1
+  },
+  {
+    "number": 29,
+    "prompt": "The average of 12, 15, 18, 21 and x is 18. Find x.",
+    "options": [
+      "20",
+      "22",
+      "24",
+      "26"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "24",
+    "marks": 1
+  },
+  {
+    "number": 30,
+    "prompt": "A 30-litre mixture contains milk and water in the ratio 4:1. How much water must be added to make the ratio 2:1?",
+    "options": [
+      "5 L",
+      "6 L",
+      "10 L",
+      "15 L"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "6 L",
+    "marks": 1
+  },
+  {
+    "number": 31,
+    "prompt": "₹10,000 is invested at 10% compound interest annually for 2 years. Amount is:",
+    "options": [
+      "₹11,000",
+      "₹12,000",
+      "₹12,100",
+      "₹12,200"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "₹12,100",
+    "marks": 1
+  },
+  {
+    "number": 32,
+    "prompt": "A can finish a task in 12 days and B in 18 days. Working together, they finish in:",
+    "options": [
+      "6 days",
+      "7.2 days",
+      "8 days",
+      "9 days"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "7.2 days",
+    "marks": 1
+  },
+  {
+    "number": 33,
+    "prompt": "A car travels 150 km in 2.5 hours. Its average speed is:",
+    "options": [
+      "50 km/h",
+      "55 km/h",
+      "60 km/h",
+      "65 km/h"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "60 km/h",
+    "marks": 1
+  },
+  {
+    "number": 34,
+    "prompt": "A train 120 m long passes a pole in 6 seconds. Speed is:",
+    "options": [
+      "60 km/h",
+      "72 km/h",
+      "80 km/h",
+      "90 km/h"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "72 km/h",
+    "marks": 1
+  },
+  {
+    "number": 35,
+    "prompt": "A 30-litre mixture contains milk and water in the ratio 4:1. How much water must be added to make the ratio 2:1?",
+    "options": [
+      "5 L",
+      "8 L",
+      "10 L",
+      "15 L"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "10 L",
+    "marks": 1
+  },
+  {
+    "number": 36,
+    "prompt": "Solve: 3x − 7 = 20.",
+    "options": [
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "9",
+    "marks": 1
+  },
+  {
+    "number": 37,
+    "prompt": "If x² − 9x + 20 = 0, the roots are:",
+    "options": [
+      "2 and 10",
+      "4 and 5",
+      "−4 and −5",
+      "1 and 20"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "4 and 5",
+    "marks": 1
+  },
+  {
+    "number": 38,
+    "prompt": "Simplify: (3/4 ÷ 9/16).",
+    "options": [
+      "3/4",
+      "4/3",
+      "9/16",
+      "16/27"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "4/3",
+    "marks": 1
+  },
+  {
+    "number": 39,
+    "prompt": "A number is increased by 20% and then decreased by 20%. Net effect:",
+    "options": [
+      "No change",
+      "4% decrease",
+      "4% increase",
+      "8% decrease"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "4% decrease",
+    "marks": 1
+  },
+  {
+    "number": 40,
+    "prompt": "The area of a triangle with base 14 cm and height 9 cm is:",
+    "options": [
+      "46 cm²",
+      "56 cm²",
+      "63 cm²",
+      "126 cm²"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "63 cm²",
+    "marks": 1
+  },
+  {
+    "number": 41,
+    "prompt": "The circumference of a circle of radius 7 cm (π = 22/7) is:",
+    "options": [
+      "22 cm",
+      "44 cm",
+      "49 cm",
+      "154 cm"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "44 cm",
+    "marks": 1
+  },
+  {
+    "number": 42,
+    "prompt": "A cube has side 4 cm. Its volume is:",
+    "options": [
+      "16 cm³",
+      "32 cm³",
+      "48 cm³",
+      "64 cm³"
+    ],
+    "correctOption": "D",
+    "correctAnswer": "64 cm³",
+    "marks": 1
+  },
+  {
+    "number": 43,
+    "prompt": "The angles of a triangle are in the ratio 2:3:4. The largest angle is:",
+    "options": [
+      "40°",
+      "60°",
+      "80°",
+      "90°"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "80°",
+    "marks": 1
+  },
+  {
+    "number": 44,
+    "prompt": "A rectangle has perimeter 54 cm and length 16 cm. Its area is:",
+    "options": [
+      "160 cm²",
+      "176 cm²",
+      "184 cm²",
+      "192 cm²"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "176 cm²",
+    "marks": 1
+  },
+  {
+    "number": 45,
+    "prompt": "A fair die is rolled once. Probability of getting a prime number is:",
+    "options": [
+      "1/3",
+      "1/2",
+      "2/3",
+      "5/6"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "1/2",
+    "marks": 1
+  },
+  {
+    "number": 46,
+    "prompt": "A bag has 4 red, 3 blue and 5 green balls. Probability of selecting a blue ball is:",
+    "options": [
+      "1/4",
+      "1/3",
+      "3/5",
+      "5/12"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "1/4",
+    "marks": 1
+  },
+  {
+    "number": 47,
+    "prompt": "A value rises from 40 to 50. The percentage rise is:",
+    "options": [
+      "10%",
+      "20%",
+      "25%",
+      "30%"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "25%",
+    "marks": 1
+  },
+  {
+    "number": 48,
+    "prompt": "Sales for four days are 20, 25, 15 and 40 units. What percentage of total sales occurred on the fourth day?",
+    "options": [
+      "25%",
+      "30%",
+      "35%",
+      "40%"
+    ],
+    "correctOption": "D",
+    "correctAnswer": "40%",
+    "marks": 1
+  },
+  {
+    "number": 49,
+    "prompt": "If 8 workers complete a job in 15 days, how many days will 12 equally efficient workers take?",
+    "options": [
+      "8",
+      "10",
+      "12",
+      "22.5"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "10",
+    "marks": 1
+  },
+  {
+    "number": 50,
+    "prompt": "A shop offers 25% off a marked price of ₹2,400. What is the sale price?",
+    "options": [
+      "₹1,600",
+      "₹1,700",
+      "₹1,800",
+      "₹2,000"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "₹1,800",
+    "marks": 1
+  },
+  {
+    "number": 51,
+    "prompt": "Choose the grammatically correct sentence.",
+    "options": [
+      "Neither of the answers are correct.",
+      "Neither of the answers is correct.",
+      "Neither answers is correct.",
+      "Neither of answers are correct."
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Neither of the answers is correct.",
+    "marks": 1
+  },
+  {
+    "number": 52,
+    "prompt": "Choose the correct preposition: She is interested ___ robotics.",
+    "options": [
+      "on",
+      "at",
+      "in",
+      "for"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "in",
+    "marks": 1
+  },
+  {
+    "number": 53,
+    "prompt": "By the time we arrived, the lecture ___.",
+    "options": [
+      "starts",
+      "has started",
+      "had started",
+      "will start"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "had started",
+    "marks": 1
+  },
+  {
+    "number": 54,
+    "prompt": "Choose the synonym of 'concise'.",
+    "options": [
+      "Brief",
+      "Confusing",
+      "Lengthy",
+      "Vague"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Brief",
+    "marks": 1
+  },
+  {
+    "number": 55,
+    "prompt": "Choose the antonym of 'scarce'.",
+    "options": [
+      "Rare",
+      "Limited",
+      "Abundant",
+      "Insufficient"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "Abundant",
+    "marks": 1
+  },
+  {
+    "number": 56,
+    "prompt": "Choose the correct word: The new policy may ___ attendance.",
+    "options": [
+      "affect",
+      "effect",
+      "effects",
+      "affected"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "affect",
+    "marks": 1
+  },
+  {
+    "number": 57,
+    "prompt": "Identify the error: 'Each of the players have received a certificate.'",
+    "options": [
+      "Each of",
+      "the players",
+      "have received",
+      "a certificate"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "have received",
+    "marks": 1
+  },
+  {
+    "number": 58,
+    "prompt": "Choose the correctly punctuated sentence.",
+    "options": [
+      "Lets eat, Grandma!",
+      "Let's eat Grandma!",
+      "Let's eat, Grandma!",
+      "Lets eat Grandma!"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "Let's eat, Grandma!",
+    "marks": 1
+  },
+  {
+    "number": 59,
+    "prompt": "The idiom 'once in a blue moon' means:",
+    "options": [
+      "Very frequently",
+      "Very rarely",
+      "At night",
+      "Unexpectedly every day"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Very rarely",
+    "marks": 1
+  },
+  {
+    "number": 60,
+    "prompt": "Choose the correct passive voice: 'The team completed the project.'",
+    "options": [
+      "The project is completed by the team.",
+      "The project was completed by the team.",
+      "The project has completed by the team.",
+      "The team was completed by the project."
+    ],
+    "correctOption": "B",
+    "correctAnswer": "The project was completed by the team.",
+    "marks": 1
+  },
+  {
+    "number": 61,
+    "prompt": "Choose the correct sentence.",
+    "options": [
+      "He is senior than me.",
+      "He is senior to me.",
+      "He is more senior than to me.",
+      "He is senior from me."
+    ],
+    "correctOption": "B",
+    "correctAnswer": "He is senior to me.",
+    "marks": 1
+  },
+  {
+    "number": 62,
+    "prompt": "The plural of 'analysis' is:",
+    "options": [
+      "Analysises",
+      "Analysises'",
+      "Analyses",
+      "Analysis"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "Analyses",
+    "marks": 1
+  },
+  {
+    "number": 63,
+    "prompt": "Choose the word closest in meaning to 'mitigate'.",
+    "options": [
+      "Worsen",
+      "Reduce",
+      "Ignore",
+      "Predict"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Reduce",
+    "marks": 1
+  },
+  {
+    "number": 64,
+    "prompt": "Choose the correct form: If I ___ enough time, I would learn another language.",
+    "options": [
+      "have",
+      "had",
+      "will have",
+      "am having"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "had",
+    "marks": 1
+  },
+  {
+    "number": 65,
+    "prompt": "Choose the correct sentence.",
+    "options": [
+      "The information are useful.",
+      "The informations are useful.",
+      "The information is useful.",
+      "An information is useful."
+    ],
+    "correctOption": "C",
+    "correctAnswer": "The information is useful.",
+    "marks": 1
+  },
+  {
+    "number": 66,
+    "prompt": "Select the correct word: The results were different ___ we expected.",
+    "options": [
+      "then",
+      "than",
+      "that",
+      "from than"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "than",
+    "marks": 1
+  },
+  {
+    "number": 67,
+    "prompt": "Choose the antonym of 'transparent'.",
+    "options": [
+      "Clear",
+      "Obvious",
+      "Opaque",
+      "Visible"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "Opaque",
+    "marks": 1
+  },
+  {
+    "number": 68,
+    "prompt": "Choose the best replacement for 'due to the fact that'.",
+    "options": [
+      "Because",
+      "Despite",
+      "Although",
+      "Whereas"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Because",
+    "marks": 1
+  },
+  {
+    "number": 69,
+    "prompt": "Reading: 'Urban trees provide shade, absorb some pollutants, and reduce surface temperatures. However, young trees require regular watering and protection before they become established.' Which statement is supported?",
+    "options": [
+      "All urban trees need no maintenance",
+      "Trees can help cool urban areas",
+      "Trees eliminate all pollution",
+      "Young trees survive without care"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Trees can help cool urban areas",
+    "marks": 1
+  },
+  {
+    "number": 70,
+    "prompt": "From the same passage, what is a reasonable inference?",
+    "options": [
+      "Planting trees has no cost",
+      "Care may be needed for benefits to last",
+      "Only old trees absorb pollutants",
+      "Trees increase surface temperatures"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Care may be needed for benefits to last",
+    "marks": 1
+  },
+  {
+    "number": 71,
+    "prompt": "A lock uses a three-digit code. The first digit is 2, the second is twice the first, and the third is the sum of the first two. What is the code?",
+    "options": [
+      "246",
+      "248",
+      "264",
+      "268"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "246",
+    "marks": 1
+  },
+  {
+    "number": 72,
+    "prompt": "A paper is folded once in half and one hole is punched away from the fold. When unfolded, how many holes appear?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "2",
+    "marks": 1
+  },
+  {
+    "number": 73,
+    "prompt": "A 3×3 grid has 9 equal squares. How many small squares are there in total?",
+    "options": [
+      "9",
+      "10",
+      "12",
+      "14"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "9",
+    "marks": 1
+  },
+  {
+    "number": 74,
+    "prompt": "You have 8 identical-looking balls, one heavier than the others. With a balance scale, the minimum number of weighings guaranteed to identify it is:",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "2",
+    "marks": 1
+  },
+  {
+    "number": 75,
+    "prompt": "A sequence follows no consistent arithmetic pattern: 2, 5, 11, 20, 32, __. If differences increase by 3 each time, next term is:",
+    "options": [
+      "44",
+      "45",
+      "47",
+      "48"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "47",
+    "marks": 1
+  },
+  {
+    "number": 76,
+    "prompt": "What is the main purpose of a variable in a program?",
+    "options": [
+      "To store a value",
+      "To repeat code automatically",
+      "To translate all code",
+      "To connect to the internet"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "To store a value",
+    "marks": 1
+  },
+  {
+    "number": 77,
+    "prompt": "In most programming languages, what does the expression 17 % 5 return?",
+    "options": [
+      "2",
+      "3",
+      "3.4",
+      "5"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "2",
+    "marks": 1
+  },
+  {
+    "number": 78,
+    "prompt": "What is printed by: x = 4; x = x + 3; print(x)?",
+    "options": [
+      "4",
+      "7",
+      "x",
+      "Error"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "7",
+    "marks": 1
+  },
+  {
+    "number": 79,
+    "prompt": "Which structure is best for choosing between two alternatives based on a condition?",
+    "options": [
+      "Loop",
+      "Conditional if-else",
+      "Array",
+      "Comment"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Conditional if-else",
+    "marks": 1
+  },
+  {
+    "number": 80,
+    "prompt": "How many times does this loop run: for i = 1 to 5, inclusive?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "Depends on computer speed"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "5",
+    "marks": 1
+  },
+  {
+    "number": 81,
+    "prompt": "What is printed by: total = 0; for i = 1 to 3: total = total + i; print(total)?",
+    "options": [
+      "3",
+      "5",
+      "6",
+      "123"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "6",
+    "marks": 1
+  },
+  {
+    "number": 82,
+    "prompt": "Which condition checks whether n is even in common pseudocode?",
+    "options": [
+      "n / 2 = 0",
+      "n % 2 = 0",
+      "n % 2 = 1",
+      "n + 2 = 0"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "n % 2 = 0",
+    "marks": 1
+  },
+  {
+    "number": 83,
+    "prompt": "What is the output if x = 8 and the code says if x > 10 print('A') else print('B')?",
+    "options": [
+      "A",
+      "B",
+      "AB",
+      "Nothing"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "B",
+    "marks": 1
+  },
+  {
+    "number": 84,
+    "prompt": "Which sequence prints a triangle of 4 rows using stars most naturally?",
+    "options": [
+      "One loop only, fixed at 1",
+      "Nested loops or a row-based loop",
+      "A variable declaration only",
+      "An if statement without repetition"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Nested loops or a row-based loop",
+    "marks": 1
+  },
+  {
+    "number": 85,
+    "prompt": "What is pseudocode primarily used for?",
+    "options": [
+      "Writing machine code directly",
+      "Describing an algorithm in a language-independent way",
+      "Designing computer hardware",
+      "Compressing files"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Describing an algorithm in a language-independent way",
+    "marks": 1
+  },
+  {
+    "number": 86,
+    "prompt": "What is the value of 2 + 3 * 4 under standard operator precedence?",
+    "options": [
+      "20",
+      "14",
+      "24",
+      "10"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "14",
+    "marks": 1
+  },
+  {
+    "number": 87,
+    "prompt": "Which is a valid reason to use a function?",
+    "options": [
+      "To make code reusable and organized",
+      "To guarantee no bugs",
+      "To remove all variables",
+      "To make every program run offline"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "To make code reusable and organized",
+    "marks": 1
+  },
+  {
+    "number": 88,
+    "prompt": "An algorithm checks every item in a list of n items once. Its time complexity is typically:",
+    "options": [
+      "O(1)",
+      "O(log n)",
+      "O(n)",
+      "O(n²)"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "O(n)",
+    "marks": 1
+  },
+  {
+    "number": 89,
+    "prompt": "Which data type is most suitable for storing True or False?",
+    "options": [
+      "Boolean",
+      "String",
+      "Integer only",
+      "Character"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Boolean",
+    "marks": 1
+  },
+  {
+    "number": 90,
+    "prompt": "What is the output of: print(10 // 3) in Python?",
+    "options": [
+      "3.33",
+      "3",
+      "1",
+      "4"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "3",
+    "marks": 1
+  },
+  {
+    "number": 91,
+    "prompt": "In Python, which symbol begins a single-line comment?",
+    "options": [
+      "//",
+      "#",
+      "<!--",
+      ";"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "#",
+    "marks": 1
+  },
+  {
+    "number": 92,
+    "prompt": "What is the purpose of an array/list?",
+    "options": [
+      "Store a collection of values",
+      "Only store one character",
+      "Replace the operating system",
+      "Encrypt every value automatically"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Store a collection of values",
+    "marks": 1
+  },
+  {
+    "number": 93,
+    "prompt": "What is a likely result of an infinite loop?",
+    "options": [
+      "The loop stops immediately",
+      "The program keeps repeating until interrupted or a condition changes",
+      "The computer gains memory",
+      "The code is automatically corrected"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "The program keeps repeating until interrupted or a condition changes",
+    "marks": 1
+  },
+  {
+    "number": 94,
+    "prompt": "In machine learning, a model is commonly trained using:",
+    "options": [
+      "Examples or data",
+      "Only the monitor",
+      "A keyboard layout",
+      "Random guesses with no feedback in every case"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Examples or data",
+    "marks": 1
+  },
+  {
+    "number": 95,
+    "prompt": "Which best describes supervised learning?",
+    "options": [
+      "Learning from labelled examples",
+      "Learning without any data",
+      "Manually writing every possible answer",
+      "Compressing images"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Learning from labelled examples",
+    "marks": 1
+  },
+  {
+    "number": 96,
+    "prompt": "Which statement about AI is most accurate?",
+    "options": [
+      "AI systems are always correct",
+      "AI can identify patterns but may make mistakes",
+      "AI never needs data",
+      "AI and the internet are the same thing"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "AI can identify patterns but may make mistakes",
+    "marks": 1
+  },
+  {
+    "number": 97,
+    "prompt": "What is data science primarily concerned with?",
+    "options": [
+      "Extracting insights from data using methods and tools",
+      "Building only computer cases",
+      "Replacing all mathematics",
+      "Creating passwords only"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Extracting insights from data using methods and tools",
+    "marks": 1
+  },
+  {
+    "number": 98,
+    "prompt": "Which is the strongest password practice?",
+    "options": [
+      "Reuse one password everywhere",
+      "Use a long unique password, ideally stored in a password manager",
+      "Use your birth date",
+      "Share it with trusted classmates"
+    ],
+    "correctOption": "B",
+    "correctAnswer": "Use a long unique password, ideally stored in a password manager",
+    "marks": 1
+  },
+  {
+    "number": 99,
+    "prompt": "What is cloud computing?",
+    "options": [
+      "Using computing resources delivered over a network",
+      "Storing files only on a USB drive",
+      "A type of processor fan",
+      "Writing programs without electricity"
+    ],
+    "correctOption": "A",
+    "correctAnswer": "Using computing resources delivered over a network",
+    "marks": 1
+  },
+  {
+    "number": 100,
+    "prompt": "Which action is safest when an email asks you to urgently enter your password through an unfamiliar link?",
+    "options": [
+      "Click quickly",
+      "Reply with the password",
+      "Verify the sender and navigate to the official site independently",
+      "Forward it to everyone"
+    ],
+    "correctOption": "C",
+    "correctAnswer": "Verify the sender and navigate to the official site independently",
+    "marks": 1
+  }
+]
