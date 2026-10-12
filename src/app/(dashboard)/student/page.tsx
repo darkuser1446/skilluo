@@ -548,25 +548,25 @@ export default function StudentDashboardPage() {
             </div>
           </div>
 
-          {/* Cohort Rank */}
+          {/* Cohort Standing */}
           <div className="bg-[#111111] text-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between">
             <div className="flex items-center justify-between text-slate-300">
               <span className="font-mono text-xs font-bold uppercase text-white">
-                COHORT RANK
+                COHORT STANDING
               </span>
               <Award className="w-5 h-5 text-[#F07C27]" />
             </div>
             <div className="my-2">
-              <div className="font-mono font-black text-5xl text-white leading-none tracking-tight">
-                #{performance?.rank ?? 1}
-                <span className="text-lg text-slate-400 font-normal">/60</span>
+              <div className="font-mono font-black text-3xl sm:text-4xl text-white leading-none tracking-tight">
+                ACTIVE
+                <span className="text-base text-slate-400 font-normal ml-1">CANDIDATE</span>
               </div>
               <div className="font-mono text-[11px] font-bold text-slate-400 mt-1 uppercase">
-                IN ACTIVE COHORT
+                ROUND 1 SCREENING
               </div>
             </div>
             <div className="bg-white text-[#111111] px-2 py-1 border-[2px] border-[#111111] font-mono text-xs font-black text-center uppercase tracking-wider">
-              {(performance?.rank ?? 1) <= 10 ? "ALPHA BRACKET" : (performance?.rank ?? 1) <= 30 ? "DELTA BRACKET" : "ACTIVE RUNNER"}
+              EVALUATION IN PROGRESS
             </div>
           </div>
 
@@ -697,8 +697,8 @@ export default function StudentDashboardPage() {
             {/* Quick Context Box at bottom of student sidebar */}
             <div className="hidden lg:block pt-2 border-t-[2px] border-[#111111] text-[11px] font-mono space-y-1.5 bg-[#F9F9F9] -mx-3.5 -mb-3.5 p-3">
               <div className="flex justify-between text-slate-600 font-bold">
-                <span>COHORT RANK:</span>
-                <span className="text-[#111111] font-black">#{performance?.rank ?? 1} / 60</span>
+                <span>STATUS:</span>
+                <span className="text-[#111111] font-black">EVALUATION ACTIVE</span>
               </div>
               <div className="flex justify-between text-slate-600 font-bold">
                 <span>ATTENDANCE:</span>
@@ -932,7 +932,6 @@ export default function StudentDashboardPage() {
           <CohortQuotaMatrix
             candidates={cohortCandidates}
             selectedStudentId={user?.id}
-            currentStudentRank={performance?.rank ?? 1}
             currentStudentScore={overall}
             currentStudentName={user?.name}
             currentStudentStatus={user?.enrollments?.[0]?.status}

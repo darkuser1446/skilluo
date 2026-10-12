@@ -25,13 +25,17 @@ export async function GET(
 
     const performance = await calculateOverallPerformance(studentId, workshopId);
 
-    // Always include the student's real rank in the workshop leaderboard
-    try {
-      const { rank, totalCandidates } = await getStudentRank(studentId, workshopId);
-      performance.rank = rank;
-      performance.totalCandidates = totalCandidates;
-    } catch {
-      // rank is non-critical — keep the breakdown even if leaderboard fails
+    // Conceal rank from students during live test/screening phase; only reveal to Admin and Mentor
+    if (user.role !== "STUDENT") {
+      try {
+        const { rank, totalCandidates } = await getStudentRank(studentId, workshopId);
+        performance.rank = rank;
+        performance.totalCandidates = totalCandidates;
+      } catch {
+        // rank is non-critical — keep the breakdown even if leaderboard fails
+      }
+    } else {
+      delete performance.rank;
     }
 
     return successResponse({ performance });

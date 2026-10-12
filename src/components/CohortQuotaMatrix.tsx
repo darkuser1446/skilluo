@@ -368,7 +368,7 @@ export default function CohortQuotaMatrix({
                     </strong>
                   </div>
                 )}
-                {hoveredItem.candidate?.rank && (
+                {!isStudentView && hoveredItem.candidate?.rank && (
                   <div>
                     <span className="text-[9px] text-slate-500 block uppercase font-bold">Rank</span>
                     <strong className="text-[#F07C27] font-black">
@@ -427,12 +427,14 @@ export default function CohortQuotaMatrix({
           {/* Metrics Pill Group */}
           {activeInspectedSeat.candidate && (
             <div className="flex flex-wrap items-center gap-2.5 font-mono text-xs">
-              <div className="bg-white px-3 py-1 border-[1.5px] border-[#111111]">
-                <span className="text-[9px] text-slate-500 block uppercase font-bold">Rank</span>
-                <span className="font-black text-[#F07C27]">
-                  #{activeInspectedSeat.candidate.rank ?? activeInspectedSeat.seatNumber}
-                </span>
-              </div>
+              {!isStudentView && (
+                <div className="bg-white px-3 py-1 border-[1.5px] border-[#111111]">
+                  <span className="text-[9px] text-slate-500 block uppercase font-bold">Rank</span>
+                  <span className="font-black text-[#F07C27]">
+                    #{activeInspectedSeat.candidate.rank ?? activeInspectedSeat.seatNumber}
+                  </span>
+                </div>
+              )}
               <div className="bg-white px-3 py-1 border-[1.5px] border-[#111111]">
                 <span className="text-[9px] text-slate-500 block uppercase font-bold">Score</span>
                 <span className="font-black text-[#111111]">
