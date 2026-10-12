@@ -119,84 +119,60 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     async function init() {
-      setLoading(true);
       try {
         const meRes = await fetch("/api/auth/me");
         if (meRes.ok) {
           const meData = await meRes.json();
           const u = meData.data.user;
           setUser(u);
+          // Immediately unblock skeleton so user sees the dashboard instantly (<100ms)!
+          setLoading(false);
 
           const wsId = u.enrollments?.[0]?.workshopId;
           if (wsId) {
-            const [perfRes, assignRes, notesRes, sessRes, doubtsRes, assessRes, exRes, annRes, wsRes] =
-              await Promise.all([
-                fetch(`/api/students/${u.id}/performance?workshopId=${wsId}`),
-                fetch(`/api/assignments?workshopId=${wsId}`),
-                fetch(`/api/notes?workshopId=${wsId}`),
-                fetch(`/api/attendance/sessions?workshopId=${wsId}`),
-                fetch(`/api/doubts?workshopId=${wsId}`),
-                fetch(`/api/assessments?workshopId=${wsId}`),
-                fetch(`/api/exercises?workshopId=${wsId}`),
-                fetch(`/api/announcements?workshopId=${wsId}`),
-                fetch(`/api/workshops/${wsId}`),
-              ]);
+            // Priority 1: Core test assessments & performance data
+            Promise.all([
+              fetch(`/api/assessments?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
+              fetch(`/api/students/${u.id}/performance?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
+              fetch(`/api/assignments?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
+            ]).then(([assessData, perfData, assignData]) => {
+              if (assessData?.data?.assessments) setAssessments(assessData.data.assessments);
+              if (perfData?.data?.performance) setPerformance(perfData.data.performance);
+              if (assignData?.data?.assignments) {
+                const list = assignData.data.assignments;
+                setAssignments(list);
+                if (list.length > 0) setSelectedAssignment(list[0]);
+              }
+            }).catch(console.error);
 
-            if (perfRes.ok) {
-              const d = await perfRes.json();
-              setPerformance(d.data.performance);
-            }
-            if (assignRes.ok) {
-              const d = await assignRes.json();
-              const list = d.data.assignments || [];
-              setAssignments(list);
-              if (list.length > 0) setSelectedAssignment(list[0]);
-            }
-            if (notesRes.ok) {
-              const d = await notesRes.json();
-              setNotes(d.data.notes || []);
-            }
-            if (sessRes.ok) {
-              const d = await sessRes.json();
-              setSessions(d.data.sessions || []);
-            }
-            if (doubtsRes.ok) {
-              const d = await doubtsRes.json();
-              const list = d.data.doubts || [];
-              setDoubts(list);
-              if (list.length > 0) setSelectedDoubt(list[0]);
-            }
-            if (assessRes.ok) {
-              const d = await assessRes.json();
-              setAssessments(d.data.assessments || []);
-            }
-            if (exRes.ok) {
-              const d = await exRes.json();
-              const exList = d.data.exercises || [];
-              setExercises(exList);
-              if (exList.length > 0) setSelectedExercise(exList[0]);
-            }
-            if (annRes.ok) {
-              const d = await annRes.json();
-              setAnnouncements(d.data.announcements || []);
-            }
-            if (wsRes && wsRes.ok) {
-              const d = await wsRes.json();
-              const enrollments = d.data?.workshop?.enrollments || [];
-              const cands = enrollments.map((e: any, idx: number) => ({
-                studentId: e.student?.id,
-                studentName: e.student?.name,
-                college: e.student?.college,
-                selectionStatus: e.status,
-                rank: idx + 1,
-              }));
-              setCohortCandidates(cands);
-            }
+            // Priority 2: Secondary tab feeds in background (non-blocking)
+            Promise.all([
+              fetch(`/api/exercises?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
+              fetch(`/api/notes?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
+              fetch(`/api/attendance/sessions?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
+              fetch(`/api/doubts?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
+              fetch(`/api/announcements?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
+            ]).then(([exData, noteData, sessData, doubtData, annData]) => {
+              if (exData?.data?.exercises) {
+                const exList = exData.data.exercises;
+                setExercises(exList);
+                if (exList.length > 0) setSelectedExercise(exList[0]);
+              }
+              if (noteData?.data?.notes) setNotes(noteData.data.notes);
+              if (sessData?.data?.sessions) setSessions(sessData.data.sessions);
+              if (doubtData?.data?.doubts) {
+                const dList = doubtData.data.doubts;
+                setDoubts(dList);
+                if (dList.length > 0) setSelectedDoubt(dList[0]);
+              }
+              if (annData?.data?.announcements) setAnnouncements(annData.data.announcements);
+            }).catch(console.error);
           }
+        } else {
+          setLoading(false);
         }
       } catch (err) {
         console.error(err);
-      } finally {
         setLoading(false);
       }
     }
