@@ -112,6 +112,7 @@ export default function StudentDashboardPage() {
   const [noteCategoryFilter, setNoteCategoryFilter] = useState("ALL");
   const [noteSearch, setNoteSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [cohortCandidates, setCohortCandidates] = useState<any[]>([]);
 
   const workshopId = user?.enrollments?.[0]?.workshopId;
   const myLab = user?.labStudents?.[0]?.lab;
@@ -128,7 +129,7 @@ export default function StudentDashboardPage() {
 
           const wsId = u.enrollments?.[0]?.workshopId;
           if (wsId) {
-            const [perfRes, assignRes, notesRes, sessRes, doubtsRes, assessRes, exRes, annRes] =
+            const [perfRes, assignRes, notesRes, sessRes, doubtsRes, assessRes, exRes, annRes, wsRes] =
               await Promise.all([
                 fetch(`/api/students/${u.id}/performance?workshopId=${wsId}`),
                 fetch(`/api/assignments?workshopId=${wsId}`),
@@ -138,6 +139,7 @@ export default function StudentDashboardPage() {
                 fetch(`/api/assessments?workshopId=${wsId}`),
                 fetch(`/api/exercises?workshopId=${wsId}`),
                 fetch(`/api/announcements?workshopId=${wsId}`),
+                fetch(`/api/workshops/${wsId}`),
               ]);
 
             if (perfRes.ok) {
@@ -177,6 +179,18 @@ export default function StudentDashboardPage() {
             if (annRes.ok) {
               const d = await annRes.json();
               setAnnouncements(d.data.announcements || []);
+            }
+            if (wsRes && wsRes.ok) {
+              const d = await wsRes.json();
+              const enrollments = d.data?.workshop?.enrollments || [];
+              const cands = enrollments.map((e: any, idx: number) => ({
+                studentId: e.student?.id,
+                studentName: e.student?.name,
+                college: e.student?.college,
+                selectionStatus: e.status,
+                rank: idx + 1,
+              }));
+              setCohortCandidates(cands);
             }
           }
         }
@@ -940,6 +954,8 @@ export default function StudentDashboardPage() {
 
           {/* Super 60 Cohort Intake Matrix (60 Seats) */}
           <CohortQuotaMatrix
+            candidates={cohortCandidates}
+            selectedStudentId={user?.id}
             currentStudentRank={performance?.rank ?? 1}
             currentStudentScore={overall}
             currentStudentName={user?.name}

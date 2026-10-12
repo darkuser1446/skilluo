@@ -62,9 +62,12 @@ export default function CohortQuotaMatrix({
   );
   const [filterState, setFilterState] = useState<"ALL" | "SELECTED" | "PENDING" | "OPEN">("ALL");
 
-  // Map candidates to seats (sorted by rank or selection)
+  // Map candidates to seats (sorted by selection, then rank/score)
   const seatData = useMemo(() => {
     const sorted = [...candidates].sort((a, b) => {
+      const aSel = a.selectionStatus === "SELECTED" ? 1 : 0;
+      const bSel = b.selectionStatus === "SELECTED" ? 1 : 0;
+      if (aSel !== bSel) return bSel - aSel;
       if (a.rank && b.rank) return a.rank - b.rank;
       return (b.overallScore || 0) - (a.overallScore || 0);
     });
@@ -77,24 +80,23 @@ export default function CohortQuotaMatrix({
       if (candidate) {
         if (candidate.selectionStatus === "SELECTED") {
           state = i <= 15 ? "selected" : "qualified_gold";
-        } else if (candidate.selectionStatus === "PENDING" || (candidate.overallScore || 0) >= 85) {
+        } else if (candidate.selectionStatus === "PENDING") {
           state = "pending";
         } else {
           state = "open";
         }
       } else if (isStudentView) {
         if (currentStudentRank && i === currentStudentRank) {
-          state = currentStudentStatus === "SELECTED" ? "selected" : (currentStudentScore || 0) >= 85 ? "qualified_gold" : "pending";
-        } else if (i <= 28) {
-          state = i <= 15 ? "selected" : "qualified_gold";
-        } else if (i <= 45) {
-          state = "pending";
+          state = currentStudentStatus === "SELECTED" ? "selected" : "pending";
         } else {
           state = "open";
         }
       }
 
-      const isCurrentStudent = isStudentView && currentStudentRank === i;
+      const isCurrentStudent = isStudentView && (
+        (candidate && selectedStudentId && candidate.studentId === selectedStudentId) ||
+        (currentStudentRank && currentStudentRank === i)
+      );
 
       seats.push({
         seatNumber: i,
@@ -111,7 +113,7 @@ export default function CohortQuotaMatrix({
     }
 
     return seats;
-  }, [candidates, totalSeats, isStudentView, currentStudentRank, currentStudentScore, currentStudentName, currentStudentStatus]);
+  }, [candidates, totalSeats, isStudentView, currentStudentRank, currentStudentScore, currentStudentName, currentStudentStatus, selectedStudentId]);
 
   // Aggregate counts
   const counts = useMemo(() => {
