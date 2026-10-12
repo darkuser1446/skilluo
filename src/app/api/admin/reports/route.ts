@@ -19,32 +19,44 @@ export async function GET(req: NextRequest) {
     const leaderboard = await getWorkshopLeaderboard(workshopId);
 
     // 2. Workshop enrollment statuses & lab assignments
-    const enrollments = await prisma.workshopEnrollment.findMany({
-      where: { workshopId },
-      include: {
-        student: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            college: true,
-            phone: true,
-            rollNumber: true,
-            branch: true,
-            semester: true,
-            labStudents: {
-              where: { lab: { workshopId } },
-              include: { lab: { select: { id: true, name: true } } },
+    const [enrollments, selectedAssessments] = await Promise.all([
+      prisma.workshopEnrollment.findMany({
+        where: { workshopId },
+        include: {
+          student: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              college: true,
+              phone: true,
+              rollNumber: true,
+              branch: true,
+              semester: true,
+              labStudents: {
+                where: { lab: { workshopId } },
+                include: { lab: { select: { id: true, name: true } } },
+              },
             },
           },
         },
-      },
-    });
+      }),
+      prisma.assessmentResult.findMany({
+        where: {
+          assessment: { workshopId },
+          status: { in: ["SELECTED", "SELECTED_ROUND2"] },
+        },
+        select: { studentId: true },
+      }),
+    ]);
+
+    const selectedSet = new Set(selectedAssessments.map((a) => a.studentId));
 
     const candidateSelectionList = leaderboard.map((item) => {
       const enrollment = enrollments.find((e) => e.studentId === item.studentId);
       const student = enrollment?.student;
       const labAssignment = student?.labStudents?.[0];
+      const isSelected = enrollment?.status === "SELECTED" || selectedSet.has(item.studentId);
       return {
         ...item,
         email: student?.email || "",
@@ -55,7 +67,7 @@ export async function GET(req: NextRequest) {
         college: student?.college || item.college || "",
         labId: labAssignment?.labId || null,
         labName: labAssignment?.lab?.name || "Unassigned",
-        status: enrollment?.status || "ENROLLED",
+        status: isSelected ? "SELECTED" : (enrollment?.status || "PENDING"),
       };
     });
 

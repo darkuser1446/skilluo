@@ -452,8 +452,17 @@ export default function StudentDashboardPage() {
   });
 
   const overall = performance?.overallScore ?? 0;
-  const isSelected = user?.enrollments?.[0]?.status === "SELECTED";
-  const isOnTrack = overall >= 75 || isSelected;
+  const isSelected =
+    user?.enrollments?.[0]?.status === "SELECTED" ||
+    assessments.some((a) => a.results?.[0]?.status === "SELECTED" || a.results?.[0]?.status === "SELECTED_ROUND2");
+  const isRejected =
+    user?.enrollments?.[0]?.status === "REJECTED" ||
+    assessments.some((a) => a.results?.[0]?.status === "REJECTED");
+  const isWaitlist =
+    user?.enrollments?.[0]?.status === "WAITLIST" ||
+    assessments.some((a) => a.results?.[0]?.status === "WAITLIST" || a.results?.[0]?.status === "WAITLIST_ROUND2");
+  const hasSubmittedTest = assessments.some((a) => a.results && a.results.length > 0);
+  const isOnTrack = isSelected;
 
   if (loading) {
     return (
@@ -527,24 +536,24 @@ export default function StudentDashboardPage() {
 
         {/* Oversized Neo-Brutalist Metric Blocks */}
         <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Performance Score */}
-          <div className="bg-[#F07C27] border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between">
+          {/* Performance / Selection Status */}
+          <div className={`${isSelected ? "bg-[#e6f4ea]" : "bg-[#F07C27]"} border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between`}>
             <div className="flex items-center justify-between">
-              <span className="font-mono text-xs font-black uppercase text-[#111111]">
-                PERFORMANCE SCORE
+              <span className={`font-mono text-xs font-black uppercase ${isSelected ? "text-emerald-950" : "text-[#111111]"}`}>
+                {isSelected ? "SELECTION STATUS" : "COHORT STATUS"}
               </span>
-              <Trophy className="w-5 h-5 text-[#111111]" />
+              <Trophy className={`w-5 h-5 ${isSelected ? "text-emerald-700" : "text-[#111111]"}`} />
             </div>
             <div className="my-2">
-              <div className="font-display font-black text-5xl text-[#111111] leading-none tracking-tight">
-                {overall}
+              <div className={`font-display font-black ${isSelected ? "text-3xl sm:text-4xl text-emerald-900" : "text-2xl text-[#111111]"} leading-tight tracking-tight uppercase`}>
+                {isSelected ? "SELECTED 🎉" : isRejected ? "NOT SELECTED" : isWaitlist ? "WAITLIST" : hasSubmittedTest ? "SUBMITTED ✓" : "IN REVIEW"}
               </div>
-              <div className="font-mono text-[11px] font-bold text-[#111111]/80 mt-1 uppercase">
-                TARGET SCALE: 100.0 MAX
+              <div className={`font-mono text-[11px] font-bold ${isSelected ? "text-emerald-800" : "text-[#111111]/80"} mt-1 uppercase`}>
+                {isSelected ? "SUPER 60 COHORT" : "SKILLUP SCREENING"}
               </div>
             </div>
-            <div className="bg-[#111111] text-white px-2 py-1 border-[2px] border-[#111111] font-mono text-xs font-bold text-center uppercase tracking-wider">
-              {overall >= 80 ? "TIER 1 ELIGIBLE" : overall >= 65 ? "TIER 2 CANDIDATE" : "EVALUATION PENDING"}
+            <div className={`${isSelected ? "bg-emerald-600 text-white" : "bg-[#111111] text-white"} px-2 py-1 border-[2px] border-[#111111] font-mono text-xs font-bold text-center uppercase tracking-wider`}>
+              {isSelected ? "CONGRATULATIONS!" : isRejected ? "REVIEW COMPLETE" : "EVALUATION ACTIVE"}
             </div>
           </div>
 
@@ -705,8 +714,10 @@ export default function StudentDashboardPage() {
                 <span className="text-emerald-700 font-black">{performance?.attendancePercentage ?? 100}%</span>
               </div>
               <div className="flex justify-between text-slate-600 font-bold">
-                <span>TOTAL SCORE:</span>
-                <span className="text-[#F07C27] font-black">{overall} / 100</span>
+                <span>SELECTION:</span>
+                <span className={`font-black ${isSelected ? "text-emerald-700" : isRejected ? "text-slate-700" : "text-[#F07C27]"}`}>
+                  {isSelected ? "SELECTED ✓" : isRejected ? "NOT SELECTED" : isWaitlist ? "WAITLIST" : hasSubmittedTest ? "SUBMITTED" : "PENDING"}
+                </span>
               </div>
               <div className="pt-2 border-t border-[#111111]/20 space-y-1.5">
                 <a
@@ -743,8 +754,128 @@ export default function StudentDashboardPage() {
       ══════════════════════════════════════════════════════════ */}
       {activeTab === "overview" && (
         <div className="space-y-6">
+          {/* ── CELEBRATORY BANNER (FOR SELECTED CANDIDATES) ── */}
+          {isSelected && (
+            <div className="p-6 sm:p-7 bg-[#e6f4ea] border-[4px] border-[#111111] shadow-[8px_8px_0px_#111111] space-y-4">
+              <div className="flex items-start justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 bg-emerald-500 border-[3px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center text-white text-3xl flex-shrink-0">
+                    🎉
+                  </div>
+                  <div>
+                    <span className="px-2.5 py-0.5 bg-emerald-700 text-white font-mono text-[10px] font-black uppercase tracking-wider border border-[#111111] shadow-[1px_1px_0px_#111111]">
+                      OFFICIALLY SELECTED
+                    </span>
+                    <h2 className="font-display font-black text-[#111111] text-xl sm:text-2xl uppercase mt-1">
+                      Congratulations! You Have Been Selected
+                    </h2>
+                  </div>
+                </div>
+                <span className="text-[11px] font-mono font-black text-emerald-950 bg-white border-[2px] border-[#111111] px-3.5 py-1.5 shadow-[2px_2px_0px_#111111] uppercase">
+                  SUPER 60 COHORT
+                </span>
+              </div>
+
+              <p className="text-sm font-mono text-slate-800 leading-relaxed font-bold">
+                Congratulations! You have been officially selected by the Mentor & Admin Committee for the Super 60 intensive training workshop and laboratory tracks!
+              </p>
+
+              {myLab ? (
+                <div className="p-4 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-2.5 font-mono">
+                  <div className="flex items-center justify-between flex-wrap gap-2 border-b-[2px] border-[#111111]/20 pb-2.5">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase block">Your Allocated Laboratory Track:</span>
+                      <strong className="text-[#111111] text-base uppercase font-black">{myLab.name}</strong>
+                    </div>
+                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-900 border border-emerald-600 text-[10px] font-black uppercase">
+                      Track Confirmed ✓
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-800 pt-1">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase block">Schedule:</span>
+                      <strong className="text-[#111111]">{myLab.schedule || "Schedule TBA"}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase block">Assigned Lead Mentor:</span>
+                      <strong className="text-[#111111]">
+                        {myLab.mentors && myLab.mentors.length > 0
+                          ? myLab.mentors.map((m: any) => m.mentor?.name).filter(Boolean).join(", ")
+                          : "Lead Mentor details will appear shortly"}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 bg-white border-[2px] border-[#111111] font-mono text-xs text-emerald-950 flex items-center gap-2.5 shadow-[2px_2px_0px_#111111]">
+                  <Sparkles className="w-4 h-4 text-[#F07C27] flex-shrink-0" />
+                  <span className="font-bold">
+                    Your laboratory track is being configured by the admin team and will be assigned here shortly. Get ready for an exciting learning journey!
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── NOT SELECTED NOTICE ── */}
+          {isRejected && !isSelected && (
+            <div className="p-6 bg-slate-100 border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-2.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 bg-slate-300 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center text-slate-800 text-lg flex-shrink-0">
+                  📋
+                </div>
+                <div>
+                  <span className="px-2 py-0.5 bg-slate-300 text-slate-800 font-mono text-[10px] font-black uppercase tracking-wider border border-[#111111]">
+                    APPLICATION STATUS
+                  </span>
+                  <h2 className="font-display font-black text-[#111111] text-base uppercase mt-0.5">
+                    Application Status: Not Selected
+                  </h2>
+                </div>
+              </div>
+              <p className="text-xs font-mono text-slate-700 leading-relaxed pt-1">
+                Thank you for participating in the SkillUp 3.0 screening assessment. Unfortunately, you have not been selected for this cohort edition as admissions are strictly limited by laboratory capacity. We truly appreciate your dedication and strongly encourage you to continue building on your software engineering skills.
+              </p>
+            </div>
+          )}
+
+          {/* ── WAITLIST NOTICE ── */}
+          {isWaitlist && !isSelected && !isRejected && (
+            <div className="p-6 bg-blue-50 border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-2.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 bg-blue-200 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center text-blue-900 text-lg flex-shrink-0">
+                  ⏳
+                </div>
+                <div>
+                  <span className="px-2 py-0.5 bg-blue-200 text-blue-900 font-mono text-[10px] font-black uppercase tracking-wider border border-[#111111]">
+                    WAITLIST POOL
+                  </span>
+                  <h2 className="font-display font-black text-[#111111] text-base uppercase mt-0.5">
+                    Application Status: Placed on Waitlist
+                  </h2>
+                </div>
+              </div>
+              <p className="text-xs font-mono text-blue-950 leading-relaxed pt-1">
+                Your screening assessment performance reached the benchmark threshold. You are currently placed on the active waitlist pool. If additional lab track seats open up, the admin committee will reach out to you directly.
+              </p>
+            </div>
+          )}
+
+          {/* ── TEST SUBMITTED · EVALUATION IN PROGRESS ── */}
+          {hasSubmittedTest && !isSelected && !isRejected && !isWaitlist && (
+            <div className="p-5 bg-amber-50 border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-2">
+              <div className="flex items-center gap-2 text-xs font-mono font-black uppercase text-amber-950">
+                <Clock className="w-4 h-4 text-amber-700" />
+                <span>Screening Test Submitted · Evaluation in Progress</span>
+              </div>
+              <p className="text-xs font-mono text-slate-700 leading-relaxed">
+                Your screening test submission has been recorded. The Mentor & Admin Committee is evaluating submissions and finalizing laboratory track selections. Your result will be announced right here!
+              </p>
+            </div>
+          )}
+
           {/* ── REGISTRATION STATUS (admin review flow) ── */}
-          {user?.enrollments?.[0]?.status === "PENDING" && (
+          {user?.enrollments?.[0]?.status === "PENDING" && !hasSubmittedTest && (
             <div className="p-4 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-[#F07C27] flex-shrink-0 mt-0.5" />
               <div>
@@ -849,84 +980,86 @@ export default function StudentDashboardPage() {
             );
           })()}
 
-          {/* 4 Score Breakdown Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
-              <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
-                <span>ASSIGNMENTS (30%)</span>
-                <FileCode className="w-4 h-4 text-[#F07C27]" />
+          {/* 4 Score Breakdown Cards (Hidden for selected students so only Congratulations is shown) */}
+          {!isSelected && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+                <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
+                  <span>ASSIGNMENTS (30%)</span>
+                  <FileCode className="w-4 h-4 text-[#F07C27]" />
+                </div>
+                <div className="font-mono font-black text-3xl text-[#111111]">
+                  {performance?.assignmentsScore ?? 0}%
+                </div>
+                <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
+                  <div
+                    className="bg-[#F07C27] h-full transition-all duration-500"
+                    style={{ width: `${performance?.assignmentsScore ?? 0}%` }}
+                  />
+                </div>
+                <span className="text-[11px] font-mono text-emerald-700 font-bold mt-2 block">
+                  {assignments.filter((a) => a.submissions?.[0]?.score !== undefined).length} / {assignments.length} Graded
+                </span>
               </div>
-              <div className="font-mono font-black text-3xl text-[#111111]">
-                {performance?.assignmentsScore ?? 0}%
-              </div>
-              <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
-                <div
-                  className="bg-[#F07C27] h-full transition-all duration-500"
-                  style={{ width: `${performance?.assignmentsScore ?? 0}%` }}
-                />
-              </div>
-              <span className="text-[11px] font-mono text-emerald-700 font-bold mt-2 block">
-                {assignments.filter((a) => a.submissions?.[0]?.score !== undefined).length} / {assignments.length} Graded
-              </span>
-            </div>
 
-            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
-              <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
-                <span>ASSESSMENTS (35%)</span>
-                <Award className="w-4 h-4 text-[#111111]" />
+              <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+                <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
+                  <span>ASSESSMENTS (35%)</span>
+                  <Award className="w-4 h-4 text-[#111111]" />
+                </div>
+                <div className="font-mono font-black text-3xl text-[#111111]">
+                  {performance?.assessmentsScore ?? 0}%
+                </div>
+                <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
+                  <div
+                    className="bg-[#111111] h-full transition-all duration-500"
+                    style={{ width: `${performance?.assessmentsScore ?? 0}%` }}
+                  />
+                </div>
+                <span className="text-[11px] font-mono text-slate-700 font-bold mt-2 block">
+                  Benchmark Tests
+                </span>
               </div>
-              <div className="font-mono font-black text-3xl text-[#111111]">
-                {performance?.assessmentsScore ?? 0}%
-              </div>
-              <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
-                <div
-                  className="bg-[#111111] h-full transition-all duration-500"
-                  style={{ width: `${performance?.assessmentsScore ?? 0}%` }}
-                />
-              </div>
-              <span className="text-[11px] font-mono text-slate-700 font-bold mt-2 block">
-                Benchmark Tests
-              </span>
-            </div>
 
-            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
-              <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
-                <span>ATTENDANCE (15%)</span>
-                <CalendarCheck className="w-4 h-4 text-[#F07C27]" />
+              <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+                <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
+                  <span>ATTENDANCE (15%)</span>
+                  <CalendarCheck className="w-4 h-4 text-[#F07C27]" />
+                </div>
+                <div className="font-mono font-black text-3xl text-[#111111]">
+                  {performance?.attendancePercentage ?? 100}%
+                </div>
+                <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
+                  <div
+                    className="bg-emerald-600 h-full transition-all duration-500"
+                    style={{ width: `${performance?.attendancePercentage ?? 100}%` }}
+                  />
+                </div>
+                <span className="text-[11px] font-mono text-emerald-700 font-bold mt-2 block">
+                  Threshold: 85% Met ✓
+                </span>
               </div>
-              <div className="font-mono font-black text-3xl text-[#111111]">
-                {performance?.attendancePercentage ?? 100}%
-              </div>
-              <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
-                <div
-                  className="bg-emerald-600 h-full transition-all duration-500"
-                  style={{ width: `${performance?.attendancePercentage ?? 100}%` }}
-                />
-              </div>
-              <span className="text-[11px] font-mono text-emerald-700 font-bold mt-2 block">
-                Threshold: 85% Met ✓
-              </span>
-            </div>
 
-            <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
-              <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
-                <span>PARTICIPATION (10%)</span>
-                <HelpCircle className="w-4 h-4 text-[#111111]" />
+              <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+                <div className="flex items-center justify-between text-slate-600 text-xs font-mono font-bold mb-2">
+                  <span>PARTICIPATION (10%)</span>
+                  <HelpCircle className="w-4 h-4 text-[#111111]" />
+                </div>
+                <div className="font-mono font-black text-3xl text-[#111111]">
+                  {performance?.doubtsResolved ?? 0}
+                </div>
+                <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
+                  <div
+                    className="bg-[#F07C27] h-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, (performance?.doubtsResolved ?? 0) * 50)}%` }}
+                  />
+                </div>
+                <span className="text-[11px] font-mono text-slate-700 font-bold mt-2 block">
+                  Doubts & Community
+                </span>
               </div>
-              <div className="font-mono font-black text-3xl text-[#111111]">
-                {performance?.doubtsResolved ?? 0}
-              </div>
-              <div className="w-full bg-[#f4f3f3] h-2.5 border-[2px] border-[#111111] overflow-hidden mt-3">
-                <div
-                  className="bg-[#F07C27] h-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, (performance?.doubtsResolved ?? 0) * 50)}%` }}
-                />
-              </div>
-              <span className="text-[11px] font-mono text-slate-700 font-bold mt-2 block">
-                Doubts & Community
-              </span>
             </div>
-          </div>
+          )}
 
           {/* Super 60 Cohort Intake Matrix (60 Seats) */}
           <CohortQuotaMatrix
@@ -1815,7 +1948,7 @@ export default function StudentDashboardPage() {
                           {isLocked
                             ? "🔒 LOCKED OUT"
                             : res.status === "SELECTED" || res.status === "SELECTED_ROUND2"
-                            ? "★ SELECTED FOR ROUND 2"
+                            ? "🎉 OFFICIALLY SELECTED"
                             : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2"
                             ? "⏳ WAITLISTED"
                             : "✓ TEST SUBMITTED"}
@@ -1861,9 +1994,9 @@ export default function StudentDashboardPage() {
                         </div>
                         <p className="text-[11px] text-slate-700">
                           {res.status === "SELECTED" || res.status === "SELECTED_ROUND2" ? (
-                            <strong className="text-emerald-800">🎉 Selected for Round 2 by Mentor & Admin Committee!</strong>
+                            <strong className="text-emerald-800">🎉 Congratulations! You have been selected for the Super 60 Workshop & Lab Allocation!</strong>
                           ) : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2" ? (
-                            <strong className="text-blue-800">Placed on the Round 2 Waitlist.</strong>
+                            <strong className="text-blue-800">Placed on the Lab Allocation Waitlist.</strong>
                           ) : (
                             <span>Results confidential · Evaluation in progress by Mentors & Admin.</span>
                           )}
@@ -2075,11 +2208,11 @@ export default function StudentDashboardPage() {
                   <span className="font-black uppercase text-right ml-2">
                     {quizResult.status === "SELECTED" || quizResult.status === "SELECTED_ROUND2" ? (
                       <span className="px-2 py-0.5 bg-emerald-500 text-white border border-[#111111] text-[10px] shadow-[1px_1px_0px_#111111]">
-                        ★ SELECTED FOR ROUND 2
+                        🎉 SELECTED FOR LAB ALLOCATION
                       </span>
                     ) : quizResult.status === "WAITLIST" || quizResult.status === "WAITLIST_ROUND2" ? (
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-900 border border-[#111111] text-[10px] shadow-[1px_1px_0px_#111111]">
-                        WAITLISTED FOR ROUND 2
+                        WAITLISTED FOR LAB ALLOCATION
                       </span>
                     ) : (
                       <span className="px-2 py-0.5 bg-amber-100 text-amber-900 border border-[#111111] text-[10px] shadow-[1px_1px_0px_#111111]">
@@ -2100,7 +2233,7 @@ export default function StudentDashboardPage() {
                   Per examination guidelines, <strong>individual scores and question keys are strictly confidential</strong> and are accessible exclusively to the <strong>Admin and Mentor Evaluation Panel</strong>.
                 </p>
                 <p className="text-slate-800 font-mono text-xs leading-relaxed">
-                  Mentors and Administrators will review all candidate submissions, evaluate completion metrics and scores, and select the candidates who will advance to <strong>Round 2</strong>.
+                  Mentors and Administrators will review all candidate submissions, evaluate completion metrics and scores, and select the candidates who will be allocated to the <strong>Super 60 Laboratory Tracks</strong>.
                 </p>
                 <div className="pt-1 text-[11px] font-mono font-bold text-[#F07C27]">
                   ● Selected candidates will be notified directly through their student dashboard once the review is finalized.

@@ -148,6 +148,7 @@ const CandidateActionSchema = z.object({
     "UNLOCK",
     "RETEST",
     "SELECT_ROUND2",
+    "SELECT_FOR_LABS",
     "WAITLIST",
     "REJECT",
     "CLEAR_SELECTION",
@@ -205,15 +206,15 @@ export async function PATCH(
       for (const sid of studentIds) {
         await notify(
           sid,
-          "🎉 Selected for Round 2!",
-          `Congratulations! You have been officially selected by the Mentor & Admin Committee to advance to Round 2 for "${assessment.title}".`,
+          "🎉 Selected for Super 60 Lab Allocation!",
+          `Congratulations! You have been officially selected by the Mentor & Admin Committee for the Super 60 Workshop and Lab Allocation for "${assessment.title}".`,
           "ASSESSMENT",
           "/student"
         );
       }
 
       return successResponse({
-        message: `Successfully selected top ${selected.length} candidates for Round 2.`,
+        message: `Successfully selected top ${selected.length} candidates for Lab Allocation.`,
         selectedCount: selected.length,
       });
     }
@@ -264,7 +265,7 @@ export async function PATCH(
       );
 
       return successResponse({ result: updated, message: "Candidate unlocked successfully." });
-    } else if (action === "SELECT_ROUND2") {
+    } else if (action === "SELECT_ROUND2" || action === "SELECT_FOR_LABS") {
       const updated = await prisma.assessmentResult.update({
         where: { id: existing.id },
         data: { status: "SELECTED" },
@@ -280,13 +281,13 @@ export async function PATCH(
 
       await notify(
         studentId,
-        "🎉 Selected for Round 2!",
-        `Congratulations! You have been selected to advance to Round 2 of the Super 60 selection process for "${assessment.title}".`,
+        "🎉 Selected for Super 60 Lab Allocation!",
+        `Congratulations! You have been selected for the Super 60 Workshop and Lab Allocation for "${assessment.title}".`,
         "ASSESSMENT",
         "/student"
       );
 
-      return successResponse({ result: updated, message: "Candidate selected for Round 2." });
+      return successResponse({ result: updated, message: "Candidate selected for Lab Allocation." });
     } else if (action === "WAITLIST") {
       const updated = await prisma.assessmentResult.update({
         where: { id: existing.id },
@@ -295,13 +296,13 @@ export async function PATCH(
 
       await notify(
         studentId,
-        "Round 2 Waitlist Update",
-        `Your application for "${assessment.title}" has been placed on the Round 2 Waitlist.`,
+        "Super 60 Lab Allocation Waitlist",
+        `Your application for "${assessment.title}" has been placed on the Lab Allocation Waitlist.`,
         "ASSESSMENT",
         "/student"
       );
 
-      return successResponse({ result: updated, message: "Candidate waitlisted for Round 2." });
+      return successResponse({ result: updated, message: "Candidate waitlisted for Lab Allocation." });
     } else if (action === "REJECT") {
       const updated = await prisma.assessmentResult.update({
         where: { id: existing.id },

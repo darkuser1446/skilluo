@@ -360,7 +360,7 @@ export default function CohortQuotaMatrix({
               </div>
 
               <div className="flex items-center gap-4 text-right font-mono text-xs">
-                {hoveredItem.candidate?.overallScore !== undefined && (
+                {!isStudentView && hoveredItem.candidate?.overallScore !== undefined && (
                   <div>
                     <span className="text-[9px] text-slate-500 block uppercase font-bold">Composite</span>
                     <strong className="text-[#111111] font-black">
@@ -435,12 +435,14 @@ export default function CohortQuotaMatrix({
                   </span>
                 </div>
               )}
-              <div className="bg-white px-3 py-1 border-[1.5px] border-[#111111]">
-                <span className="text-[9px] text-slate-500 block uppercase font-bold">Score</span>
-                <span className="font-black text-[#111111]">
-                  {activeInspectedSeat.candidate.overallScore ?? "--"}%
-                </span>
-              </div>
+              {!isStudentView && (
+                <div className="bg-white px-3 py-1 border-[1.5px] border-[#111111]">
+                  <span className="text-[9px] text-slate-500 block uppercase font-bold">Score</span>
+                  <span className="font-black text-[#111111]">
+                    {activeInspectedSeat.candidate.overallScore ?? "--"}%
+                  </span>
+                </div>
+              )}
               {activeInspectedSeat.candidate.attendancePercentage !== undefined && (
                 <div className="bg-white px-3 py-1 border-[1.5px] border-[#111111]">
                   <span className="text-[9px] text-slate-500 block uppercase font-bold">Attendance</span>

@@ -7,7 +7,8 @@ import { notify } from "@/lib/notify";
 import { z } from "zod";
 
 const AssignStudentSchema = z.object({
-  studentId: z.string(),
+  studentId: z.string().optional(),
+  studentIds: z.array(z.string()).optional(),
   workshopId: z.string(),
 });
 
@@ -26,30 +27,24 @@ export async function POST(
     const body = await req.json();
     const data = AssignStudentSchema.parse(body);
 
+    const idsToAssign = data.studentIds && data.studentIds.length > 0
+      ? data.studentIds
+      : data.studentId
+      ? [data.studentId]
+      : [];
+
+    if (idsToAssign.length === 0) {
+      return errorResponse("studentId or studentIds is required", "VALIDATION_ERROR", 400);
+    }
+
     // Verify lab exists and fetch workshop info
     const lab = await prisma.lab.findUnique({
       where: { id: labId },
-      select: { id: true, name: true, workshopId: true },
+      select: { id: true, name: true, workshopId: true, capacity: true },
     });
     if (!lab) return errorResponse("Lab not found", "NOT_FOUND", 404);
 
-    // Ensure the student is enrolled in the workshop
-    await prisma.workshopEnrollment.upsert({
-      where: {
-        workshopId_studentId: {
-          workshopId: data.workshopId,
-          studentId: data.studentId,
-        },
-      },
-      update: {},
-      create: {
-        workshopId: data.workshopId,
-        studentId: data.studentId,
-        status: "ENROLLED",
-      },
-    });
-
-    // Remove any previous lab assignment in this workshop so the student is strictly in 1 lab
+    // Remove any previous lab assignment in this workshop so students are strictly in 1 lab
     const workshopLabs = await prisma.lab.findMany({
       where: { workshopId: data.workshopId },
       select: { id: true },
@@ -58,39 +53,68 @@ export async function POST(
     if (labIds.length > 0) {
       await prisma.labStudent.deleteMany({
         where: {
-          studentId: data.studentId,
+          studentId: { in: idsToAssign },
           labId: { in: labIds },
         },
       });
     }
 
-    const labStudent = await prisma.labStudent.create({
-      data: { labId, studentId: data.studentId },
-      include: {
-        student: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            college: true,
-            phone: true,
-            rollNumber: true,
-            branch: true,
-            semester: true,
+    const createdList = [];
+    for (const sid of idsToAssign) {
+      // Ensure the student is enrolled in the workshop
+      await prisma.workshopEnrollment.upsert({
+        where: {
+          workshopId_studentId: {
+            workshopId: data.workshopId,
+            studentId: sid,
           },
         },
+        update: {},
+        create: {
+          workshopId: data.workshopId,
+          studentId: sid,
+          status: "ENROLLED",
+        },
+      });
+
+      const labStudent = await prisma.labStudent.create({
+        data: { labId, studentId: sid },
+        include: {
+          student: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              college: true,
+              phone: true,
+              rollNumber: true,
+              branch: true,
+              semester: true,
+            },
+          },
+        },
+      });
+      createdList.push(labStudent);
+
+      await notify(
+        sid,
+        `🏛️ Assigned to ${lab.name}`,
+        `You have been allocated to ${lab.name}. View your schedule and assignments in your student dashboard.`,
+        "INFO",
+        "/student"
+      );
+    }
+
+    return successResponse(
+      {
+        labStudent: createdList[0],
+        labStudents: createdList,
+        assignedCount: createdList.length,
+        message: `Assigned ${createdList.length} candidate(s) to ${lab.name}`,
       },
-    });
-
-    await notify(
-      data.studentId,
-      `🏛️ Assigned to ${lab.name}`,
-      `You have been assigned to ${lab.name}. View your schedule and assignments in your student dashboard.`,
-      "INFO",
-      "/student"
+      undefined,
+      201
     );
-
-    return successResponse({ labStudent }, undefined, 201);
   } catch (err) {
     return handleApiError(err);
   }
