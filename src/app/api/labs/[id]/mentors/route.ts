@@ -15,7 +15,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireRole(["ADMIN"]);
+    await requireRole(["ADMIN", "MENTOR"]);
     const { id: labId } = await params;
     const body = await req.json();
     const data = AssignMentorSchema.parse(body);
@@ -40,7 +40,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireRole(["ADMIN"]);
+    await requireRole(["ADMIN", "MENTOR"]);
     const { id: labId } = await params;
     const { searchParams } = new URL(req.url);
     const mentorId = searchParams.get("mentorId");

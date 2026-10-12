@@ -62,6 +62,7 @@ const LabUpdateSchema = z.object({
   name: z.string().min(2).optional(),
   schedule: z.string().optional(),
   capacity: z.number().int().optional(),
+  leadMentorId: z.string().optional().nullable(),
 });
 
 export async function PUT(
@@ -69,12 +70,46 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireRole(["ADMIN"]);
+    await requireRole(["ADMIN", "MENTOR"]);
     const { id } = await params;
     const body = await req.json();
     const data = LabUpdateSchema.parse(body);
-    const lab = await prisma.lab.update({ where: { id }, data });
-    return successResponse({ lab });
+    const { leadMentorId, ...labData } = data;
+
+    const lab = await prisma.lab.update({
+      where: { id },
+      data: labData,
+      include: {
+        mentors: {
+          include: {
+            mentor: { select: { id: true, name: true, email: true } },
+          },
+        },
+      },
+    });
+
+    if (leadMentorId !== undefined) {
+      if (leadMentorId && leadMentorId.trim()) {
+        await prisma.labMentor.upsert({
+          where: { labId_mentorId: { labId: id, mentorId: leadMentorId } },
+          update: { isLead: true },
+          create: { labId: id, mentorId: leadMentorId, isLead: true },
+        });
+      }
+    }
+
+    const updatedLab = await prisma.lab.findUnique({
+      where: { id },
+      include: {
+        mentors: {
+          include: {
+            mentor: { select: { id: true, name: true, email: true } },
+          },
+        },
+      },
+    });
+
+    return successResponse({ lab: updatedLab || lab });
   } catch (err) {
     return handleApiError(err);
   }

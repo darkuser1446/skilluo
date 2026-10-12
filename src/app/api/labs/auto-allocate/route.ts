@@ -9,7 +9,7 @@ import { z } from "zod";
 const AutoAllocateSchema = z.object({
   workshopId: z.string(),
   studentsPerLab: z.number().int().min(1).max(200).default(15),
-  targetGroup: z.enum(["SELECTED", "ALL"]).default("SELECTED"),
+  targetGroup: z.enum(["SELECTED", "ALL", "TOP_60"]).default("ALL"),
   mode: z.enum(["CREATE_AND_ALLOCATE", "ALLOCATE_EXISTING"]).default("CREATE_AND_ALLOCATE"),
   labPrefix: z.string().min(1).max(50).default("Lab"),
   defaultSchedule: z.string().optional(),
@@ -42,7 +42,26 @@ export async function POST(req: NextRequest) {
     // 1. Gather target eligible students
     let studentIds: string[] = [];
 
-    if (targetGroup === "SELECTED") {
+    if (targetGroup === "TOP_60") {
+      const results = await prisma.assessmentResult.findMany({
+        where: { assessment: { workshopId } },
+        select: { studentId: true },
+        orderBy: [{ score: "desc" }, { submittedAt: "asc" }],
+        take: 60,
+      });
+      studentIds = results.map((r) => r.studentId);
+
+      if (studentIds.length < 60) {
+        const topEnrollments = await prisma.workshopEnrollment.findMany({
+          where: { workshopId },
+          select: { studentId: true },
+          orderBy: { appliedAt: "asc" },
+          take: 60,
+        });
+        const combined = Array.from(new Set([...studentIds, ...topEnrollments.map((e) => e.studentId)]));
+        studentIds = combined.slice(0, 60);
+      }
+    } else if (targetGroup === "SELECTED") {
       // Find students marked SELECTED in WorkshopEnrollment
       const selectedEnrollments = await prisma.workshopEnrollment.findMany({
         where: { workshopId, status: "SELECTED" },
@@ -60,6 +79,15 @@ export async function POST(req: NextRequest) {
           select: { studentId: true },
         });
         studentIds = Array.from(new Set(selectedResults.map((r) => r.studentId)));
+      }
+
+      // If still 0 selected, gracefully fall back to all enrolled students
+      if (studentIds.length === 0) {
+        const allEnrollments = await prisma.workshopEnrollment.findMany({
+          where: { workshopId },
+          select: { studentId: true },
+        });
+        studentIds = allEnrollments.map((e) => e.studentId);
       }
     } else {
       // All enrolled students

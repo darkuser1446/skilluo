@@ -14,12 +14,13 @@ export async function GET(req: NextRequest) {
     await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
+    const assignedOnly = searchParams.get("assignedOnly") === "true";
 
     const mentors = await prisma.user.findMany({
       where: {
         role: "MENTOR",
         isActive: true,
-        ...(workshopId
+        ...(workshopId && assignedOnly
           ? { labMentors: { some: { lab: { workshopId } } } }
           : {}),
       },
@@ -27,6 +28,8 @@ export async function GET(req: NextRequest) {
         id: true,
         name: true,
         email: true,
+        phone: true,
+        college: true,
         mentorProfile: true,
         labMentors: {
           include: { lab: { select: { id: true, name: true, workshopId: true } } },
