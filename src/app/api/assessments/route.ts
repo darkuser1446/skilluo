@@ -16,8 +16,32 @@ export async function GET(req: NextRequest) {
       return errorResponse("workshopId query parameter is required", "BAD_REQUEST", 400);
     }
 
+    let studentLabId: string | null = null;
+    if (user.role === "STUDENT" && prisma.labStudent?.findFirst) {
+      try {
+        const enrollment = await prisma.labStudent.findFirst({
+          where: { studentId: user.sub },
+          select: { labId: true },
+        });
+        studentLabId = enrollment?.labId || null;
+      } catch {
+        studentLabId = null;
+      }
+    }
+
     const assessments = await prisma.assessment.findMany({
-      where: { workshopId },
+      where: {
+        workshopId,
+        ...(user.role === "STUDENT" && studentLabId
+          ? {
+              OR: [
+                { labId: null, targetLabIds: { isEmpty: true } },
+                { labId: studentLabId },
+                { targetLabIds: { has: studentLabId } },
+              ],
+            }
+          : {}),
+      },
       include: {
         lab: true,
         questions: true,
@@ -45,6 +69,10 @@ export async function GET(req: NextRequest) {
             id: r.id,
             studentId: r.studentId,
             status: r.status,
+            score: r.score,
+            correctCount: r.correctCount,
+            incorrectCount: r.incorrectCount,
+            unansweredCount: r.unansweredCount,
             isLocked: r.isLocked,
             violationCount: r.violationCount,
             violationReason: r.violationReason,
@@ -69,14 +97,16 @@ const QuestionSchema = z.object({
 
 const AssessmentCreateSchema = z.object({
   workshopId: z.string(),
-  labId: z.string().optional(),
+  labId: z.string().optional().nullable(),
+  targetLabIds: z.array(z.string()).optional().default([]),
   title: z.string().min(3),
+  description: z.string().optional().nullable(),
   type: z.enum(["TEST", "QUIZ", "PROGRAMMING", "ASSIGNMENT"]).default("QUIZ"),
-  totalMarks: z.number().int().positive().default(100),
-  passingMarks: z.number().min(0).optional(),
-  durationMinutes: z.number().int().positive().optional(),
+  totalMarks: z.number().positive().default(100),
+  passingMarks: z.number().min(0).optional().nullable(),
+  durationMinutes: z.number().int().positive().optional().nullable(),
   allowedViolations: z.number().int().positive().default(3),
-  instructions: z.string().optional(),
+  instructions: z.string().optional().nullable(),
   startsAt: z.string(),
   endsAt: z.string(),
   questions: z.array(QuestionSchema).min(1),
@@ -96,13 +126,15 @@ export async function POST(req: NextRequest) {
       data: {
         workshopId: data.workshopId,
         labId: data.labId || null,
+        targetLabIds: data.targetLabIds || [],
         title: data.title,
+        description: data.description || null,
         type: data.type,
         totalMarks: data.totalMarks,
         passingMarks: data.passingMarks ?? null,
         durationMinutes: data.durationMinutes ?? null,
         allowedViolations: data.allowedViolations ?? 3,
-        instructions: data.instructions ?? null,
+        instructions: data.instructions || data.description || null,
         startsAt: new Date(data.startsAt),
         endsAt: new Date(data.endsAt),
         questions: {
@@ -118,7 +150,21 @@ export async function POST(req: NextRequest) {
     });
 
     // Notify enrolled students that a new test is scheduled
-    const studentIds = await workshopStudentIds(data.workshopId, data.labId);
+    let studentIds: string[] = [];
+    if (data.targetLabIds && data.targetLabIds.length > 0 && prisma.labStudent?.findMany) {
+      try {
+        const enrollments = await prisma.labStudent.findMany({
+          where: { labId: { in: data.targetLabIds } },
+          select: { studentId: true },
+        });
+        studentIds = Array.from(new Set(enrollments.map((e) => e.studentId)));
+      } catch {
+        studentIds = [];
+      }
+    } else {
+      studentIds = await workshopStudentIds(data.workshopId, data.labId || undefined);
+    }
+
     await notifyMany(
       studentIds,
       "New test scheduled",

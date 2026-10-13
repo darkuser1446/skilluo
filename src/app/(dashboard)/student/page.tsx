@@ -40,6 +40,7 @@ import {
   Shield,
   Lock,
 } from "lucide-react";
+import LeaderboardModal from "@/components/LeaderboardModal";
 import TestEngine from "@/components/TestEngine";
 import StudentProgressTrend from "@/components/StudentProgressTrend";
 import CohortQuotaMatrix from "@/components/CohortQuotaMatrix";
@@ -98,13 +99,14 @@ export default function StudentDashboardPage() {
   const [quizResult, setQuizResult] = useState<any>(null);
   const [quizStartedAt, setQuizStartedAt] = useState<number>(0);
   const [quizError, setQuizError] = useState<string | null>(null);
+  const [leaderboardAssessmentId, setLeaderboardAssessmentId] = useState<string | null>(null);
 
   // Feedback state
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [feedbackCategory, setFeedbackCategory] = useState("MENTORSHIP");
   const [feedbackComment, setFeedbackComment] = useState("");
-  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(true);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
 
@@ -371,6 +373,11 @@ export default function StudentDashboardPage() {
                   submitted: true,
                   assessmentId: activeAssessment.id,
                   assessmentTitle: activeAssessment.title,
+                  score: mine.score,
+                  totalMarks: activeAssessment.totalMarks,
+                  correctCount: mine.correctCount,
+                  incorrectCount: mine.incorrectCount,
+                  unansweredCount: mine.unansweredCount,
                   durationSec: mine.durationSec,
                   answeredCount: activeAssessment.questions.length,
                   totalQuestions: activeAssessment.questions.length,
@@ -1828,7 +1835,7 @@ export default function StudentDashboardPage() {
                   )}
                   {sessions.map((s) => {
                     const record = s.attendanceRecords?.[0];
-                    const status = record?.status || "PRESENT";
+                    const status = record ? record.status : "PENDING";
                     return (
                       <tr key={s.id} className="hover:bg-[#FFF0E5]/30 transition-colors">
                         <td className="py-3.5 px-4 font-bold text-[#111111] text-sm">
@@ -1845,10 +1852,12 @@ export default function StudentDashboardPage() {
                                 ? "bg-[#e6f4ea] text-emerald-800"
                                 : status === "LATE"
                                 ? "bg-[#fff8e1] text-amber-900"
-                                : "bg-[#fde8e8] text-rose-900"
+                                : status === "ABSENT"
+                                ? "bg-[#fde8e8] text-rose-900"
+                                : "bg-slate-100 text-slate-700 border-slate-300"
                             }`}
                           >
-                            {status}
+                            {status === "PENDING" ? "⏳ PENDING" : status}
                           </span>
                         </td>
                       </tr>
@@ -1986,69 +1995,88 @@ export default function StudentDashboardPage() {
                       </div>
                     )}
 
-                    {/* Submission status notice */}
+                    {/* Submission score & accuracy notice */}
                     {res && !isLocked && (
-                      <div className="p-2.5 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] font-mono text-xs space-y-1">
+                      <div className="p-3 bg-[#e6f4ea] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] font-mono text-xs space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-[#111111] flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Test Submitted
+                          <span className="text-[10px] font-black uppercase text-emerald-950 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" /> Completed (One Attempt Submitted)
                           </span>
                           <span className="text-[10px] font-bold text-slate-600">
                             {new Date(res.submittedAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-700">
-                          {res.status === "SELECTED" || res.status === "SELECTED_ROUND2" ? (
-                            <strong className="text-emerald-800">🎉 Congratulations! You have been selected for the Super 60 Workshop & Lab Allocation!</strong>
-                          ) : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2" ? (
-                            <strong className="text-blue-800">Placed on the Lab Allocation Waitlist.</strong>
-                          ) : (
-                            <span>Results confidential · Evaluation in progress by Mentors & Admin.</span>
-                          )}
-                        </p>
+                        <div className="flex items-center justify-between border-t border-emerald-800/20 pt-1.5 flex-wrap gap-2">
+                          <div>
+                            <span className="text-[10px] text-slate-600 font-bold uppercase block">Your Score:</span>
+                            <span className="font-display font-black text-base text-[#111111]">
+                              {res.score} / {as.totalMarks} <span className="text-xs text-slate-500 font-mono">({Math.round((res.score / (as.totalMarks || 100)) * 100)}%)</span>
+                            </span>
+                          </div>
+                          <div className="text-right text-[11px] font-bold">
+                            <span className="text-emerald-700">✓ {res.correctCount ?? 0} Correct</span>
+                            <span className="text-slate-400 mx-1">·</span>
+                            <span className="text-rose-700">✕ {res.incorrectCount ?? 0} Incorrect</span>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="pt-3 border-t-[2px] border-[#111111] flex items-center justify-between">
+                  <div className="pt-3 border-t-[2px] border-[#111111] flex items-center justify-between flex-wrap gap-2">
                     <span className="text-[10px] font-mono text-slate-600 font-bold">
                       {isLocked ? "Session Locked" : res ? `Submitted ${new Date(res.submittedAt).toLocaleDateString()}` : `Opens ${new Date(as.startsAt).toLocaleDateString()}`}
                     </span>
-                    <button
-                      disabled={!isLocked && (isUpcoming || (isExpired && !res))}
-                      onClick={() => {
-                        setActiveAssessment(as);
-                        if (res) {
-                          setQuizResult({
-                            submitted: true,
-                            assessmentId: as.id,
-                            assessmentTitle: as.title,
-                            durationSec: res.durationSec,
-                            answeredCount: as.questions?.length || 0,
-                            totalQuestions: as.questions?.length || 0,
-                            status: res.status,
-                            isLocked: isLocked,
-                            violationCount: res.violationCount,
-                            violationReason: res.violationReason,
-                            submittedAt: res.submittedAt,
-                            history: true,
-                          });
-                        } else {
-                          setQuizResult(null);
-                          setQuizAnswers({});
-                          setQuizError(null);
-                          setQuizStartedAt(Date.now());
-                        }
-                      }}
-                      className={`px-4 py-1.5 border-[2px] border-[#111111] text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-[2px_2px_0px_#111111] ${
-                        isLocked ? "bg-rose-600 hover:bg-rose-700 text-white" :
-                        res ? "bg-white text-[#111111] hover:bg-[#f4f3f3]" :
-                        isLive ? "bg-[#F07C27] text-white hover:brightness-110" :
-                        "bg-[#f4f3f3] text-slate-400 cursor-not-allowed opacity-50"
-                      }`}
-                    >
-                      {isLocked ? "🔒 Locked Out Notice" : res ? "📋 Submission Status" : isLive ? "🚀 Start Test" : isUpcoming ? "⏳ Not Started" : "Expired"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setLeaderboardAssessmentId(as.id)}
+                        className="px-3 py-1.5 border-[2px] border-[#111111] bg-[#FFB703] hover:bg-[#ffa700] text-[#111111] text-xs font-mono font-black uppercase tracking-wider transition-all shadow-[2px_2px_0px_#111111] flex items-center gap-1 cursor-pointer"
+                        title="View Official Test Leaderboard"
+                      >
+                        <Trophy className="w-3.5 h-3.5 text-[#111111]" /> Leaderboard
+                      </button>
+                      <button
+                        disabled={!isLocked && (isUpcoming || (isExpired && !res))}
+                        onClick={() => {
+                          setActiveAssessment(as);
+                          if (res) {
+                            setQuizResult({
+                              submitted: true,
+                              assessmentId: as.id,
+                              assessmentTitle: as.title,
+                              score: res.score,
+                              totalMarks: as.totalMarks,
+                              correctCount: res.correctCount,
+                              incorrectCount: res.incorrectCount,
+                              unansweredCount: res.unansweredCount,
+                              durationSec: res.durationSec,
+                              answeredCount: as.questions?.length || 0,
+                              totalQuestions: as.questions?.length || 0,
+                              status: res.status,
+                              isLocked: isLocked,
+                              violationCount: res.violationCount,
+                              violationReason: res.violationReason,
+                              submittedAt: res.submittedAt,
+                              history: true,
+                            });
+                          } else {
+                            setQuizResult(null);
+                            setQuizAnswers({});
+                            setQuizError(null);
+                            setQuizStartedAt(Date.now());
+                          }
+                        }}
+                        className={`px-4 py-1.5 border-[2px] border-[#111111] text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-[2px_2px_0px_#111111] ${
+                          isLocked ? "bg-rose-600 hover:bg-rose-700 text-white cursor-pointer" :
+                          res ? "bg-white text-[#111111] hover:bg-[#f4f3f3] cursor-pointer" :
+                          isLive ? "bg-[#F07C27] text-white hover:brightness-110 cursor-pointer" :
+                          "bg-[#f4f3f3] text-slate-400 cursor-not-allowed opacity-50"
+                        }`}
+                      >
+                        {isLocked ? "🔒 Locked Out Notice" : res ? "📋 View Scorecard" : isLive ? "🚀 Start Test" : isUpcoming ? "⏳ Not Started" : "Expired"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -2170,7 +2198,7 @@ export default function StudentDashboardPage() {
               </div>
             </div>
           ) : (
-            /* Confidential Clean Submission Receipt Screen (No Scores Shown to Student) */
+            /* Verified Official Test Scorecard & Receipt Screen */
             <div className="p-7 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] text-center space-y-6">
               {/* Submission Icon & Header */}
               <div className="space-y-3">
@@ -2178,14 +2206,57 @@ export default function StudentDashboardPage() {
                   <CheckCircle2 className="w-9 h-9 stroke-[2.5]" />
                 </div>
                 <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-900 border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase tracking-wider shadow-[2px_2px_0px_#111111]">
-                  [ ✓ SUBMISSION RECORDED & SECURED ]
+                  [ ✓ TEST SUBMITTED & SCORED ]
                 </span>
                 <h3 className="font-display font-black text-2xl sm:text-3xl uppercase text-[#111111] tracking-tight">
-                  Assessment Submitted Successfully!
+                  Assessment Completed!
                 </h3>
                 <p className="text-slate-600 font-mono text-xs max-w-lg mx-auto">
-                  Your answers and examination session have been securely logged into the evaluation database.
+                  Your answers have been automatically graded against predefined answer criteria.
                 </p>
+              </div>
+
+              {/* Official Score & Accuracy Grid */}
+              <div className="p-5 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[2px] border-[#111111] pb-3 gap-2">
+                  <div className="text-left">
+                    <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Total Score Achieved</span>
+                    <span className="font-display font-black text-3xl sm:text-4xl text-[#111111]">
+                      {quizResult.score ?? 0} <span className="text-lg text-slate-500 font-mono">/ {activeAssessment.totalMarks || quizResult.totalMarks || 100}</span>
+                    </span>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Score Percentage</span>
+                    <span className="font-display font-black text-2xl text-[#F07C27]">
+                      {Math.round(((quizResult.score ?? 0) / (activeAssessment.totalMarks || quizResult.totalMarks || 100)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 font-mono text-xs">
+                  <div className="p-3 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                    <span className="text-[10px] text-emerald-800 uppercase font-black block">Correct</span>
+                    <span className="font-black text-xl text-emerald-700">✓ {quizResult.correctCount ?? 0}</span>
+                  </div>
+                  <div className="p-3 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                    <span className="text-[10px] text-rose-800 uppercase font-black block">Incorrect</span>
+                    <span className="font-black text-xl text-rose-700">✕ {quizResult.incorrectCount ?? 0}</span>
+                  </div>
+                  <div className="p-3 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                    <span className="text-[10px] text-slate-600 uppercase font-bold block">Unanswered</span>
+                    <span className="font-black text-xl text-slate-800">{quizResult.unansweredCount ?? 0}</span>
+                  </div>
+                </div>
+
+                {/* View Leaderboard Button */}
+                <button
+                  type="button"
+                  onClick={() => setLeaderboardAssessmentId(activeAssessment.id)}
+                  className="w-full py-3 bg-[#FFB703] hover:bg-[#ffa700] text-[#111111] font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  <Trophy className="w-4 h-4 text-[#111111]" />
+                  <span>View Official Test Leaderboard & Cohort Rankings →</span>
+                </button>
               </div>
 
               {/* Candidate & Assessment Verification Dossier */}
@@ -2209,39 +2280,10 @@ export default function StudentDashboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between pt-0.5">
-                  <span className="text-slate-600 font-bold uppercase">Selection Status:</span>
-                  <span className="font-black uppercase text-right ml-2">
-                    {quizResult.status === "SELECTED" || quizResult.status === "SELECTED_ROUND2" ? (
-                      <span className="px-2 py-0.5 bg-emerald-500 text-white border border-[#111111] text-[10px] shadow-[1px_1px_0px_#111111]">
-                        🎉 SELECTED FOR LAB ALLOCATION
-                      </span>
-                    ) : quizResult.status === "WAITLIST" || quizResult.status === "WAITLIST_ROUND2" ? (
-                      <span className="px-2 py-0.5 bg-blue-100 text-blue-900 border border-[#111111] text-[10px] shadow-[1px_1px_0px_#111111]">
-                        WAITLISTED FOR LAB ALLOCATION
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-amber-100 text-amber-900 border border-[#111111] text-[10px] shadow-[1px_1px_0px_#111111]">
-                        UNDER EVALUATION BY MENTORS & ADMINS
-                      </span>
-                    )}
+                  <span className="text-slate-600 font-bold uppercase">Attempt Policy:</span>
+                  <span className="text-[#111111] font-black">
+                    1 of 1 Attempts Completed (Submissions Locked)
                   </span>
-                </div>
-              </div>
-
-              {/* Confidential Evaluation Notice */}
-              <div className="p-5 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] text-left space-y-2">
-                <div className="flex items-center gap-2 text-sm font-black uppercase text-[#111111]">
-                  <Shield className="w-4 h-4 text-[#F07C27]" />
-                  <span>Evaluation & Selection Protocol</span>
-                </div>
-                <p className="text-slate-800 font-mono text-xs leading-relaxed">
-                  Per examination guidelines, <strong>individual scores and question keys are strictly confidential</strong> and are accessible exclusively to the <strong>Admin and Mentor Evaluation Panel</strong>.
-                </p>
-                <p className="text-slate-800 font-mono text-xs leading-relaxed">
-                  Mentors and Administrators will review all candidate submissions, evaluate completion metrics and scores, and select the candidates who will be allocated to the <strong>Super 60 Laboratory Tracks</strong>.
-                </p>
-                <div className="pt-1 text-[11px] font-mono font-bold text-[#F07C27]">
-                  ● Selected candidates will be notified directly through their student dashboard once the review is finalized.
                 </div>
               </div>
 
@@ -2633,6 +2675,13 @@ export default function StudentDashboardPage() {
             );
           })()}
         </div>
+      )}
+
+      {leaderboardAssessmentId && (
+        <LeaderboardModal
+          assessmentId={leaderboardAssessmentId}
+          onClose={() => setLeaderboardAssessmentId(null)}
+        />
       )}
         </main>
       </div>

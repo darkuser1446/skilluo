@@ -110,6 +110,7 @@ export default function MentorDashboardPage() {
   const [attendanceRegisterFilter, setAttendanceRegisterFilter] = useState<string>("ALL");
   const [markingQuick, setMarkingQuick] = useState<string | null>(null);
   const [attendanceFeedbackMsg, setAttendanceFeedbackMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [selectedDayFilter, setSelectedDayFilter] = useState<string>("ALL");
 
   // Doubt Reply state
   const [selectedDoubt, setSelectedDoubt] = useState<any>(null);
@@ -544,7 +545,7 @@ export default function MentorDashboardPage() {
         lateCount: number;
         absentCount: number;
         recordsByDate: { sessionDate: string; sessionTitle: string; status: string }[];
-        percentage: number;
+        percentage: number | null;
       }
     > = {};
 
@@ -558,7 +559,7 @@ export default function MentorDashboardPage() {
         lateCount: 0,
         absentCount: 0,
         recordsByDate: [],
-        percentage: 0,
+        percentage: null,
       };
     });
 
@@ -581,7 +582,7 @@ export default function MentorDashboardPage() {
             lateCount: 0,
             absentCount: 0,
             recordsByDate: [],
-            percentage: 0,
+            percentage: null,
           };
         }
         const s = summary[rec.studentId];
@@ -605,7 +606,7 @@ export default function MentorDashboardPage() {
 
     Object.keys(summary).forEach((sid) => {
       const s = summary[sid];
-      s.percentage = s.totalSessions > 0 ? Math.round((s.attendedCount / s.totalSessions) * 100) : 100;
+      s.percentage = s.totalSessions > 0 ? Math.round((s.attendedCount / s.totalSessions) * 100) : null;
     });
 
     return summary;
@@ -627,6 +628,40 @@ export default function MentorDashboardPage() {
       (a, b) => a[1].date.getTime() - b[1].date.getTime()
     );
   }, [activeLab, sessions]);
+
+  const activeLabAttendanceTotals = useMemo(() => {
+    const labStudents = activeLab?.students || [];
+    const totalStudents = labStudents.length;
+    let present = 0;
+    let absent = 0;
+    let pending = 0;
+
+    if (selectedDayFilter === "ALL") {
+      const days = labDistinctDates.length > 0 ? labDistinctDates : [["12 Oct"]];
+      days.forEach(([dStr]) => {
+        labStudents.forEach((ls: any) => {
+          const sum = labAttendanceSummary[ls.studentId];
+          const rec = sum?.recordsByDate.find((r) => r.sessionDate === dStr);
+          if (rec?.status === "PRESENT") present += 1;
+          else if (rec?.status === "ABSENT") absent += 1;
+          else pending += 1;
+        });
+      });
+    } else {
+      labStudents.forEach((ls: any) => {
+        const sum = labAttendanceSummary[ls.studentId];
+        const rec = sum?.recordsByDate.find((r) => r.sessionDate === selectedDayFilter);
+        if (rec?.status === "PRESENT") present += 1;
+        else if (rec?.status === "ABSENT") absent += 1;
+        else pending += 1;
+      });
+    }
+
+    const totalMarked = present + absent;
+    const percentage = totalMarked > 0 ? Math.round((present / totalMarked) * 100) : null;
+
+    return { totalStudents, present, absent, pending, percentage };
+  }, [activeLab, labDistinctDates, labAttendanceSummary, selectedDayFilter]);
 
   const filteredAttendanceStudents = (activeLab?.students || []).filter((ls: any) => {
     const sum = labAttendanceSummary[ls.studentId];
@@ -1656,7 +1691,7 @@ export default function MentorDashboardPage() {
                     Lab Cohort Size
                   </div>
                   <div className="font-display font-black text-2xl text-[#111111] mt-0.5">
-                    {activeLab?.students?.length || 0}
+                    {activeLabAttendanceTotals.totalStudents}
                   </div>
                   <div className="text-[10px] font-mono text-slate-500 mt-0.5 font-bold">
                     {activeLab?.name || "Laboratory"}
@@ -1665,38 +1700,154 @@ export default function MentorDashboardPage() {
 
                 <div className="bg-[#e6f4ea] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 font-bold">
-                    Days Scheduled
+                    {selectedDayFilter === "ALL" ? "Days Scheduled" : "Active Day View"}
                   </div>
                   <div className="font-display font-black text-2xl text-emerald-950 mt-0.5">
-                    {labDistinctDates.length > 0 ? labDistinctDates.length : 2}
+                    {selectedDayFilter === "ALL" ? (labDistinctDates.length > 0 ? labDistinctDates.length : 2) : selectedDayFilter}
                   </div>
                   <div className="text-[10px] font-mono text-emerald-700 mt-0.5 font-bold">
-                    Day 1 (12 Oct) & Day 2 (13 Oct)
+                    {selectedDayFilter === "ALL"
+                      ? "Day 1 (12 Oct) & Day 2 (13 Oct)"
+                      : selectedDayFilter === "12 Oct"
+                      ? "Day 1 Inaugural Lab"
+                      : "Day 2 Lab Session"}
                   </div>
                 </div>
 
                 <div className="bg-emerald-50 border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 font-bold">
-                    Lab Presence Rate
+                    {selectedDayFilter === "ALL" ? "Lab Presence Rate" : `${selectedDayFilter} Presence`}
                   </div>
                   <div className="font-display font-black text-2xl text-emerald-950 mt-0.5">
-                    100%
+                    {activeLabAttendanceTotals.percentage !== null ? `${activeLabAttendanceTotals.percentage}%` : "Pending"}
                   </div>
                   <div className="text-[10px] font-mono text-emerald-700 mt-0.5 font-bold">
-                    Day 1: All Candidates Present
+                    {activeLabAttendanceTotals.percentage !== null
+                      ? `${activeLabAttendanceTotals.present} Present / ${activeLabAttendanceTotals.totalStudents}`
+                      : "Session Not Yet Recorded"}
                   </div>
                 </div>
 
                 <div className="bg-[#FFF9E6] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-amber-800 font-bold">
-                    Session Quota Limit
+                    {selectedDayFilter === "ALL" ? "Pending / Quota" : `${selectedDayFilter} Pending`}
                   </div>
                   <div className="font-display font-black text-2xl text-[#111111] mt-0.5">
-                    1 / Day
+                    {activeLabAttendanceTotals.pending}
                   </div>
                   <div className="text-[10px] font-mono text-amber-700 mt-0.5 font-bold">
-                    Strict Single-Session Daily Rule
+                    {activeLabAttendanceTotals.absent} Absences Recorded · 1 Sess/Day
                   </div>
+                </div>
+              </div>
+
+              {/* ── DAY FILTER BUTTONS ── */}
+              <div className="bg-white border-[3px] border-[#111111] p-3.5 shadow-[4px_4px_0px_#111111] flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-mono font-black uppercase text-slate-800">
+                    Filter By Day:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDayFilter("ALL")}
+                    className={`px-3 py-1.5 font-mono text-xs font-black uppercase border-[2px] border-[#111111] transition-all cursor-pointer shadow-[2px_2px_0px_#111111] ${
+                      selectedDayFilter === "ALL"
+                        ? "bg-[#111111] text-white"
+                        : "bg-[#F4F3F3] text-[#111111] hover:bg-white"
+                    }`}
+                  >
+                    📊 All Days Overview
+                  </button>
+                  {labDistinctDates.map(([dStr], idx) => (
+                    <button
+                      key={dStr}
+                      type="button"
+                      onClick={() => setSelectedDayFilter(dStr)}
+                      className={`px-3 py-1.5 font-mono text-xs font-black uppercase border-[2px] border-[#111111] transition-all cursor-pointer shadow-[2px_2px_0px_#111111] ${
+                        selectedDayFilter === dStr
+                          ? "bg-[#F07C27] text-white"
+                          : "bg-[#F4F3F3] text-[#111111] hover:bg-white"
+                      }`}
+                    >
+                      📅 Day {idx + 1} ({dStr})
+                    </button>
+                  ))}
+                </div>
+
+                <div className="text-xs font-mono font-bold text-slate-600">
+                  Active Filter: <span className="text-[#111111] uppercase font-black">{selectedDayFilter === "ALL" ? "All Days Overview" : selectedDayFilter}</span>
+                </div>
+              </div>
+
+              {/* ── LAB ATTENDANCE SUMMARY TABLE ── */}
+              <div className="bg-white border-[3px] border-[#111111] shadow-[5px_5px_0px_#111111] overflow-hidden">
+                <div className="p-3.5 bg-[#F4F3F3] border-b-[2px] border-[#111111] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h4 className="font-display font-black text-sm uppercase text-[#111111] tracking-tight flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 bg-[#F07C27] border border-[#111111]" />
+                      <span>{activeLab?.name || "Laboratory"} · Attendance Summary</span>
+                      <span className="px-2 py-0.5 bg-white border border-[#111111] text-[10px] font-mono font-bold">
+                        {selectedDayFilter === "ALL" ? "All Days Combined" : `Day: ${selectedDayFilter}`}
+                      </span>
+                    </h4>
+                    <p className="text-[11px] font-mono text-slate-600 mt-0.5">
+                      Verified lab track attendance audit. Pending students are not counted as Present or Absent.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead>
+                      <tr className="bg-[#111111] text-white uppercase text-[10px] tracking-wider border-b border-[#111111]">
+                        <th className="py-2.5 px-4 min-w-[200px]">Lab Track</th>
+                        <th className="py-2.5 px-3 text-center min-w-[110px]">Total Students</th>
+                        <th className="py-2.5 px-3 text-center min-w-[90px] text-emerald-400">Present</th>
+                        <th className="py-2.5 px-3 text-center min-w-[90px] text-rose-400">Absent</th>
+                        <th className="py-2.5 px-3 text-center min-w-[90px] text-amber-300">Pending</th>
+                        <th className="py-2.5 px-4 text-right min-w-[120px]">Attendance %</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#111111]/20 bg-white">
+                      <tr className="hover:bg-[#FFF0E5]/40 transition-colors">
+                        <td className="py-2.5 px-4 font-bold text-[#111111] border-r border-[#111111]/20">
+                          <div className="flex items-center gap-2">
+                            <span>🏛️</span>
+                            <span>{activeLab?.name || "Laboratory"}</span>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-bold text-[#111111] border-r border-[#111111]/20">
+                          {activeLabAttendanceTotals.totalStudents}
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-bold text-emerald-700 bg-emerald-50/50 border-r border-[#111111]/20">
+                          {activeLabAttendanceTotals.present}
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-bold text-rose-700 bg-rose-50/50 border-r border-[#111111]/20">
+                          {activeLabAttendanceTotals.absent}
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-bold text-amber-700 bg-amber-50/50 border-r border-[#111111]/20">
+                          {activeLabAttendanceTotals.pending}
+                        </td>
+                        <td className="py-2.5 px-4 text-right font-bold">
+                          {activeLabAttendanceTotals.percentage !== null ? (
+                            <span className={`px-2 py-0.5 border border-[#111111] shadow-[1px_1px_0px_#111111] text-[11px] font-black ${
+                              activeLabAttendanceTotals.percentage >= 85
+                                ? "bg-emerald-600 text-white"
+                                : activeLabAttendanceTotals.percentage >= 75
+                                ? "bg-amber-500 text-white"
+                                : "bg-rose-600 text-white"
+                            }`}>
+                              {activeLabAttendanceTotals.percentage}%
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 text-[10px] font-bold">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
@@ -1776,18 +1927,24 @@ export default function MentorDashboardPage() {
                         <th className="py-3 px-3 min-w-[180px]">Contact & Branch</th>
                         <th className="py-3 px-3 text-center min-w-[90px]">Sessions</th>
                         <th className="py-3 px-3 text-center min-w-[100px]">Attendance %</th>
-                        {labDistinctDates.map(([dateStr]) => (
-                          <th key={dateStr} className="py-3 px-3 text-center min-w-[120px] bg-slate-900 border-l border-slate-700">
-                            {dateStr}
+                        {selectedDayFilter === "ALL" ? (
+                          labDistinctDates.map(([dateStr]) => (
+                            <th key={dateStr} className="py-3 px-3 text-center min-w-[120px] bg-slate-900 border-l border-slate-700">
+                              {dateStr}
+                            </th>
+                          ))
+                        ) : (
+                          <th className="py-3 px-3 text-center min-w-[130px] bg-[#F07C27] text-white border-l border-slate-700">
+                            Attendance ({selectedDayFilter})
                           </th>
-                        ))}
+                        )}
                         <th className="py-3 px-4 text-right min-w-[140px]">Toggle Presence</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#111111]/20 bg-white">
                       {filteredAttendanceStudents.length === 0 ? (
                         <tr>
-                          <td colSpan={6 + labDistinctDates.length} className="p-8 text-center text-slate-500 font-mono text-xs">
+                          <td colSpan={6 + (selectedDayFilter === "ALL" ? labDistinctDates.length : 1)} className="p-8 text-center text-slate-500 font-mono text-xs">
                             No students match the search criteria in this laboratory.
                           </td>
                         </tr>
@@ -1797,7 +1954,10 @@ export default function MentorDashboardPage() {
                           const st = ls.student;
                           const initials = st?.name ? st.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("") : "S";
                           const sum = labAttendanceSummary[sid];
-                          const percentage = sum?.percentage ?? 100;
+                          const isAllDays = selectedDayFilter === "ALL";
+                          const dayRecord = !isAllDays ? sum?.recordsByDate.find((r) => r.sessionDate === selectedDayFilter) : null;
+                          const dayStatus = dayRecord ? dayRecord.status : null;
+                          const displayPct = isAllDays ? sum?.percentage : dayStatus === "PRESENT" ? 100 : dayStatus === "ABSENT" ? 0 : null;
                           const currentStatus = attendanceMap[sid] || null;
                           const isMarkingThis = markingQuick === sid;
 
@@ -1842,53 +2002,84 @@ export default function MentorDashboardPage() {
                               {/* Sessions Attended / Total */}
                               <td className="py-3 px-3 text-center border-r border-[#111111]/20 font-bold">
                                 <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] shadow-[1px_1px_0px_#111111]">
-                                  {sum ? `${sum.attendedCount}/${sum.totalSessions || 1}` : "1/1"}
+                                  {isAllDays
+                                    ? sum ? `${sum.attendedCount}/${sum.totalSessions || 1}` : "0/1"
+                                    : dayStatus === "PRESENT" ? "1/1" : dayStatus === "ABSENT" ? "0/1" : "0/0"}
                                 </span>
                               </td>
 
                               {/* Attendance % */}
                               <td className="py-3 px-3 text-center border-r border-[#111111]/20">
                                 <div className="flex flex-col items-center gap-1">
-                                  <span className={`px-2 py-0.5 text-[11px] font-black border border-[#111111] shadow-[1px_1px_0px_#111111] ${
-                                    percentage >= 85
-                                      ? "bg-emerald-600 text-white"
-                                      : percentage >= 75
-                                      ? "bg-amber-500 text-white"
-                                      : "bg-rose-600 text-white"
-                                  }`}>
-                                    {percentage}%
-                                  </span>
+                                  {displayPct !== null && displayPct !== undefined ? (
+                                    <span className={`px-2 py-0.5 text-[11px] font-black border border-[#111111] shadow-[1px_1px_0px_#111111] ${
+                                      displayPct >= 85
+                                        ? "bg-emerald-600 text-white"
+                                        : displayPct >= 75
+                                        ? "bg-amber-500 text-white"
+                                        : "bg-rose-600 text-white"
+                                    }`}>
+                                      {displayPct}%
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 text-[10px] font-bold border border-slate-300 bg-slate-100 text-slate-700">
+                                      Pending
+                                    </span>
+                                  )}
                                 </div>
                               </td>
 
-                              {/* Date Columns (e.g. Day 1: 12 Oct, Day 2: 13 Oct) */}
-                              {labDistinctDates.map(([dateStr]) => {
-                                const foundRecord = sum?.recordsByDate.find((r) => r.sessionDate === dateStr);
-                                const status = foundRecord ? foundRecord.status : null;
+                              {/* Date Columns */}
+                              {isAllDays ? (
+                                labDistinctDates.map(([dateStr]) => {
+                                  const foundRecord = sum?.recordsByDate.find((r) => r.sessionDate === dateStr);
+                                  const status = foundRecord ? foundRecord.status : null;
 
-                                return (
-                                  <td key={dateStr} className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
-                                    {status === "PRESENT" ? (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-black text-[10px] shadow-[1px_1px_0px_#111111]">
-                                        <Check className="w-3 h-3 text-emerald-700 stroke-[3]" />
-                                        <span>PRESENT</span>
-                                      </span>
-                                    ) : status === "LATE" ? (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-900 font-black text-[10px]">
-                                        <span>LATE</span>
-                                      </span>
-                                    ) : status === "ABSENT" ? (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-950 border border-rose-900 font-black text-[10px]">
-                                        <span>ABSENT</span>
-                                      </span>
-                                    ) : (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[10px]">
-                                        <span>PENDING</span>
-                                      </span>
-                                    )}
-                                  </td>
-                                );
-                              })}
+                                  return (
+                                    <td key={dateStr} className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
+                                      {status === "PRESENT" ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-black text-[10px] shadow-[1px_1px_0px_#111111]">
+                                          <Check className="w-3 h-3 text-emerald-700 stroke-[3]" />
+                                          <span>PRESENT</span>
+                                        </span>
+                                      ) : status === "LATE" ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-900 font-black text-[10px]">
+                                          <span>LATE</span>
+                                        </span>
+                                      ) : status === "ABSENT" ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-950 border border-rose-900 font-black text-[10px]">
+                                          <span>ABSENT</span>
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[10px]">
+                                          <span>⏳ PENDING</span>
+                                        </span>
+                                      )}
+                                    </td>
+                                  );
+                                })
+                              ) : (
+                                <td className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
+                                  {dayStatus === "PRESENT" ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-black text-[10px] shadow-[1px_1px_0px_#111111]">
+                                      <Check className="w-3 h-3 text-emerald-700 stroke-[3]" />
+                                      <span>PRESENT</span>
+                                    </span>
+                                  ) : dayStatus === "LATE" ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-900 font-black text-[10px]">
+                                      <span>LATE</span>
+                                    </span>
+                                  ) : dayStatus === "ABSENT" ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-rose-100 text-rose-950 border border-rose-900 font-black text-[10px]">
+                                      <span>ABSENT</span>
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-900 border border-amber-300 font-bold text-[10px]">
+                                      <span>⏳ PENDING</span>
+                                    </span>
+                                  )}
+                                </td>
+                              )}
 
                               {/* Quick Presence Toggle Actions */}
                               <td className="py-3 px-4 text-right">
@@ -2410,7 +2601,12 @@ export default function MentorDashboardPage() {
                 </div>
                 <p className="text-sm text-slate-800 font-mono italic">&quot;{f.comment}&quot;</p>
                 <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 pt-2 border-t border-[#111111]/15 font-bold">
-                  <span>From: {f.isAnonymous ? "Anonymous Candidate" : f.student?.name}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[#111111]">From: Anonymous Student</span>
+                    <span className="px-1.5 py-0.2 bg-slate-100 text-slate-700 border border-slate-300 text-[9px] uppercase font-bold">
+                      🛡️ Confidential Appraisal
+                    </span>
+                  </div>
                   <span>{new Date(f.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>

@@ -149,7 +149,7 @@ export async function calculateOverallPerformance(
   }
   const exercisesScore = totalExMax > 0 ? (totalExEarned / totalExMax) * 100 : 0;
 
-  // 4. Attendance percentage
+  // 4. Attendance percentage: Present Students ÷ (Present Students + Absent Students) * 100
   const myLabIds = myLabRows.map((r) => r.labId);
   const sessionWhere = {
     workshopId,
@@ -158,16 +158,25 @@ export async function calculateOverallPerformance(
       : { labId: null }),
   };
 
-  const attendedRecords = await prisma.attendanceRecord.count({
-    where: {
-      studentId,
-      session: sessionWhere,
-      status: { in: ["PRESENT", "LATE"] },
-    },
-  });
+  const [attendedRecords, recordedAttendanceCount] = await Promise.all([
+    prisma.attendanceRecord.count({
+      where: {
+        studentId,
+        session: sessionWhere,
+        status: { in: ["PRESENT", "LATE"] },
+      },
+    }),
+    prisma.attendanceRecord.count({
+      where: {
+        studentId,
+        session: sessionWhere,
+        status: { in: ["PRESENT", "LATE", "ABSENT"] },
+      },
+    }),
+  ]);
 
   const attendancePercentage =
-    totalSessions > 0 ? (attendedRecords / totalSessions) * 100 : 100;
+    recordedAttendanceCount > 0 ? (attendedRecords / recordedAttendanceCount) * 100 : 100;
 
   // 5. Doubts / Participation
   const doubtsScore = Math.min(doubtsResolved * 20, 100);
@@ -279,9 +288,9 @@ export async function getWorkshopLeaderboard(workshopId: string): Promise<Perfor
     prisma.attendanceRecord.findMany({
       where: {
         session: { workshopId },
-        status: { in: ["PRESENT", "LATE"] },
+        status: { in: ["PRESENT", "LATE", "ABSENT"] },
       },
-      select: { studentId: true },
+      select: { studentId: true, status: true },
     }),
     prisma.doubt.findMany({
       where: { workshopId, status: "RESOLVED" },
@@ -328,9 +337,13 @@ export async function getWorkshopLeaderboard(workshopId: string): Promise<Perfor
     arr.push({ score: ex.score, maxScore: ex.exercise.maxScore });
   }
 
-  const attendanceCountByStudent = new Map<string, number>();
+  const attendedCountByStudent = new Map<string, number>();
+  const totalRecordedCountByStudent = new Map<string, number>();
   for (const att of allAttendance) {
-    attendanceCountByStudent.set(att.studentId, (attendanceCountByStudent.get(att.studentId) || 0) + 1);
+    if (att.status === "PRESENT" || att.status === "LATE") {
+      attendedCountByStudent.set(att.studentId, (attendedCountByStudent.get(att.studentId) || 0) + 1);
+    }
+    totalRecordedCountByStudent.set(att.studentId, (totalRecordedCountByStudent.get(att.studentId) || 0) + 1);
   }
 
   const doubtsCountByStudent = new Map<string, number>();
@@ -375,8 +388,9 @@ export async function getWorkshopLeaderboard(workshopId: string): Promise<Perfor
     }
     const exercisesScore = exMax > 0 ? (exEarned / exMax) * 100 : 0;
 
-    const attCount = attendanceCountByStudent.get(student.id) || 0;
-    const attendancePercentage = totalSessions > 0 ? (attCount / totalSessions) * 100 : 100;
+    const attCount = attendedCountByStudent.get(student.id) || 0;
+    const totalRecorded = totalRecordedCountByStudent.get(student.id) || 0;
+    const attendancePercentage = totalRecorded > 0 ? (attCount / totalRecorded) * 100 : 100;
 
     const doubtsResolved = doubtsCountByStudent.get(student.id) || 0;
     const doubtsScore = Math.min(doubtsResolved * 20, 100);

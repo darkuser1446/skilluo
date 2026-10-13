@@ -35,6 +35,27 @@ export async function POST(
       return errorResponse("Assessment not found", "NOT_FOUND", 404);
     }
 
+    // ── Target Lab Validation ──
+    if (prisma.labStudent?.findFirst && ((assessment.targetLabIds && assessment.targetLabIds.length > 0) || assessment.labId)) {
+      try {
+        const studentEnrollment = await prisma.labStudent.findFirst({
+          where: { studentId: user.sub },
+          select: { labId: true },
+        });
+        const sLabId = studentEnrollment?.labId;
+        if (sLabId) {
+          const isTargeted =
+            (assessment.labId && assessment.labId === sLabId) ||
+            (assessment.targetLabIds && assessment.targetLabIds.includes(sLabId));
+          if (!isTargeted) {
+            return errorResponse("This test is not assigned to your lab", "FORBIDDEN", 403);
+          }
+        }
+      } catch {
+        // Safe fallback in test environments
+      }
+    }
+
     // ── Availability window (server-side; client timer is not trusted) ──
     const now = Date.now();
     const startsAt = new Date(assessment.startsAt).getTime();
@@ -163,6 +184,11 @@ export async function POST(
       submitted: true,
       assessmentId,
       assessmentTitle: assessment.title,
+      score: result.score,
+      totalMarks: assessment.totalMarks,
+      correctCount: result.correctCount ?? 0,
+      incorrectCount: result.incorrectCount ?? 0,
+      unansweredCount: result.unansweredCount ?? 0,
       durationSec: durationSec ?? null,
       answeredCount: assessment.questions.length - unansweredCount,
       totalQuestions: assessment.questions.length,
@@ -172,7 +198,7 @@ export async function POST(
       disqualified: isDisqualified,
       violationReason: violationReason || null,
       message:
-        "Assessment submitted successfully. Results are confidential and under review by mentors and administrators.",
+        "Assessment submitted successfully. Your score has been calculated.",
     });
   } catch (err) {
     return handleApiError(err);

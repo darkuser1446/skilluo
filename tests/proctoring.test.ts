@@ -108,8 +108,10 @@ describe("Assessment Proctoring & Anti-Cheating Suite", () => {
     const json = await res.json();
     expect(json.success).toBe(true);
     expect(json.data.submitted).toBe(true);
-    // Student must not see test scores/results in post-submit payload
-    expect(json.data.score).toBeUndefined();
+    // After submission, student receives their calculated score and stats
+    expect(json.data.score).toBe(20);
+    expect(json.data.correctCount).toBe(2);
+    expect(json.data.incorrectCount).toBe(0);
     expect(json.data.status).toBe("COMPLETED");
     expect(json.data.disqualified).toBe(false);
 
@@ -147,8 +149,7 @@ describe("Assessment Proctoring & Anti-Cheating Suite", () => {
     const json = await res.json();
     expect(json.success).toBe(true);
     expect(json.data.submitted).toBe(true);
-    // Student must not see test scores in post-submit payload
-    expect(json.data.score).toBeUndefined();
+    expect(json.data.score).toBe(0);
     expect(json.data.status).toBe("DISQUALIFIED");
     expect(json.data.disqualified).toBe(true);
     expect(json.data.violationReason).toContain("Exceeded 3 proctoring warnings");

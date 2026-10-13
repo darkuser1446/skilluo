@@ -148,6 +148,7 @@ export default function AdminDashboardPage() {
   const [attendanceSearch, setAttendanceSearch] = useState<string>("");
   const [attendanceLabFilter, setAttendanceLabFilter] = useState<string>("ALL");
   const [attendanceStatusFilter, setAttendanceStatusFilter] = useState<string>("ALL");
+  const [selectedDayFilter, setSelectedDayFilter] = useState<string>("ALL");
   const [loadingAttendance, setLoadingAttendance] = useState<boolean>(false);
 
   // Announcements management
@@ -316,9 +317,11 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const loadFeedbacks = async (labId: string) => {
-    if (!labId) return;
-    const res = await fetch(`/api/feedback/lab/${labId}?workshopId=${selectedWorkshopId}`);
+  const loadFeedbacks = async (labId?: string) => {
+    const url = labId
+      ? `/api/feedback?workshopId=${selectedWorkshopId}&labId=${labId}`
+      : `/api/feedback?workshopId=${selectedWorkshopId}`;
+    const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       setFeedbacks(data.data.feedbacks || []);
@@ -1035,7 +1038,7 @@ export default function AdminDashboardPage() {
         lateCount: number;
         absentCount: number;
         recordsByDate: { sessionDate: string; sessionTitle: string; status: string; labName?: string }[];
-        percentage: number;
+        percentage: number | null;
       }
     > = {};
 
@@ -1046,7 +1049,7 @@ export default function AdminDashboardPage() {
         lateCount: 0,
         absentCount: 0,
         recordsByDate: [],
-        percentage: 0,
+        percentage: null,
       };
     });
 
@@ -1093,7 +1096,7 @@ export default function AdminDashboardPage() {
 
     Object.keys(summary).forEach((sid) => {
       const s = summary[sid];
-      s.percentage = s.totalSessions > 0 ? Math.round((s.attendedCount / s.totalSessions) * 100) : 100;
+      s.percentage = s.totalSessions > 0 ? Math.round((s.attendedCount / s.totalSessions) * 100) : null;
     });
 
     return summary;
@@ -1118,6 +1121,87 @@ export default function AdminDashboardPage() {
       (a, b) => a[1].date.getTime() - b[1].date.getTime()
     );
   }, [attendanceSessions]);
+
+  const labAttendanceSummaries = useMemo(() => {
+    return labs.map((l) => {
+      const labStudents = selectedCandidates.filter((c) => {
+        const labInfo = getCandidateLab(c);
+        return labInfo.labId === l.id;
+      });
+      const totalStudents = labStudents.length;
+
+      let present = 0;
+      let absent = 0;
+      let pending = 0;
+
+      if (selectedDayFilter === "ALL") {
+        const days = distinctSessionDates.length > 0 ? distinctSessionDates : [["12 Oct"]];
+        days.forEach(([dStr]) => {
+          labStudents.forEach((c) => {
+            const sum = studentAttendanceSummary[c.studentId];
+            const rec = sum?.recordsByDate.find((r) => r.sessionDate === dStr);
+            if (rec?.status === "PRESENT") present += 1;
+            else if (rec?.status === "ABSENT") absent += 1;
+            else pending += 1;
+          });
+        });
+      } else {
+        labStudents.forEach((c) => {
+          const sum = studentAttendanceSummary[c.studentId];
+          const rec = sum?.recordsByDate.find((r) => r.sessionDate === selectedDayFilter);
+          if (rec?.status === "PRESENT") present += 1;
+          else if (rec?.status === "ABSENT") absent += 1;
+          else pending += 1;
+        });
+      }
+
+      const totalMarked = present + absent;
+      const percentage = totalMarked > 0 ? Math.round((present / totalMarked) * 100) : null;
+
+      return {
+        labId: l.id,
+        labName: l.name,
+        totalStudents,
+        present,
+        absent,
+        pending,
+        percentage,
+      };
+    });
+  }, [labs, selectedCandidates, studentAttendanceSummary, selectedDayFilter, distinctSessionDates]);
+
+  const cohortAttendanceTotals = useMemo(() => {
+    const totalStudents = selectedCandidates.length;
+    let present = 0;
+    let absent = 0;
+    let pending = 0;
+
+    if (selectedDayFilter === "ALL") {
+      const days = distinctSessionDates.length > 0 ? distinctSessionDates : [["12 Oct"]];
+      days.forEach(([dStr]) => {
+        selectedCandidates.forEach((c) => {
+          const sum = studentAttendanceSummary[c.studentId];
+          const rec = sum?.recordsByDate.find((r) => r.sessionDate === dStr);
+          if (rec?.status === "PRESENT") present += 1;
+          else if (rec?.status === "ABSENT") absent += 1;
+          else pending += 1;
+        });
+      });
+    } else {
+      selectedCandidates.forEach((c) => {
+        const sum = studentAttendanceSummary[c.studentId];
+        const rec = sum?.recordsByDate.find((r) => r.sessionDate === selectedDayFilter);
+        if (rec?.status === "PRESENT") present += 1;
+        else if (rec?.status === "ABSENT") absent += 1;
+        else pending += 1;
+      });
+    }
+
+    const totalMarked = present + absent;
+    const percentage = totalMarked > 0 ? Math.round((present / totalMarked) * 100) : null;
+
+    return { totalStudents, present, absent, pending, percentage };
+  }, [selectedCandidates, studentAttendanceSummary, selectedDayFilter, distinctSessionDates]);
 
   const filteredAttendanceCandidates = useMemo(() => {
     return selectedCandidates.filter((c) => {
@@ -1150,7 +1234,7 @@ export default function AdminDashboardPage() {
         return sum && sum.totalSessions > 0 && sum.percentage === 100;
       }
       if (attendanceStatusFilter === "LOW") {
-        return sum && sum.percentage < 75;
+        return sum && sum.percentage !== null && sum.percentage < 75;
       }
       if (attendanceStatusFilter === "PRESENT_DAY1") {
         return sum && sum.recordsByDate.some((r) => r.status === "PRESENT");
@@ -3157,7 +3241,9 @@ export default function AdminDashboardPage() {
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-2.5 py-1 bg-emerald-100 text-emerald-950 border-[2px] border-[#111111] font-mono text-xs font-bold shadow-[2px_2px_0px_#111111]">
-                  ✓ Day 1: 100% Present ({selectedCandidates.length}/{selectedCandidates.length})
+                  {selectedDayFilter === "ALL"
+                    ? `✓ Overall: ${cohortAttendanceTotals.percentage !== null ? cohortAttendanceTotals.percentage + "% Present" : "Pending"} (${cohortAttendanceTotals.present} Present · ${cohortAttendanceTotals.pending} Pending)`
+                    : `✓ ${selectedDayFilter}: ${cohortAttendanceTotals.percentage !== null ? cohortAttendanceTotals.percentage + "% Present" : "Pending"} (${cohortAttendanceTotals.present}/${cohortAttendanceTotals.totalStudents})`}
                 </span>
                 <span className="px-2.5 py-1 bg-[#FFF0E5] text-[#111111] border-[2px] border-[#111111] font-mono text-xs font-bold shadow-[2px_2px_0px_#111111]">
                   Rule: 1 Session / Day Max
@@ -3188,10 +3274,10 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-1">
               <div className="bg-[#FFF0E5] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-slate-600 font-bold">
-                  Total Selected Cohort
+                  Total Eligible Cohort
                 </div>
                 <div className="font-display font-black text-2xl text-[#111111] mt-0.5">
-                  {selectedCandidates.length}
+                  {cohortAttendanceTotals.totalStudents}
                 </div>
                 <div className="text-[10px] font-mono text-slate-500 mt-0.5 font-bold">
                   Selected Across {labs.length} Laboratory Tracks
@@ -3200,39 +3286,210 @@ export default function AdminDashboardPage() {
 
               <div className="bg-[#e6f4ea] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 font-bold">
-                  Days Scheduled
+                  {selectedDayFilter === "ALL" ? "Days Scheduled" : "Active Day View"}
                 </div>
                 <div className="font-display font-black text-2xl text-emerald-950 mt-0.5">
-                  {distinctSessionDates.length > 0 ? distinctSessionDates.length : 2}
+                  {selectedDayFilter === "ALL" ? (distinctSessionDates.length > 0 ? distinctSessionDates.length : 2) : selectedDayFilter}
                 </div>
                 <div className="text-[10px] font-mono text-emerald-700 mt-0.5 font-bold">
-                  Day 1 (12 Oct) & Day 2 (13 Oct)
+                  {selectedDayFilter === "ALL"
+                    ? "Day 1 (12 Oct) & Day 2 (13 Oct)"
+                    : selectedDayFilter === "12 Oct"
+                    ? "Day 1 Inaugural Lab"
+                    : "Day 2 Lab Session"}
                 </div>
               </div>
 
               <div className="bg-emerald-50 border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 font-bold">
-                  Day 1 Cohort Presence
+                  {selectedDayFilter === "ALL" ? "Cohort Present Records" : `${selectedDayFilter} Present`}
                 </div>
                 <div className="font-display font-black text-2xl text-emerald-950 mt-0.5">
-                  100%
+                  {cohortAttendanceTotals.present}
                 </div>
                 <div className="text-[10px] font-mono text-emerald-700 mt-0.5 font-bold">
-                  All {selectedCandidates.length} Selected Students Present
+                  {cohortAttendanceTotals.percentage !== null
+                    ? `${cohortAttendanceTotals.percentage}% Attendance Rate`
+                    : "Pending Session Check-In"}
                 </div>
               </div>
 
               <div className="bg-[#FFF9E6] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-amber-800 font-bold">
-                  Cohort Compliance Rate
+                  {selectedDayFilter === "ALL" ? "Pending / Unmarked" : `${selectedDayFilter} Pending`}
                 </div>
                 <div className="font-display font-black text-2xl text-[#111111] mt-0.5">
-                  100%
+                  {cohortAttendanceTotals.pending}
                 </div>
                 <div className="text-[10px] font-mono text-amber-700 mt-0.5 font-bold">
-                  Zero Absences Recorded
+                  {cohortAttendanceTotals.absent} Absences Recorded
                 </div>
               </div>
+            </div>
+
+            {/* ── DAY FILTER BUTTONS ── */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t-[2px] border-[#111111]">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-mono font-black uppercase text-slate-800">
+                  Filter By Day:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDayFilter("ALL")}
+                  className={`px-3 py-1.5 font-mono text-xs font-black uppercase border-[2px] border-[#111111] transition-all cursor-pointer shadow-[2px_2px_0px_#111111] ${
+                    selectedDayFilter === "ALL"
+                      ? "bg-[#111111] text-white"
+                      : "bg-[#F4F3F3] text-[#111111] hover:bg-white"
+                  }`}
+                >
+                  📊 All Days Overview
+                </button>
+                {distinctSessionDates.length > 0 ? (
+                  distinctSessionDates.map(([dStr], idx) => (
+                    <button
+                      key={dStr}
+                      type="button"
+                      onClick={() => setSelectedDayFilter(dStr)}
+                      className={`px-3 py-1.5 font-mono text-xs font-black uppercase border-[2px] border-[#111111] transition-all cursor-pointer shadow-[2px_2px_0px_#111111] ${
+                        selectedDayFilter === dStr
+                          ? "bg-[#F07C27] text-white"
+                          : "bg-[#F4F3F3] text-[#111111] hover:bg-white"
+                      }`}
+                    >
+                      📅 Day {idx + 1} ({dStr})
+                    </button>
+                  ))
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDayFilter("12 Oct")}
+                      className={`px-3 py-1.5 font-mono text-xs font-black uppercase border-[2px] border-[#111111] transition-all cursor-pointer shadow-[2px_2px_0px_#111111] ${
+                        selectedDayFilter === "12 Oct" ? "bg-[#F07C27] text-white" : "bg-[#F4F3F3] text-[#111111] hover:bg-white"
+                      }`}
+                    >
+                      📅 Day 1 (12 Oct)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDayFilter("13 Oct")}
+                      className={`px-3 py-1.5 font-mono text-xs font-black uppercase border-[2px] border-[#111111] transition-all cursor-pointer shadow-[2px_2px_0px_#111111] ${
+                        selectedDayFilter === "13 Oct" ? "bg-[#F07C27] text-white" : "bg-[#F4F3F3] text-[#111111] hover:bg-white"
+                      }`}
+                    >
+                      📅 Day 2 (13 Oct)
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <div className="text-xs font-mono font-bold text-slate-600">
+                Active Scope: <span className="text-[#111111] uppercase font-black">{selectedDayFilter === "ALL" ? "All Days Overview" : selectedDayFilter}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── LAB-WISE ATTENDANCE SUMMARY TABLE ── */}
+          <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] overflow-hidden">
+            <div className="p-4 bg-[#F4F3F3] border-b-[2px] border-[#111111] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="font-display font-black text-sm uppercase text-[#111111] tracking-tight flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-[#F07C27] border border-[#111111]" />
+                  <span>Lab-Wise Attendance Summary</span>
+                  <span className="px-2 py-0.5 bg-white border border-[#111111] text-[10px] font-mono font-bold">
+                    {selectedDayFilter === "ALL" ? "All Days Combined" : `Day: ${selectedDayFilter}`}
+                  </span>
+                </h3>
+                <p className="text-[11px] font-mono text-slate-600 mt-0.5">
+                  Live cohort presence audit across all laboratories. Pending candidates are not counted as Present or Absent.
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead>
+                  <tr className="bg-[#111111] text-white uppercase text-[10px] tracking-wider border-b border-[#111111]">
+                    <th className="py-2.5 px-4 min-w-[200px]">Laboratory Track</th>
+                    <th className="py-2.5 px-3 text-center min-w-[110px]">Total Students</th>
+                    <th className="py-2.5 px-3 text-center min-w-[90px] text-emerald-400">Present</th>
+                    <th className="py-2.5 px-3 text-center min-w-[90px] text-rose-400">Absent</th>
+                    <th className="py-2.5 px-3 text-center min-w-[90px] text-amber-300">Pending</th>
+                    <th className="py-2.5 px-4 text-right min-w-[120px]">Attendance %</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#111111]/20 bg-white">
+                  {labAttendanceSummaries.map((summary) => (
+                    <tr key={summary.labId} className="hover:bg-[#FFF0E5]/40 transition-colors">
+                      <td className="py-2.5 px-4 font-bold text-[#111111] border-r border-[#111111]/20">
+                        <div className="flex items-center gap-2">
+                          <span>🏛️</span>
+                          <span>{summary.labName}</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold text-[#111111] border-r border-[#111111]/20">
+                        {summary.totalStudents}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold text-emerald-700 bg-emerald-50/50 border-r border-[#111111]/20">
+                        {summary.present}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold text-rose-700 bg-rose-50/50 border-r border-[#111111]/20">
+                        {summary.absent}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold text-amber-700 bg-amber-50/50 border-r border-[#111111]/20">
+                        {summary.pending}
+                      </td>
+                      <td className="py-2.5 px-4 text-right font-bold">
+                        {summary.percentage !== null ? (
+                          <span className={`px-2 py-0.5 border border-[#111111] shadow-[1px_1px_0px_#111111] text-[11px] font-black ${
+                            summary.percentage >= 85
+                              ? "bg-emerald-600 text-white"
+                              : summary.percentage >= 75
+                              ? "bg-amber-500 text-white"
+                              : "bg-rose-600 text-white"
+                          }`}>
+                            {summary.percentage}%
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 text-[10px] font-bold">
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-[#111111] text-white font-bold border-t-2 border-[#111111]">
+                    <td className="py-3 px-4 uppercase text-[11px] tracking-wider">
+                      Total Cohort
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      {cohortAttendanceTotals.totalStudents}
+                    </td>
+                    <td className="py-3 px-3 text-center text-emerald-400">
+                      {cohortAttendanceTotals.present}
+                    </td>
+                    <td className="py-3 px-3 text-center text-rose-400">
+                      {cohortAttendanceTotals.absent}
+                    </td>
+                    <td className="py-3 px-3 text-center text-amber-300">
+                      {cohortAttendanceTotals.pending}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      {cohortAttendanceTotals.percentage !== null ? (
+                        <span className="px-2.5 py-0.5 bg-emerald-500 text-black font-black text-xs border border-white">
+                          {cohortAttendanceTotals.percentage}%
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 bg-slate-700 text-slate-300 text-[10px]">
+                          Pending
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </div>
 
@@ -3328,18 +3585,24 @@ export default function AdminDashboardPage() {
                     <th className="py-3 px-3 min-w-[180px]">Contact & Branch</th>
                     <th className="py-3 px-3 text-center min-w-[90px]">Sessions</th>
                     <th className="py-3 px-3 text-center min-w-[100px]">Attendance %</th>
-                    {distinctSessionDates.map(([dateStr]) => (
-                      <th key={dateStr} className="py-3 px-3 text-center min-w-[120px] bg-slate-900 border-l border-slate-700">
-                        {dateStr}
+                    {selectedDayFilter === "ALL" ? (
+                      distinctSessionDates.map(([dateStr]) => (
+                        <th key={dateStr} className="py-3 px-3 text-center min-w-[120px] bg-slate-900 border-l border-slate-700">
+                          {dateStr}
+                        </th>
+                      ))
+                    ) : (
+                      <th className="py-3 px-3 text-center min-w-[130px] bg-[#F07C27] text-white border-l border-slate-700">
+                        Attendance ({selectedDayFilter})
                       </th>
-                    ))}
+                    )}
                     <th className="py-3 px-4 text-right min-w-[120px]">Presence Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#111111]/20 bg-white">
                   {filteredAttendanceCandidates.length === 0 ? (
                     <tr>
-                      <td colSpan={7 + distinctSessionDates.length} className="p-8 text-center text-slate-500 font-mono text-xs">
+                      <td colSpan={7 + (selectedDayFilter === "ALL" ? distinctSessionDates.length : 1)} className="p-8 text-center text-slate-500 font-mono text-xs">
                         No candidates found matching the selected search query or filters.
                       </td>
                     </tr>
@@ -3350,7 +3613,10 @@ export default function AdminDashboardPage() {
                       const initials = c.studentName
                         ? c.studentName.split(" ").map((n) => n[0]).slice(0, 2).join("")
                         : "S";
-                      const percentage = sum?.percentage ?? 100;
+                      const isAllDays = selectedDayFilter === "ALL";
+                      const dayRecord = !isAllDays ? sum?.recordsByDate.find((r) => r.sessionDate === selectedDayFilter) : null;
+                      const dayStatus = dayRecord ? dayRecord.status : null;
+                      const displayPct = isAllDays ? sum?.percentage : dayStatus === "PRESENT" ? 100 : dayStatus === "ABSENT" ? 0 : null;
 
                       return (
                         <tr key={c.studentId} className="hover:bg-[#FFF0E5]/40 transition-colors">
@@ -3407,59 +3673,116 @@ export default function AdminDashboardPage() {
                           {/* Sessions Attended / Total */}
                           <td className="py-3 px-3 text-center border-r border-[#111111]/20 font-bold">
                             <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] shadow-[1px_1px_0px_#111111]">
-                              {sum ? `${sum.attendedCount}/${sum.totalSessions || 1}` : "1/1"}
+                              {isAllDays
+                                ? sum ? `${sum.attendedCount}/${sum.totalSessions || 1}` : "0/1"
+                                : dayStatus === "PRESENT" ? "1/1" : dayStatus === "ABSENT" ? "0/1" : "0/0"}
                             </span>
                           </td>
 
                           {/* Attendance % */}
                           <td className="py-3 px-3 text-center border-r border-[#111111]/20">
                             <div className="flex flex-col items-center gap-1">
-                              <span className={`px-2 py-0.5 text-[11px] font-black border border-[#111111] shadow-[1px_1px_0px_#111111] ${
-                                percentage >= 85
-                                  ? "bg-emerald-600 text-white"
-                                  : percentage >= 75
-                                  ? "bg-amber-500 text-white"
-                                  : "bg-rose-600 text-white"
-                              }`}>
-                                {percentage}%
-                              </span>
+                              {displayPct !== null && displayPct !== undefined ? (
+                                <span className={`px-2 py-0.5 text-[11px] font-black border border-[#111111] shadow-[1px_1px_0px_#111111] ${
+                                  displayPct >= 85
+                                    ? "bg-emerald-600 text-white"
+                                    : displayPct >= 75
+                                    ? "bg-amber-500 text-white"
+                                    : "bg-rose-600 text-white"
+                                }`}>
+                                  {displayPct}%
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 text-[10px] font-bold border border-slate-300 bg-slate-100 text-slate-700">
+                                  Pending
+                                </span>
+                              )}
                             </div>
                           </td>
 
-                          {/* Date Columns (e.g. Day 1: 12 Oct, Day 2: 13 Oct) */}
-                          {distinctSessionDates.map(([dateStr]) => {
-                            const foundRecord = sum?.recordsByDate.find((r) => r.sessionDate === dateStr);
-                            const status = foundRecord ? foundRecord.status : null;
+                          {/* Date Columns */}
+                          {isAllDays ? (
+                            distinctSessionDates.map(([dateStr]) => {
+                              const foundRecord = sum?.recordsByDate.find((r) => r.sessionDate === dateStr);
+                              const status = foundRecord ? foundRecord.status : null;
 
-                            return (
-                              <td key={dateStr} className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
-                                {status === "PRESENT" ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-black text-[10px] shadow-[1px_1px_0px_#111111]">
-                                    <Check className="w-3 h-3 text-emerald-700 stroke-[3]" />
-                                    <span>PRESENT</span>
-                                  </span>
-                                ) : status === "LATE" ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-900 font-black text-[10px]">
-                                    <span>LATE</span>
-                                  </span>
-                                ) : status === "ABSENT" ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-950 border border-rose-900 font-black text-[10px]">
-                                    <span>ABSENT</span>
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[10px]">
-                                    <span>PENDING</span>
-                                  </span>
-                                )}
-                              </td>
-                            );
-                          })}
+                              return (
+                                <td key={dateStr} className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
+                                  {status === "PRESENT" ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-black text-[10px] shadow-[1px_1px_0px_#111111]">
+                                      <Check className="w-3 h-3 text-emerald-700 stroke-[3]" />
+                                      <span>PRESENT</span>
+                                    </span>
+                                  ) : status === "LATE" ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-900 font-black text-[10px]">
+                                      <span>LATE</span>
+                                    </span>
+                                  ) : status === "ABSENT" ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-950 border border-rose-900 font-black text-[10px]">
+                                      <span>ABSENT</span>
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[10px]">
+                                      <span>⏳ PENDING</span>
+                                    </span>
+                                  )}
+                                </td>
+                              );
+                            })
+                          ) : (
+                            <td className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
+                              {dayStatus === "PRESENT" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-black text-[10px] shadow-[1px_1px_0px_#111111]">
+                                  <Check className="w-3 h-3 text-emerald-700 stroke-[3]" />
+                                  <span>PRESENT</span>
+                                </span>
+                              ) : dayStatus === "LATE" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-900 font-black text-[10px]">
+                                  <span>LATE</span>
+                                </span>
+                              ) : dayStatus === "ABSENT" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-rose-100 text-rose-950 border border-rose-900 font-black text-[10px]">
+                                  <span>ABSENT</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-900 border border-amber-300 font-bold text-[10px]">
+                                  <span>⏳ PENDING</span>
+                                </span>
+                              )}
+                            </td>
+                          )}
 
                           {/* Presence Status */}
                           <td className="py-3 px-4 text-right">
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111]">
-                              ✓ EXCELLENT
-                            </span>
+                            {isAllDays ? (
+                              displayPct === 100 ? (
+                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111]">
+                                  ✓ EXCELLENT
+                                </span>
+                              ) : displayPct !== null && displayPct !== undefined ? (
+                                <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-900 font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111]">
+                                  {displayPct}%
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 font-mono text-[10px] font-bold uppercase">
+                                  ⏳ PENDING
+                                </span>
+                              )
+                            ) : (
+                              dayStatus === "PRESENT" ? (
+                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111]">
+                                  ✓ PRESENT
+                                </span>
+                              ) : dayStatus === "ABSENT" ? (
+                                <span className="px-2 py-0.5 bg-rose-100 text-rose-950 border border-rose-900 font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111]">
+                                  ❌ ABSENT
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 font-mono text-[10px] font-bold uppercase">
+                                  ⏳ PENDING SESSION
+                                </span>
+                              )
+                            )}
                           </td>
                         </tr>
                       );
@@ -3750,7 +4073,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-4">
             <h3 className="font-mono font-black text-[#111111] uppercase tracking-wider text-sm flex items-center gap-2">
               <span className="w-2.5 h-2.5 bg-[#F07C27] border border-[#111111]"></span>
-              Faculty Feedback Explorer
+              Faculty Feedback & Appraisal Audit
             </h3>
             <select
               value={feedbackLabId}
@@ -3758,12 +4081,12 @@ export default function AdminDashboardPage() {
                 setFeedbackLabId(e.target.value);
                 loadFeedbacks(e.target.value);
               }}
-              className="bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
+              className="bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white cursor-pointer"
             >
-              <option value="">Select Laboratory Track...</option>
+              <option value="">All Laboratory Tracks ({labs.length})</option>
               {labs.map((l) => (
                 <option key={l.id} value={l.id}>
-                  {l.name}
+                  🏛️ {l.name}
                 </option>
               ))}
             </select>
@@ -3772,12 +4095,8 @@ export default function AdminDashboardPage() {
           {feedbacks.length === 0 ? (
             <EmptyState
               icon={MessageSquare}
-              title={feedbackLabId ? "No feedback submitted yet" : "Select a Laboratory Track"}
-              description={
-                feedbackLabId
-                  ? "Candidates enrolled in this lab track haven't submitted any feedback evaluations yet."
-                  : "Select a laboratory track above to inspect mentor ratings and candidate evaluations."
-              }
+              title={feedbackLabId ? "No feedback submitted yet for this lab" : "No Student Appraisals Found"}
+              description="Candidates have not yet submitted any feedback reviews for the selected filter."
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3806,9 +4125,20 @@ export default function AdminDashboardPage() {
 
                   <p className="text-sm text-[#111111] font-mono italic">&quot;{f.comment}&quot;</p>
 
-                  <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-700 pt-2 border-t border-[#111111]/15">
-                    <span>From: {f.isAnonymous ? "Anonymous Candidate" : f.student?.name}</span>
-                    <span>Mentor: {f.mentor?.name || "Lead"}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] font-mono font-bold text-slate-700 pt-2 border-t border-[#111111]/15 gap-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span>Candidate: <strong className="text-[#111111]">{f.student?.name || "Student"}</strong></span>
+                      {f.student?.rollNumber && <span className="text-slate-500 font-bold">({f.student.rollNumber})</span>}
+                      {f.isAnonymous && (
+                        <span className="px-1.5 py-0.2 bg-amber-100 text-amber-900 border border-amber-400 text-[9px] font-black uppercase">
+                          Anonymous to Mentor
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-500 shrink-0">
+                      <span>Mentor: {f.mentor?.name || "Lead"}</span>
+                      <span>· {new Date(f.createdAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 </div>
               ))}

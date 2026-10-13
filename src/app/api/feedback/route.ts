@@ -15,15 +15,30 @@ export async function GET(req: NextRequest) {
       return errorResponse("workshopId query parameter is required", "BAD_REQUEST", 400);
     }
 
+    const labId = searchParams.get("labId");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
+    const where: any = {
+      workshopId,
+      ...(user.role === "MENTOR" ? { mentorId: user.sub } : {}),
+      ...(user.role === "STUDENT" ? { studentId: user.sub } : {}),
+    };
+
+    if (user.role === "ADMIN") {
+      if (labId) where.labId = labId;
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt.gte = new Date(startDate);
+        if (endDate) where.createdAt.lte = new Date(endDate);
+      }
+    }
+
     const feedbacks = await prisma.feedback.findMany({
-      where: {
-        workshopId,
-        ...(user.role === "MENTOR" ? { mentorId: user.sub } : {}),
-        ...(user.role === "STUDENT" ? { studentId: user.sub } : {}),
-      },
+      where,
       include: {
         mentor: { select: { id: true, name: true } },
-        student: { select: { id: true, name: true } },
+        student: { select: { id: true, name: true, email: true, rollNumber: true, college: true } },
         lab: true,
       },
       orderBy: { createdAt: "desc" },
@@ -31,8 +46,9 @@ export async function GET(req: NextRequest) {
 
     const sanitized = feedbacks.map((f) => {
       if (f.isAnonymous && user.role !== "ADMIN") {
+        const { student: _s, studentId: _sid, ...rest } = f;
         return {
-          ...f,
+          ...rest,
           studentId: "ANONYMOUS",
           student: { id: "ANONYMOUS", name: "Anonymous Student" },
         };
@@ -120,7 +136,7 @@ export async function POST(req: NextRequest) {
         rating: data.rating,
         comment: data.comment,
         category: data.category,
-        isAnonymous: data.isAnonymous,
+        isAnonymous: data.isAnonymous !== undefined ? data.isAnonymous : true,
       },
       create: {
         workshopId: data.workshopId,
@@ -130,11 +146,14 @@ export async function POST(req: NextRequest) {
         rating: data.rating,
         comment: data.comment,
         category: data.category,
-        isAnonymous: data.isAnonymous,
+        isAnonymous: data.isAnonymous !== undefined ? data.isAnonymous : true,
       },
     });
 
-    return successResponse({ feedback }, undefined, 201);
+    return successResponse({
+      feedback,
+      message: "Feedback submitted successfully. Your feedback is anonymous to mentors.",
+    }, undefined, 201);
   } catch (err) {
     return handleApiError(err);
   }

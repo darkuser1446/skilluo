@@ -22,9 +22,11 @@ import {
   Copy,
   Calendar,
   Star,
-  Sparkles,
   Check,
+  Trophy,
+  Sparkles,
 } from "lucide-react";
+import LeaderboardModal from "@/components/LeaderboardModal";
 
 /* ───────────────────────── types ───────────────────────── */
 
@@ -77,6 +79,8 @@ interface Result {
 interface Assessment {
   id: string;
   title: string;
+  description?: string | null;
+  targetLabIds?: string[];
   type: string;
   totalMarks: number;
   passingMarks?: number | null;
@@ -135,8 +139,13 @@ export default function TestManager({
 
   // create-form state
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [type, setType] = useState<"TEST" | "QUIZ" | "PROGRAMMING">("QUIZ");
+  const [targetLabMode, setTargetLabMode] = useState<"ALL" | "SINGLE" | "MULTIPLE">("ALL");
   const [labId, setLabId] = useState("");
+  const [selectedTargetLabIds, setSelectedTargetLabIds] = useState<string[]>([]);
+  const [filterTestStatus, setFilterTestStatus] = useState<"ALL" | "ACTIVE" | "COMPLETED" | "UPCOMING">("ALL");
+  const [leaderboardAssessment, setLeaderboardAssessment] = useState<{ id: string; title: string } | null>(null);
   const [passingMarks, setPassingMarks] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("30");
   const [allowedViolations, setAllowedViolations] = useState("3");
@@ -196,7 +205,10 @@ export default function TestManager({
 
   const resetForm = () => {
     setTitle("");
+    setDescription("");
     setLabId("");
+    setTargetLabMode("ALL");
+    setSelectedTargetLabIds([]);
     setPassingMarks("");
     setDurationMinutes("30");
     setAllowedViolations("3");
@@ -212,16 +224,26 @@ export default function TestManager({
     if (questions.length === 0) return flash("Add at least one question", false);
     setBusy(true);
     try {
+      let finalLabId: string | undefined = undefined;
+      let finalTargetLabIds: string[] = [];
+      if (targetLabMode === "SINGLE") {
+        finalLabId = labId || undefined;
+      } else if (targetLabMode === "MULTIPLE") {
+        finalTargetLabIds = selectedTargetLabIds;
+      }
+
       const payload = {
         workshopId,
-        labId: labId || undefined,
+        labId: finalLabId,
+        targetLabIds: finalTargetLabIds,
         title,
+        description: description || undefined,
         type,
         totalMarks,
         passingMarks: passingMarks ? Number(passingMarks) : Math.round(totalMarks * 0.6),
         durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
         allowedViolations: allowedViolations ? Number(allowedViolations) : 3,
-        instructions: instructions || undefined,
+        instructions: instructions || description || undefined,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
         questions: questions.map((q) => ({
@@ -848,7 +870,7 @@ export default function TestManager({
           className="border-[3px] border-[#111111] p-6 bg-white shadow-[6px_6px_0px_#111111] space-y-5"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="sm:col-span-2">
+            <div>
               <label className={labelCls}>Test Title *</label>
               <input
                 className={inputCls}
@@ -857,6 +879,15 @@ export default function TestManager({
                 placeholder="Unit Test 3 — Pointers & References"
                 required
                 minLength={3}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Test Description / Subtitle</label>
+              <input
+                className={inputCls}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Comprehensive MCQ assessment on memory and pointers"
               />
             </div>
             <div>
@@ -871,16 +902,92 @@ export default function TestManager({
                 <option value="PROGRAMMING">Programming (code answers, manual review)</option>
               </select>
             </div>
-            <div>
-              <label className={labelCls}>Assign to Lab</label>
-              <select className={inputCls} value={labId} onChange={(e) => setLabId(e.target.value)}>
-                <option value="">All labs</option>
-                {labs.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
+            <div className="sm:col-span-2 lg:col-span-3 bg-[#F4F3F3] p-3 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] space-y-2">
+              <label className={labelCls}>Publish Target & Lab Selection</label>
+              <div className="flex items-center gap-4 flex-wrap text-xs font-mono font-bold">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="targetLabMode"
+                    value="ALL"
+                    checked={targetLabMode === "ALL"}
+                    onChange={() => setTargetLabMode("ALL")}
+                    className="accent-[#F07C27]"
+                  />
+                  <span>All Labs at Once ({labs.length} Labs)</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="targetLabMode"
+                    value="SINGLE"
+                    checked={targetLabMode === "SINGLE"}
+                    onChange={() => setTargetLabMode("SINGLE")}
+                    className="accent-[#F07C27]"
+                  />
+                  <span>Specific Single Lab</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="targetLabMode"
+                    value="MULTIPLE"
+                    checked={targetLabMode === "MULTIPLE"}
+                    onChange={() => setTargetLabMode("MULTIPLE")}
+                    className="accent-[#F07C27]"
+                  />
+                  <span>Multiple Selected Labs</span>
+                </label>
+              </div>
+
+              {targetLabMode === "SINGLE" && (
+                <div className="pt-2">
+                  <select
+                    className={inputCls}
+                    value={labId}
+                    onChange={(e) => setLabId(e.target.value)}
+                  >
+                    <option value="">Select a specific lab...</option>
+                    {labs.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        🏛️ {l.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {targetLabMode === "MULTIPLE" && (
+                <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {labs.map((l) => {
+                    const checked = selectedTargetLabIds.includes(l.id);
+                    return (
+                      <label
+                        key={l.id}
+                        className={`flex items-center gap-2 p-2 border-[2px] border-[#111111] text-xs font-mono font-bold cursor-pointer transition-all ${
+                          checked
+                            ? "bg-[#FFF0E5] text-[#111111] shadow-[2px_2px_0px_#111111]"
+                            : "bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTargetLabIds((prev) => [...prev, l.id]);
+                            } else {
+                              setSelectedTargetLabIds((prev) => prev.filter((id) => id !== l.id));
+                            }
+                          }}
+                          className="accent-[#F07C27]"
+                        />
+                        <span className="truncate">🏛️ {l.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <div>
               <label className={labelCls}>Duration (minutes)</label>
@@ -1089,6 +1196,60 @@ export default function TestManager({
         </form>
       )}
 
+      {/* ── tests filter bar ── */}
+      {assessments.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap bg-[#F4F3F3] p-2 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+          <span className="text-[11px] font-mono font-bold text-slate-700 uppercase px-1">Filter Tests:</span>
+          <button
+            type="button"
+            onClick={() => setFilterTestStatus("ALL")}
+            className={`px-3 py-1 font-mono text-xs font-bold transition-all border-[2px] border-[#111111] ${
+              filterTestStatus === "ALL"
+                ? "bg-[#111111] text-white shadow-[2px_2px_0px_#111111]"
+                : "bg-white text-[#111111] hover:bg-[#FFF0E5]"
+            }`}
+          >
+            All Tests ({assessments.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterTestStatus("ACTIVE")}
+            className={`px-3 py-1 font-mono text-xs font-bold transition-all border-[2px] border-[#111111] flex items-center gap-1 ${
+              filterTestStatus === "ACTIVE"
+                ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
+                : "bg-white text-emerald-800 hover:bg-emerald-50"
+            }`}
+          >
+            ● Active / Live ({assessments.filter((a) => {
+              const now = Date.now();
+              return now >= new Date(a.startsAt).getTime() && now <= new Date(a.endsAt).getTime();
+            }).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterTestStatus("COMPLETED")}
+            className={`px-3 py-1 font-mono text-xs font-bold transition-all border-[2px] border-[#111111] ${
+              filterTestStatus === "COMPLETED"
+                ? "bg-[#111111] text-white shadow-[2px_2px_0px_#111111]"
+                : "bg-white text-slate-700 hover:bg-[#FFF0E5]"
+            }`}
+          >
+            ✓ Completed ({assessments.filter((a) => Date.now() > new Date(a.endsAt).getTime()).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterTestStatus("UPCOMING")}
+            className={`px-3 py-1 font-mono text-xs font-bold transition-all border-[2px] border-[#111111] ${
+              filterTestStatus === "UPCOMING"
+                ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111]"
+                : "bg-white text-slate-700 hover:bg-[#FFF0E5]"
+            }`}
+          >
+            ⏳ Upcoming ({assessments.filter((a) => Date.now() < new Date(a.startsAt).getTime()).length})
+          </button>
+        </div>
+      )}
+
       {/* ── tests list ── */}
       {assessments.length === 0 ? (
         <div className="py-16 border-[3px] border-[#111111] bg-white shadow-[6px_6px_0px_#111111] text-center">
@@ -1100,7 +1261,18 @@ export default function TestManager({
         </div>
       ) : (
         <div className="space-y-3">
-          {assessments.map((a) => {
+          {assessments
+            .filter((a) => {
+              const now = Date.now();
+              const isLive = now >= new Date(a.startsAt).getTime() && now <= new Date(a.endsAt).getTime();
+              const isCompleted = now > new Date(a.endsAt).getTime();
+              const isUpcoming = now < new Date(a.startsAt).getTime();
+              if (filterTestStatus === "ACTIVE") return isLive;
+              if (filterTestStatus === "COMPLETED") return isCompleted;
+              if (filterTestStatus === "UPCOMING") return isUpcoming;
+              return true;
+            })
+            .map((a) => {
             const now = Date.now();
             const isLive =
               now >= new Date(a.startsAt).getTime() && now <= new Date(a.endsAt).getTime();
@@ -1131,15 +1303,28 @@ export default function TestManager({
                           ⏳ NOT LIVE (SCHEDULED: {new Date(a.startsAt).toLocaleDateString()})
                         </span>
                       )}
-                      {a.lab && (
+                      {a.lab ? (
                         <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold text-[#111111] bg-[#F4F3F3]">
-                          {a.lab.name}
+                          🏛️ {a.lab.name}
+                        </span>
+                      ) : a.targetLabIds && a.targetLabIds.length > 0 ? (
+                        <span className="px-2 py-0.5 border border-blue-900 text-[10px] font-mono font-bold text-blue-950 bg-blue-50">
+                          🏛️ {a.targetLabIds.length} Selected Labs
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 border border-[#111111] text-[10px] font-mono font-bold text-[#111111] bg-emerald-50">
+                          🌐 All Labs
                         </span>
                       )}
                     </div>
                     <h4 className="font-mono font-bold text-[#111111] text-sm mt-1 truncate uppercase">
                       {a.title}
                     </h4>
+                    {a.description && (
+                      <p className="text-xs font-mono text-slate-600 mt-0.5 line-clamp-1">
+                        {a.description}
+                      </p>
+                    )}
                     <div className="flex items-center gap-3 text-[11px] font-mono text-slate-600 mt-1 flex-wrap font-bold">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-[#F07C27]" />
@@ -1165,6 +1350,14 @@ export default function TestManager({
                       </span>
                     </div>
                     <button
+                      type="button"
+                      onClick={() => setLeaderboardAssessment({ id: a.id, title: a.title })}
+                      className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-[#FFB703] hover:bg-[#ffa700] text-[#111111] font-mono text-xs font-black transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
+                      title="View test leaderboard and student rankings"
+                    >
+                      <Trophy className="w-3.5 h-3.5 text-[#111111]" /> Leaderboard
+                    </button>
+                    <button
                       onClick={() => handleToggleLive(a, !isLive)}
                       className={`px-2.5 py-1.5 border-[2px] border-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer ${
                         !isLive
@@ -1186,7 +1379,7 @@ export default function TestManager({
                     <button
                       onClick={() => handleDuplicate(a)}
                       className="px-2.5 py-1.5 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-xs font-bold transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111] cursor-pointer"
-                      title="Reuse / Duplicate test with all 100 questions for new cohort"
+                      title="Reuse / Duplicate test with all questions for new cohort"
                     >
                       <Copy className="w-3.5 h-3.5 text-blue-600" /> Reuse
                     </button>
@@ -1279,6 +1472,35 @@ export default function TestManager({
                             >
                               <Download className="w-3.5 h-3.5 text-slate-700" /> Export All (CSV)
                             </button>
+                          </div>
+                        </div>
+
+                        {/* Lab-Wise Performance Stats */}
+                        <div className="bg-white border-[2px] border-[#111111] p-3 shadow-[2px_2px_0px_#111111] mb-3">
+                          <div className="font-display font-black text-xs uppercase text-[#111111] mb-2 flex items-center justify-between">
+                            <span>Lab-Wise Performance & Participation Breakdown</span>
+                            <span className="text-[10px] font-mono text-slate-500 font-bold">Total: {results.length} Submissions</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
+                            {labs.map((l) => {
+                              const labResults = results.filter((r) => {
+                                return (r.student as any)?.labStudents?.[0]?.labId === l.id || (r.student as any)?.college?.includes(l.name);
+                              });
+                              const lSub = labResults.length;
+                              const lAvg = lSub > 0 ? (labResults.reduce((s, r) => s + r.score, 0) / lSub).toFixed(1) : "0";
+                              const passMark = a.passingMarks ?? Math.round(a.totalMarks * 0.6);
+                              const passCount = labResults.filter((r) => r.score >= passMark).length;
+                              return (
+                                <div key={l.id} className="p-2.5 bg-[#F4F3F3] border border-[#111111]">
+                                  <div className="font-bold text-[#111111] truncate">🏛️ {l.name}</div>
+                                  <div className="text-[11px] text-slate-700 mt-1 space-y-0.5">
+                                    <div>Submissions: <strong>{lSub}</strong></div>
+                                    <div>Average Score: <strong>{lAvg} / {a.totalMarks}</strong></div>
+                                    <div>Passed: <strong>{passCount}</strong></div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -1776,6 +1998,14 @@ export default function TestManager({
             </form>
           </div>
         </div>
+      )}
+
+      {leaderboardAssessment && (
+        <LeaderboardModal
+          assessmentId={leaderboardAssessment.id}
+          assessmentTitle={leaderboardAssessment.title}
+          onClose={() => setLeaderboardAssessment(null)}
+        />
       )}
     </div>
   );

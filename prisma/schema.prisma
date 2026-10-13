@@ -298,7 +298,9 @@ model Assessment {
   workshop        Workshop       @relation(fields: [workshopId], references: [id], onDelete: Cascade)
   labId           String?
   lab             Lab?           @relation(fields: [labId], references: [id], onDelete: SetNull)
+  targetLabIds    String[]       @default([])
   title           String
+  description     String?
   type            AssessmentType @default(TEST)
   totalMarks      Float          @default(100)
   passingMarks    Float?
