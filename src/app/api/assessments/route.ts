@@ -160,6 +160,39 @@ export async function POST(req: NextRequest) {
       return errorResponse("End time must be after start time", "VALIDATION_ERROR", 400);
     }
 
+    // ── MCQ Correct Answer Validation ──
+    for (let i = 0; i < data.questions.length; i++) {
+      const q = data.questions[i];
+      const hasOptions = Array.isArray(q.options) && q.options.length > 0;
+      if (hasOptions && q.options) {
+        const cleanOpts = q.options.map((o) => o.trim()).filter(Boolean);
+        if (cleanOpts.length < 2) {
+          return errorResponse(
+            `Question #${i + 1} must have at least 2 answer options`,
+            "VALIDATION_ERROR",
+            400
+          );
+        }
+        if (!q.correctAnswer || !q.correctAnswer.trim()) {
+          return errorResponse(
+            `Please designate a correct answer for Question #${i + 1}`,
+            "VALIDATION_ERROR",
+            400
+          );
+        }
+        const matchesOption = cleanOpts.some(
+          (opt) => opt.toLowerCase() === q.correctAnswer!.trim().toLowerCase()
+        );
+        if (!matchesOption) {
+          return errorResponse(
+            `The selected correct answer for Question #${i + 1} must match one of the provided options`,
+            "VALIDATION_ERROR",
+            400
+          );
+        }
+      }
+    }
+
     const assessment = await prisma.assessment.create({
       data: {
         workshopId: data.workshopId,

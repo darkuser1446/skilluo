@@ -40,6 +40,7 @@ interface Question {
   correctAnswer: string;
   marks: number;
   kind: "choice" | "text";
+  correctOptionIndex?: number;
 }
 
 interface BankQuestion {
@@ -94,7 +95,7 @@ interface Assessment {
   startsAt: string;
   endsAt: string;
   lab?: { id: string; name: string } | null;
-  questions: { id: string; prompt: string; options?: unknown; marks: number }[];
+  questions: { id: string; prompt: string; options?: unknown; correctAnswer?: string | null; marks: number }[];
   results?: Result[];
 }
 
@@ -113,10 +114,11 @@ const btnGhost =
 
 const emptyQuestion = (): Question => ({
   prompt: "",
-  options: ["", ""],
+  options: ["", "", "", ""],
   correctAnswer: "",
-  marks: 5,
+  marks: 1,
   kind: "choice",
+  correctOptionIndex: undefined,
 });
 
 /* ───────────────────────── component ───────────────────────── */
@@ -175,6 +177,7 @@ export default function TestManager({
   const [editInstructions, setEditInstructions] = useState("");
   const [editStartsAt, setEditStartsAt] = useState("");
   const [editEndsAt, setEditEndsAt] = useState("");
+  const [editQuestions, setEditQuestions] = useState<Question[]>([]);
 
   const totalMarks = questions.reduce((s, q) => s + (Number(q.marks) || 0), 0);
 
@@ -231,6 +234,34 @@ export default function TestManager({
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (questions.length === 0) return flash("Add at least one question", false);
+
+    // ── MCQ Correct Answer Validation ──
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      if (!q.prompt.trim()) {
+        flash(`Please enter a prompt for Question #${i + 1}`, false);
+        return;
+      }
+      if (q.kind === "choice") {
+        const cleanOpts = q.options.map((o) => o.trim()).filter(Boolean);
+        if (cleanOpts.length < 2) {
+          flash(`Question #${i + 1} must have at least 2 non-empty options.`, false);
+          return;
+        }
+        if (!q.correctAnswer || !q.correctAnswer.trim()) {
+          flash(`Please select the radio button next to the correct answer for Question #${i + 1}.`, false);
+          return;
+        }
+        const matchesOption = cleanOpts.some(
+          (opt) => opt.toLowerCase() === q.correctAnswer.trim().toLowerCase()
+        );
+        if (!matchesOption) {
+          flash(`The selected correct answer for Question #${i + 1} must match one of its options.`, false);
+          return;
+        }
+      }
+    }
+
     setBusy(true);
     try {
       let finalLabId: string | undefined = undefined;
@@ -311,14 +342,61 @@ export default function TestManager({
     setEditInstructions(a.instructions || "");
     setEditStartsAt(toLocalInput(a.startsAt));
     setEditEndsAt(toLocalInput(a.endsAt));
+
+    const mappedQuestions: Question[] = (a.questions || []).map((q: any) => {
+      const opts = Array.isArray(q.options) && q.options.length > 0 ? (q.options as string[]) : ["", "", "", ""];
+      const correct = q.correctAnswer || "";
+      const correctIdx = opts.findIndex((o) => o.trim().toLowerCase() === correct.trim().toLowerCase());
+      return {
+        prompt: q.prompt || "",
+        options: opts,
+        correctAnswer: correct,
+        marks: q.marks || 1,
+        kind: Array.isArray(q.options) && q.options.length > 0 ? "choice" : "text",
+        correctOptionIndex: correctIdx >= 0 ? correctIdx : undefined,
+      };
+    });
+    setEditQuestions(mappedQuestions.length > 0 ? mappedQuestions : [emptyQuestion()]);
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingAssessment) return;
+
+    const hasSubmissions = (editingAssessment.results?.length || 0) > 0;
+
+    // Validate edit questions if modifying questions on a test with 0 submissions
+    if (!hasSubmissions && editQuestions.length > 0) {
+      for (let i = 0; i < editQuestions.length; i++) {
+        const q = editQuestions[i];
+        if (!q.prompt.trim()) {
+          flash(`Please enter a prompt for Question #${i + 1}`, false);
+          return;
+        }
+        if (q.kind === "choice") {
+          const cleanOpts = q.options.map((o) => o.trim()).filter(Boolean);
+          if (cleanOpts.length < 2) {
+            flash(`Question #${i + 1} must have at least 2 non-empty options.`, false);
+            return;
+          }
+          if (!q.correctAnswer || !q.correctAnswer.trim()) {
+            flash(`Please select the radio button next to the correct answer for Question #${i + 1}.`, false);
+            return;
+          }
+          const matchesOption = cleanOpts.some(
+            (opt) => opt.toLowerCase() === q.correctAnswer.trim().toLowerCase()
+          );
+          if (!matchesOption) {
+            flash(`The designated correct answer for Question #${i + 1} must match one of its options.`, false);
+            return;
+          }
+        }
+      }
+    }
+
     setBusy(true);
     try {
-      const payload = {
+      const payload: any = {
         title: editTitle,
         type: editType,
         labId: editLabId || null,
@@ -329,6 +407,16 @@ export default function TestManager({
         startsAt: new Date(editStartsAt).toISOString(),
         endsAt: new Date(editEndsAt).toISOString(),
       };
+
+      if (!hasSubmissions && editQuestions.length > 0) {
+        payload.questions = editQuestions.map((q) => ({
+          prompt: q.prompt,
+          options: q.kind === "choice" ? q.options.filter((o) => o.trim()) : [],
+          correctAnswer: q.correctAnswer || undefined,
+          marks: Number(q.marks) || 1,
+        }));
+      }
+
       const res = await fetch(`/api/assessments/${editingAssessment.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -1144,65 +1232,135 @@ export default function TestManager({
                 />
 
                 {q.kind === "choice" ? (
-                  <div className="space-y-2">
-                    {q.options.map((opt, oi) => (
-                      <div key={oi} className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={`correct-${idx}`}
-                          checked={q.correctAnswer === opt && opt.trim() !== ""}
-                          onChange={() => updateQ(idx, { correctAnswer: opt })}
-                          disabled={!opt.trim()}
-                          title="Mark as correct answer"
-                          className="accent-emerald-500"
-                        />
-                        <input
-                          className={inputCls}
-                          value={opt}
-                          onChange={(e) => {
-                            const old = q.options[oi];
-                            const next = [...q.options];
-                            next[oi] = e.target.value;
-                            const patch: Partial<Question> = { options: next };
-                            if (q.correctAnswer === old) patch.correctAnswer = e.target.value;
-                            updateQ(idx, patch);
-                          }}
-                          placeholder={`Option ${oi + 1}${oi < 2 ? " *" : ""}`}
-                        />
-                        {q.options.length > 2 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateQ(idx, {
-                                options: q.options.filter((_, i) => i !== oi),
-                                correctAnswer:
-                                  q.correctAnswer === q.options[oi] ? "" : q.correctAnswer,
-                              })
-                            }
-                            className="text-rose-400 hover:text-rose-300 text-xs"
+                  <div className="space-y-2.5">
+                    <div className="text-[11px] font-mono font-bold text-slate-700 flex items-center justify-between">
+                      <span>Answer Options (Select the radio button next to the single correct option):</span>
+                      <span className="text-[10px] text-slate-500 font-normal">Min 2 options required</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {q.options.map((opt, oi) => {
+                        const optLetter = ["A", "B", "C", "D", "E", "F", "G", "H"][oi] || String(oi + 1);
+                        const isSelectedCorrect = Boolean(
+                          (q.correctOptionIndex === oi) ||
+                          (q.correctAnswer && q.correctAnswer.trim() !== "" && q.correctAnswer.trim().toLowerCase() === opt.trim().toLowerCase() && opt.trim() !== "")
+                        );
+
+                        return (
+                          <div
+                            key={oi}
+                            className={`flex items-center gap-2 p-1.5 border-[2px] transition-all ${
+                              isSelectedCorrect
+                                ? "border-emerald-600 bg-emerald-50/80 shadow-[2px_2px_0px_#059669]"
+                                : "border-[#111111] bg-white shadow-[1px_1px_0px_#111111]"
+                            }`}
                           >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="text-[11px] font-mono text-brand-orange hover:underline"
-                      onClick={() => updateQ(idx, { options: [...q.options, ""] })}
-                    >
-                      + add option
-                    </button>
-                    {!q.correctAnswer && (
-                      <p className="text-[10px] font-mono text-amber-400">
-                        Select the radio next to the correct option.
-                      </p>
-                    )}
+                            <label
+                              className="flex items-center gap-2 cursor-pointer flex-shrink-0"
+                              title={`Designate Option ${optLetter} as the correct answer`}
+                            >
+                              <input
+                                type="radio"
+                                name={`correct-${idx}`}
+                                checked={isSelectedCorrect}
+                                onChange={() => {
+                                  updateQ(idx, {
+                                    correctOptionIndex: oi,
+                                    correctAnswer: opt.trim() || opt,
+                                  });
+                                }}
+                                className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                              />
+                              <span
+                                className={`px-2 py-0.5 border font-mono text-xs font-black uppercase ${
+                                  isSelectedCorrect
+                                    ? "bg-emerald-600 text-white border-emerald-700"
+                                    : "bg-[#111111] text-white border-[#111111]"
+                                }`}
+                              >
+                                Option {optLetter}
+                              </span>
+                            </label>
+
+                            <input
+                              className={`flex-1 px-3 py-1.5 border-[2px] text-xs font-mono transition-all focus:outline-none ${
+                                isSelectedCorrect
+                                  ? "border-emerald-600 bg-white font-bold text-emerald-950 focus:ring-1 focus:ring-emerald-600"
+                                  : "border-[#111111] bg-[#F4F3F3] text-[#111111] focus:bg-white"
+                              }`}
+                              value={opt}
+                              onChange={(e) => {
+                                const newVal = e.target.value;
+                                const oldVal = q.options[oi];
+                                const next = [...q.options];
+                                next[oi] = newVal;
+                                const patch: Partial<Question> = { options: next };
+                                if (isSelectedCorrect || q.correctOptionIndex === oi || q.correctAnswer === oldVal) {
+                                  patch.correctAnswer = newVal;
+                                  patch.correctOptionIndex = oi;
+                                }
+                                updateQ(idx, patch);
+                              }}
+                              placeholder={`Enter text for Option ${optLetter}${oi < 2 ? " *" : ""}`}
+                              required={oi < 2}
+                            />
+
+                            {isSelectedCorrect && (
+                              <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600 text-white font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] whitespace-nowrap">
+                                <Check className="w-3 h-3 text-white" /> Correct Answer
+                              </span>
+                            )}
+
+                            {q.options.length > 2 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const next = q.options.filter((_, i) => i !== oi);
+                                  const patch: Partial<Question> = { options: next };
+                                  if (isSelectedCorrect) {
+                                    patch.correctAnswer = "";
+                                    patch.correctOptionIndex = undefined;
+                                  } else if (q.correctOptionIndex !== undefined && q.correctOptionIndex > oi) {
+                                    patch.correctOptionIndex = q.correctOptionIndex - 1;
+                                  }
+                                  updateQ(idx, patch);
+                                }}
+                                className="p-1 text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-300 transition-all text-xs"
+                                title={`Remove Option ${optLetter}`}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                      <button
+                        type="button"
+                        className="text-[11px] font-mono text-brand-orange hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                        onClick={() => updateQ(idx, { options: [...q.options, ""] })}
+                      >
+                        <Plus className="w-3 h-3" /> Add Option {["A", "B", "C", "D", "E", "F", "G", "H"][q.options.length] || ""}
+                      </button>
+
+                      {q.correctAnswer ? (
+                        <span className="text-[11px] font-mono font-bold text-emerald-700 flex items-center gap-1 bg-emerald-100 px-2 py-0.5 border border-emerald-600">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          Selected Key: Option {["A", "B", "C", "D", "E", "F", "G", "H"][q.correctOptionIndex ?? q.options.indexOf(q.correctAnswer)] || "?"}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-mono font-bold text-amber-800 flex items-center gap-1 bg-amber-100 px-2 py-0.5 border border-amber-600 animate-pulse">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                          Select a radio button to designate the correct answer
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <p className="text-[10px] font-mono text-slate-500">
-                    Students answer with text/code here — you grade it manually from the results
-                    panel.
+                    Students answer with text/code here — you grade it manually from the results panel.
                   </p>
                 )}
               </div>
@@ -2043,7 +2201,7 @@ export default function TestManager({
       {/* ── edit test modal ── */}
       {editingAssessment && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="border-[4px] border-[#111111] bg-white shadow-[10px_10px_0px_#111111] max-w-xl w-full p-6 space-y-4 my-8">
+          <div className="border-[4px] border-[#111111] bg-white shadow-[10px_10px_0px_#111111] max-w-3xl w-full p-6 space-y-4 my-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b-[2px] border-[#111111] pb-3">
               <h4 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
                 <Edit3 className="w-5 h-5 text-[#F07C27]" /> Edit Test Schedule & Parameters
@@ -2186,6 +2344,160 @@ export default function TestManager({
                   onChange={(e) => setEditInstructions(e.target.value)}
                   placeholder="e.g. 100 MCQs. 90 minutes duration. Top candidates by Score & Completion Speed will be shortlisted for Lab Allocation."
                 />
+              </div>
+
+              {/* ── Question Editor & Answer Key in Edit Modal ── */}
+              <div className="border-[2px] border-[#111111] bg-[#F4F3F3] p-3 space-y-3 shadow-[2px_2px_0px_#111111]">
+                <div className="flex items-center justify-between border-b border-[#111111] pb-2">
+                  <div className="flex items-center gap-1.5 font-mono text-xs font-black uppercase text-[#111111]">
+                    <FileText className="w-4 h-4 text-[#F07C27]" />
+                    <span>Questions & Answer Keys ({editQuestions.length} Questions)</span>
+                  </div>
+                  {editingAssessment.results && editingAssessment.results.length > 0 ? (
+                    <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-600 px-2 py-0.5">
+                      🔒 Locked ({editingAssessment.results.length} submissions recorded)
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditQuestions((prev) => [...prev, emptyQuestion()])}
+                      className="px-2 py-1 bg-white border border-[#111111] text-[10px] font-mono font-bold text-[#111111] hover:bg-[#111111] hover:text-white transition-all shadow-[1px_1px_0px_#111111]"
+                    >
+                      + Add Question
+                    </button>
+                  )}
+                </div>
+
+                {editingAssessment.results && editingAssessment.results.length > 0 ? (
+                  <p className="text-xs font-mono text-slate-600 py-2">
+                    Questions and answer keys cannot be modified because {editingAssessment.results.length} students have already submitted results. Only schedule, duration, passing marks, and violation limits may be updated.
+                  </p>
+                ) : (
+                  <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                    {editQuestions.map((eq, qi) => (
+                      <div key={qi} className="p-3 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-mono font-black text-[#F07C27] bg-[#FFF0E5] px-2 py-0.5 border border-[#111111]">
+                            Q{qi + 1}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min={1}
+                              value={eq.marks}
+                              onChange={(e) => {
+                                const m = Number(e.target.value) || 1;
+                                setEditQuestions((prev) => prev.map((item, idx) => idx === qi ? { ...item, marks: m } : item));
+                              }}
+                              className="w-14 px-1 py-0.5 border border-[#111111] text-xs font-mono font-bold text-center"
+                              title="Marks"
+                            />
+                            <span className="text-[10px] font-mono text-slate-500">marks</span>
+                            {editQuestions.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => setEditQuestions((prev) => prev.filter((_, idx) => idx !== qi))}
+                                className="p-1 text-rose-700 hover:bg-rose-100 border border-rose-300"
+                                title="Remove question"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <textarea
+                          className={inputCls}
+                          rows={2}
+                          value={eq.prompt}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEditQuestions((prev) => prev.map((item, idx) => idx === qi ? { ...item, prompt: val } : item));
+                          }}
+                          placeholder="Question prompt…"
+                          required
+                        />
+
+                        {eq.kind === "choice" && (
+                          <div className="space-y-1.5 pt-1">
+                            <span className="text-[10px] font-mono font-bold text-slate-600 block">
+                              Options & Correct Answer (Click radio to select):
+                            </span>
+                            {eq.options.map((opt, oi) => {
+                              const optLetter = ["A", "B", "C", "D", "E", "F", "G", "H"][oi] || String(oi + 1);
+                              const isSelectedCorrect = Boolean(
+                                (eq.correctOptionIndex === oi) ||
+                                (eq.correctAnswer && eq.correctAnswer.trim() !== "" && eq.correctAnswer.trim().toLowerCase() === opt.trim().toLowerCase() && opt.trim() !== "")
+                              );
+
+                              return (
+                                <div
+                                  key={oi}
+                                  className={`flex items-center gap-1.5 p-1 border ${
+                                    isSelectedCorrect
+                                      ? "border-emerald-600 bg-emerald-50"
+                                      : "border-slate-300 bg-white"
+                                  }`}
+                                >
+                                  <label className="flex items-center gap-1.5 cursor-pointer flex-shrink-0">
+                                    <input
+                                      type="radio"
+                                      name={`edit-correct-${qi}`}
+                                      checked={isSelectedCorrect}
+                                      onChange={() => {
+                                        setEditQuestions((prev) =>
+                                          prev.map((item, idx) =>
+                                            idx === qi
+                                              ? { ...item, correctOptionIndex: oi, correctAnswer: opt.trim() || opt }
+                                              : item
+                                          )
+                                        );
+                                      }}
+                                      className="w-3.5 h-3.5 accent-emerald-600"
+                                    />
+                                    <span className={`px-1.5 py-0.5 text-[10px] font-mono font-bold ${isSelectedCorrect ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-800"}`}>
+                                      {optLetter}
+                                    </span>
+                                  </label>
+
+                                  <input
+                                    className="flex-1 px-2 py-1 border border-slate-300 text-xs font-mono focus:outline-none"
+                                    value={opt}
+                                    onChange={(e) => {
+                                      const newVal = e.target.value;
+                                      const oldVal = eq.options[oi];
+                                      const next = [...eq.options];
+                                      next[oi] = newVal;
+                                      setEditQuestions((prev) =>
+                                        prev.map((item, idx) => {
+                                          if (idx !== qi) return item;
+                                          const patch: any = { options: next };
+                                          if (isSelectedCorrect || item.correctOptionIndex === oi || item.correctAnswer === oldVal) {
+                                            patch.correctAnswer = newVal;
+                                            patch.correctOptionIndex = oi;
+                                          }
+                                          return { ...item, ...patch };
+                                        })
+                                      );
+                                    }}
+                                    placeholder={`Option ${optLetter} text`}
+                                    required={oi < 2}
+                                  />
+
+                                  {isSelectedCorrect && (
+                                    <span className="text-[10px] font-mono font-black text-emerald-800 flex items-center gap-0.5 pr-1">
+                                      <Check className="w-3 h-3 text-emerald-700" /> Key
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t-[2px] border-[#111111]">
