@@ -1093,7 +1093,7 @@ export default function AdminDashboardPage() {
 
     Object.keys(summary).forEach((sid) => {
       const s = summary[sid];
-      s.percentage = s.totalSessions > 0 ? Math.round((s.attendedCount / s.totalSessions) * 100) : 0;
+      s.percentage = s.totalSessions > 0 ? Math.round((s.attendedCount / s.totalSessions) * 100) : 100;
     });
 
     return summary;
@@ -1184,7 +1184,7 @@ export default function AdminDashboardPage() {
       const sum = studentAttendanceSummary[c.studentId];
       const dateStatuses = distinctSessionDates.map(([d]) => {
         const found = sum?.recordsByDate.find((r) => r.sessionDate === d);
-        return found ? found.status : "—";
+        return found ? found.status : "PENDING";
       });
 
       return [
@@ -3200,15 +3200,13 @@ export default function AdminDashboardPage() {
 
               <div className="bg-[#e6f4ea] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 font-bold">
-                  Days Recorded
+                  Days Scheduled
                 </div>
                 <div className="font-display font-black text-2xl text-emerald-950 mt-0.5">
-                  {distinctSessionDates.length > 0 ? distinctSessionDates.length : 1}
+                  {distinctSessionDates.length > 0 ? distinctSessionDates.length : 2}
                 </div>
                 <div className="text-[10px] font-mono text-emerald-700 mt-0.5 font-bold">
-                  {distinctSessionDates.length > 0
-                    ? `Latest: ${distinctSessionDates[distinctSessionDates.length - 1][0]}`
-                    : "Day 1 (12 Oct)"}
+                  Day 1 (12 Oct) & Day 2 (13 Oct)
                 </div>
               </div>
 
@@ -3428,10 +3426,10 @@ export default function AdminDashboardPage() {
                             </div>
                           </td>
 
-                          {/* Date Columns (e.g. Day 1: 12 Oct) */}
+                          {/* Date Columns (e.g. Day 1: 12 Oct, Day 2: 13 Oct) */}
                           {distinctSessionDates.map(([dateStr]) => {
                             const foundRecord = sum?.recordsByDate.find((r) => r.sessionDate === dateStr);
-                            const status = foundRecord ? foundRecord.status : "—";
+                            const status = foundRecord ? foundRecord.status : null;
 
                             return (
                               <td key={dateStr} className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
@@ -3449,7 +3447,9 @@ export default function AdminDashboardPage() {
                                     <span>ABSENT</span>
                                   </span>
                                 ) : (
-                                  <span className="text-slate-400 font-bold">—</span>
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[10px]">
+                                    <span>PENDING</span>
+                                  </span>
                                 )}
                               </td>
                             );

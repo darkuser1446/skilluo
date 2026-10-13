@@ -175,16 +175,7 @@ export default function MentorDashboardPage() {
         (d: any) => { const list = d.data.labs || []; setLabs(list); if (list.length > 0) setSelectedLabId(list[0].id); },
         (d: any) => setAssignments(d.data.assignments || []),
         (d: any) => setNotes(d.data.notes || []),
-        (d: any) => {
-          const sessList = d.data.sessions || [];
-          setSessions(sessList);
-          if (sessList.length > 0) {
-            setActiveSession(sessList[0]);
-            const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
-            sessList[0].attendanceRecords?.forEach((r: any) => { map[r.studentId] = r.status; });
-            setAttendanceMap(map);
-          }
-        },
+        (d: any) => setSessions(d.data.sessions || []),
         (d: any) => { const list = d.data.doubts || []; setDoubts(list); if (list.length > 0) setSelectedDoubt(list[0]); },
         (d: any) => setFeedbacks(d.data.feedbacks || []),
         (d: any) => setExercises(d.data.exercises || []),
@@ -506,6 +497,29 @@ export default function MentorDashboardPage() {
   const activeLab = labs.find((l) => l.id === selectedLabId) || labs[0];
   const profile = user?.mentorProfile;
 
+  // Active lab's sessions sorted descending (Day 2 first, Day 1 second)
+  const activeLabSessions = useMemo(() => {
+    return sessions
+      .filter((s) => !s.labId || s.labId === (selectedLabId || activeLab?.id))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [sessions, selectedLabId, activeLab?.id]);
+
+  // Keep activeSession and attendanceMap synced to the currently selected lab
+  useEffect(() => {
+    if (activeLabSessions.length > 0) {
+      const match = activeLabSessions.find((s) => s.id === activeSession?.id) || activeLabSessions[0];
+      setActiveSession(match);
+      const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
+      match.attendanceRecords?.forEach((r: any) => {
+        map[r.studentId] = r.status;
+      });
+      setAttendanceMap(map);
+    } else {
+      setActiveSession(null);
+      setAttendanceMap({});
+    }
+  }, [selectedLabId, activeLabSessions]);
+
   const filteredRosterStudents = (activeLab?.students || []).filter((ls: any) => {
     if (!rosterSearch.trim()) return true;
     const q = rosterSearch.toLowerCase();
@@ -591,7 +605,7 @@ export default function MentorDashboardPage() {
 
     Object.keys(summary).forEach((sid) => {
       const s = summary[sid];
-      s.percentage = s.totalSessions > 0 ? Math.round((s.attendedCount / s.totalSessions) * 100) : 0;
+      s.percentage = s.totalSessions > 0 ? Math.round((s.attendedCount / s.totalSessions) * 100) : 100;
     });
 
     return summary;
@@ -686,7 +700,7 @@ export default function MentorDashboardPage() {
       const sum = labAttendanceSummary[ls.studentId];
       const dateStatuses = labDistinctDates.map(([d]) => {
         const found = sum?.recordsByDate.find((r) => r.sessionDate === d);
-        return found ? found.status : "—";
+        return found ? found.status : "PENDING";
       });
 
       return [
@@ -1651,13 +1665,13 @@ export default function MentorDashboardPage() {
 
                 <div className="bg-[#e6f4ea] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                   <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 font-bold">
-                    Days Recorded
+                    Days Scheduled
                   </div>
                   <div className="font-display font-black text-2xl text-emerald-950 mt-0.5">
-                    {labDistinctDates.length > 0 ? labDistinctDates.length : 1}
+                    {labDistinctDates.length > 0 ? labDistinctDates.length : 2}
                   </div>
                   <div className="text-[10px] font-mono text-emerald-700 mt-0.5 font-bold">
-                    {labDistinctDates.length > 0 ? `Latest: ${labDistinctDates[labDistinctDates.length - 1][0]}` : "Day 1 (12 Oct)"}
+                    Day 1 (12 Oct) & Day 2 (13 Oct)
                   </div>
                 </div>
 
@@ -1784,7 +1798,7 @@ export default function MentorDashboardPage() {
                           const initials = st?.name ? st.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("") : "S";
                           const sum = labAttendanceSummary[sid];
                           const percentage = sum?.percentage ?? 100;
-                          const currentStatus = attendanceMap[sid] || "PRESENT";
+                          const currentStatus = attendanceMap[sid] || null;
                           const isMarkingThis = markingQuick === sid;
 
                           return (
@@ -1847,10 +1861,10 @@ export default function MentorDashboardPage() {
                                 </div>
                               </td>
 
-                              {/* Date Columns (e.g. Day 1: 12 Oct) */}
+                              {/* Date Columns (e.g. Day 1: 12 Oct, Day 2: 13 Oct) */}
                               {labDistinctDates.map(([dateStr]) => {
                                 const foundRecord = sum?.recordsByDate.find((r) => r.sessionDate === dateStr);
-                                const status = foundRecord ? foundRecord.status : "—";
+                                const status = foundRecord ? foundRecord.status : null;
 
                                 return (
                                   <td key={dateStr} className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
@@ -1868,7 +1882,9 @@ export default function MentorDashboardPage() {
                                         <span>ABSENT</span>
                                       </span>
                                     ) : (
-                                      <span className="text-slate-400 font-bold">—</span>
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[10px]">
+                                        <span>PENDING</span>
+                                      </span>
                                     )}
                                   </td>
                                 );
@@ -1954,20 +1970,22 @@ export default function MentorDashboardPage() {
                     <select
                       value={activeSession?.id || ""}
                       onChange={(e) => {
-                        const s = sessions.find((x) => x.id === e.target.value);
+                        const s = activeLabSessions.find((x) => x.id === e.target.value);
                         setActiveSession(s || null);
                         if (s) {
                           const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
                           s.attendanceRecords?.forEach((r: any) => { map[r.studentId] = r.status; });
                           setAttendanceMap(map);
+                        } else {
+                          setAttendanceMap({});
                         }
                       }}
-                      className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none cursor-pointer max-w-[180px] truncate"
+                      className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none cursor-pointer max-w-[200px] truncate"
                     >
-                      {sessions.length === 0 && (
-                        <option value="">Auto: Today's Lab Session</option>
+                      {activeLabSessions.length === 0 && (
+                        <option value="">No Sessions Scheduled</option>
                       )}
-                      {sessions.map((s) => (
+                      {activeLabSessions.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.title}{s.startTime ? ` · ${s.startTime}${s.endTime ? `–${s.endTime}` : ""}` : ""}
                         </option>
@@ -2045,13 +2063,19 @@ export default function MentorDashboardPage() {
                   )}
                   {filteredAttendanceStudents.map((ls: any) => {
                     const sid = ls.studentId;
-                    const currentStatus = attendanceMap[sid] || "PRESENT";
+                    const currentStatus = attendanceMap[sid] || null;
                     const isMarkingThis = markingQuick === sid;
                     return (
                       <div
                         key={sid}
                         className={`p-3 border-[2px] border-[#111111] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[2px_2px_0px_#111111] transition-colors ${
-                          currentStatus === "PRESENT" ? "bg-[#f0fbf4]" : "bg-[#F9F9F9]"
+                          currentStatus === "PRESENT"
+                            ? "bg-[#f0fbf4]"
+                            : currentStatus === "LATE"
+                            ? "bg-amber-50/60"
+                            : currentStatus === "ABSENT"
+                            ? "bg-rose-50/60"
+                            : "bg-[#F9F9F9]"
                         }`}
                       >
                         <div>
@@ -2062,9 +2086,21 @@ export default function MentorDashboardPage() {
                                 {ls.student.rollNumber}
                               </span>
                             )}
-                            {currentStatus === "PRESENT" && (
+                            {currentStatus === "PRESENT" ? (
                               <span className="bg-emerald-600 text-white px-1.5 py-0.5 text-[9px] font-mono font-black uppercase">
                                 ✓ PRESENT
+                              </span>
+                            ) : currentStatus === "LATE" ? (
+                              <span className="bg-amber-500 text-white px-1.5 py-0.5 text-[9px] font-mono font-black uppercase">
+                                ⏱️ LATE
+                              </span>
+                            ) : currentStatus === "ABSENT" ? (
+                              <span className="bg-rose-600 text-white px-1.5 py-0.5 text-[9px] font-mono font-black uppercase">
+                                ❌ ABSENT
+                              </span>
+                            ) : (
+                              <span className="bg-slate-200 text-slate-700 border border-slate-300 px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase">
+                                ⏳ PENDING
                               </span>
                             )}
                           </div>
@@ -2084,7 +2120,7 @@ export default function MentorDashboardPage() {
                                 ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
                                 : "bg-white text-emerald-900 hover:bg-emerald-100"
                             }`}
-                            title="Click to mark this student PRESENT immediately"
+                            title="Click to mark this student PRESENT"
                           >
                             {isMarkingThis ? (
                               <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
