@@ -124,10 +124,17 @@ export default function TestEngine({
 }: TestEngineProps) {
   const questions = assessment.questions || [];
   const totalQuestions = questions.length;
-  const maxAllowedViolations =
-    assessment.allowedViolations && assessment.allowedViolations > 0
+  const isAntiCheatEnabled =
+    assessment.type !== "ASSIGNMENT" &&
+    assessment.allowedViolations !== 0 &&
+    assessment.allowedViolations !== null &&
+    (assessment.allowedViolations ?? 3) > 0;
+
+  const maxAllowedViolations = isAntiCheatEnabled
+    ? assessment.allowedViolations && assessment.allowedViolations > 0
       ? assessment.allowedViolations
-      : 3;
+      : 3
+    : 999999;
 
   // Timer state: prefer configured duration, else time remaining until endsAt (capped at 90 min)
   const calcInitialTime = () => {
@@ -174,7 +181,7 @@ export default function TestEngine({
   // ── VIOLATION DISPATCHER (Debounced & Auto-submits on strike limit) ──
   const triggerViolation = useCallback(
     (reason: string) => {
-      if (!proctorActiveRef.current || isTerminatingRef.current) return;
+      if (!isAntiCheatEnabled || !proctorActiveRef.current || isTerminatingRef.current) return;
       const now = Date.now();
       // 1200ms debounce prevents dual blur & visibilitychange or keydown & clipboard triggers from counting as 2 strikes
       if (now - lastViolationTimeRef.current < 1200) return;
@@ -211,7 +218,7 @@ export default function TestEngine({
         return nextCount;
       });
     },
-    [onSubmit, maxAllowedViolations]
+    [isAntiCheatEnabled, onSubmit, maxAllowedViolations]
   );
 
   const triggerToast = useCallback((msg: string) => {
@@ -223,6 +230,7 @@ export default function TestEngine({
 
   // ── FULLSCREEN EVENT MONITOR ──
   useEffect(() => {
+    if (!isAntiCheatEnabled) return;
     const handleFullscreenChange = () => {
       const active = checkIsFullscreen();
       setIsFullscreen(active);
@@ -237,10 +245,11 @@ export default function TestEngine({
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
     };
-  }, [triggerViolation]);
+  }, [isAntiCheatEnabled, triggerViolation]);
 
   // ── TAB SWITCH & WINDOW BLUR MONITOR ──
   useEffect(() => {
+    if (!isAntiCheatEnabled) return;
     const handleVisibilityChange = () => {
       if (document.hidden && proctorActiveRef.current && !isTerminatingRef.current) {
         triggerViolation("Switched browser tab or minimized window");
@@ -260,7 +269,7 @@ export default function TestEngine({
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleWindowBlur);
     };
-  }, [triggerViolation]);
+  }, [isAntiCheatEnabled, triggerViolation]);
 
   // ── PROCTORING ACTIVATION AFTER PREFLIGHT ──
   useEffect(() => {
@@ -275,6 +284,7 @@ export default function TestEngine({
 
   // ── CLIPBOARD & SHORTCUT PREVENTION (Triggers Proctoring Violations) ──
   useEffect(() => {
+    if (!isAntiCheatEnabled) return;
     const handleCopy = (e: ClipboardEvent) => {
       e.preventDefault();
       triggerToast("🚫 Copying (Ctrl+C) is prohibited! Violation logged.");
@@ -348,7 +358,7 @@ export default function TestEngine({
       document.removeEventListener("contextmenu", handleContextMenu);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [triggerToast, triggerViolation]);
+  }, [isAntiCheatEnabled, triggerToast, triggerViolation]);
 
   // ── AUTO-SAVE: persist answers to sessionStorage ──
   useEffect(() => {
@@ -459,11 +469,19 @@ export default function TestEngine({
           <div className="bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] p-6 sm:p-7 max-w-lg w-full space-y-5 text-left">
             <div className="flex items-center gap-3 border-b-[2px] border-[#111111] pb-4">
               <div className="w-12 h-12 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center flex-shrink-0">
-                <Shield className="w-6 h-6 text-[#F07C27]" />
+                {isAntiCheatEnabled ? (
+                  <Shield className="w-6 h-6 text-[#F07C27]" />
+                ) : (
+                  <CheckCircle2 className="w-6 h-6 text-emerald-700" />
+                )}
               </div>
               <div>
-                <span className="text-[10px] font-mono uppercase font-black text-[#F07C27] tracking-wider block">
-                  [ STRICT ONLINE PROCTORING PROTOCOL ]
+                <span className="text-[10px] font-mono uppercase font-black tracking-wider block">
+                  {isAntiCheatEnabled ? (
+                    <span className="text-[#F07C27]">[ STRICT ONLINE PROCTORING PROTOCOL ]</span>
+                  ) : (
+                    <span className="text-emerald-700">[ LAB ASSIGNMENT — OPEN BOOK / UNPROCTORED ]</span>
+                  )}
                 </span>
                 <h3 className="font-display font-black text-[#111111] text-lg uppercase">
                   {assessment.title}
@@ -472,41 +490,71 @@ export default function TestEngine({
             </div>
 
             <div className="space-y-3 text-xs text-slate-700">
-              <p className="font-mono font-bold text-[#111111]">
-                Review the following proctoring rules before beginning your assessment:
-              </p>
-              <ul className="space-y-2 font-mono text-[11px]">
-                <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-                  <span className="text-[#F07C27] font-black">1.</span>
-                  <span>
-                    <strong>Full-Screen Required:</strong> The examination runs strictly in full-screen mode. Do not exit full-screen.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-                  <span className="text-[#F07C27] font-black">2.</span>
-                  <span>
-                    <strong>No Tab / Window Switching:</strong> Tab switches, window blurring, and application switches are actively logged.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-                  <span className="text-[#F07C27] font-black">3.</span>
-                  <span>
-                    <strong>Clipboard Blocked:</strong> Copying questions, cutting text, and pasting code or answers are strictly disabled.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2 bg-[#fde8e8] p-2.5 border-[2px] border-[#111111] text-rose-950 font-bold shadow-[2px_2px_0px_#111111]">
-                  <span className="text-rose-700 font-black">4.</span>
-                  <span>
-                    <strong>{maxAllowedViolations}-Strike Lockout:</strong> You receive a maximum of {maxAllowedViolations > 1 ? `${maxAllowedViolations - 1} warning${maxAllowedViolations > 2 ? "s" : ""}` : "0 warnings (zero-tolerance)"}. On violation #{maxAllowedViolations}, the test is automatically terminated, locked out, and submitted with <strong>0 marks</strong>.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2 bg-[#FFF0E5] p-2.5 border-[2px] border-[#111111] text-[#111111] font-bold shadow-[2px_2px_0px_#111111]">
-                  <span className="text-[#F07C27] font-black">5.</span>
-                  <span>
-                    <strong>Score & Completion Speed Recorded:</strong> Both your final score and time taken are recorded upon submission. Time taken serves as the primary tie-breaker for Lab Allocation shortlisting.
-                  </span>
-                </li>
-              </ul>
+              {isAntiCheatEnabled ? (
+                <>
+                  <p className="font-mono font-bold text-[#111111]">
+                    Review the following proctoring rules before beginning your assessment:
+                  </p>
+                  <ul className="space-y-2 font-mono text-[11px]">
+                    <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                      <span className="text-[#F07C27] font-black">1.</span>
+                      <span>
+                        <strong>Full-Screen Required:</strong> The examination runs strictly in full-screen mode. Do not exit full-screen.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                      <span className="text-[#F07C27] font-black">2.</span>
+                      <span>
+                        <strong>No Tab / Window Switching:</strong> Tab switches, window blurring, and application switches are actively logged.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                      <span className="text-[#F07C27] font-black">3.</span>
+                      <span>
+                        <strong>Clipboard Blocked:</strong> Copying questions, cutting text, and pasting code or answers are strictly disabled.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2 bg-[#fde8e8] p-2.5 border-[2px] border-[#111111] text-rose-950 font-bold shadow-[2px_2px_0px_#111111]">
+                      <span className="text-rose-700 font-black">4.</span>
+                      <span>
+                        <strong>{maxAllowedViolations}-Strike Lockout:</strong> You receive a maximum of {maxAllowedViolations > 1 ? `${maxAllowedViolations - 1} warning${maxAllowedViolations > 2 ? "s" : ""}` : "0 warnings (zero-tolerance)"}. On violation #{maxAllowedViolations}, the test is automatically terminated, locked out, and submitted with <strong>0 marks</strong>.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2 bg-[#FFF0E5] p-2.5 border-[2px] border-[#111111] text-[#111111] font-bold shadow-[2px_2px_0px_#111111]">
+                      <span className="text-[#F07C27] font-black">5.</span>
+                      <span>
+                        <strong>Score & Completion Speed Recorded:</strong> Both your final score and time taken are recorded upon submission.
+                      </span>
+                    </li>
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p className="font-mono font-bold text-[#111111]">
+                    Lab Track Assignment Overview:
+                  </p>
+                  <ul className="space-y-2 font-mono text-[11px]">
+                    <li className="flex items-start gap-2 bg-emerald-50 p-2.5 border-[2px] border-emerald-600 text-emerald-950 font-bold shadow-[2px_2px_0px_#111111]">
+                      <span className="text-emerald-700 font-black">✓</span>
+                      <span>
+                        <strong>Open-Book Learning:</strong> You may reference notes, textbooks, and test logic in your local C++ compiler or IDE.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2 bg-emerald-50 p-2.5 border-[2px] border-emerald-600 text-emerald-950 font-bold shadow-[2px_2px_0px_#111111]">
+                      <span className="text-emerald-700 font-black">✓</span>
+                      <span>
+                        <strong>No Anti-Cheat Restrictions:</strong> Tab switching, window blurring, and copying/pasting are allowed with zero strikes or lockouts.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2 bg-[#F9F9F9] p-2.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                      <span className="text-[#F07C27] font-black">ℹ️</span>
+                      <span>
+                        <strong>Lab Evaluation:</strong> This assignment evaluates your practical understanding and is not used for screening elimination.
+                      </span>
+                    </li>
+                  </ul>
+                </>
+              )}
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -521,7 +569,9 @@ export default function TestEngine({
                 type="button"
                 onClick={async () => {
                   setShowPreflight(false);
-                  await requestFullscreenMode();
+                  if (isAntiCheatEnabled) {
+                    await requestFullscreenMode();
+                  }
                   try {
                     sessionStorage.setItem(`skillup-test-preflight-${assessment.id}`, "true");
                   } catch {
@@ -533,7 +583,15 @@ export default function TestEngine({
                 }}
                 className="neo-btn flex-1 py-2.5 bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2"
               >
-                <Maximize2 className="w-4 h-4" /> Enter Full Screen & Start Test
+                {isAntiCheatEnabled ? (
+                  <>
+                    <Maximize2 className="w-4 h-4" /> Enter Full Screen & Start Test
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" /> Start Lab Assignment
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -642,23 +700,30 @@ export default function TestEngine({
           </span>
 
           {/* Proctoring Status Pill */}
-          <span
-            className={`flex items-center gap-1.5 px-2.5 py-1 border-[2px] border-[#111111] font-black shadow-[1px_1px_0px_#111111] ${
-              warningCount === 0
-                ? "bg-sky-100 text-sky-950"
-                : warningCount === 1
-                ? "bg-amber-100 text-amber-950"
-                : "bg-rose-100 text-rose-950 animate-pulse"
-            }`}
-          >
-            <Shield className="w-3 h-3" />
-            {warningCount === 0
-              ? `PROCTOR (0/${maxAllowedViolations})`
-              : `⚠️ ${warningCount}/${maxAllowedViolations} WARNINGS`}
-          </span>
+          {isAntiCheatEnabled ? (
+            <span
+              className={`flex items-center gap-1.5 px-2.5 py-1 border-[2px] border-[#111111] font-black shadow-[1px_1px_0px_#111111] ${
+                warningCount === 0
+                  ? "bg-sky-100 text-sky-950"
+                  : warningCount === 1
+                  ? "bg-amber-100 text-amber-950"
+                  : "bg-rose-100 text-rose-950 animate-pulse"
+              }`}
+            >
+              <Shield className="w-3 h-3" />
+              {warningCount === 0
+                ? `PROCTOR (0/${maxAllowedViolations})`
+                : `⚠️ ${warningCount}/${maxAllowedViolations} WARNINGS`}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 px-2.5 py-1 border-[2px] border-emerald-700 bg-emerald-100 text-emerald-950 font-black shadow-[1px_1px_0px_#111111]">
+              <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+              LAB ASSIGNMENT (NO ANTI-CHEAT)
+            </span>
+          )}
 
           {/* Fullscreen Button if exited */}
-          {!isFullscreen ? (
+          {isAntiCheatEnabled && (!isFullscreen ? (
             <button
               type="button"
               onClick={requestFullscreenMode}
@@ -671,7 +736,7 @@ export default function TestEngine({
             <span className="hidden xl:flex items-center gap-1 px-2 py-1 bg-[#F4F3F3] text-slate-700 border border-[#111111] text-[10px] font-bold">
               <Maximize2 className="w-2.5 h-2.5 text-emerald-700" /> Fullscreen
             </span>
-          )}
+          ))}
         </div>
 
         {/* Right: Timer + autosave + submit */}

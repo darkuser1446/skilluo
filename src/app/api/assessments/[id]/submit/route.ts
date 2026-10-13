@@ -144,7 +144,8 @@ export async function POST(
       }
     }
 
-    const isDisqualified = Boolean(violationReason);
+    const isAntiCheat = assessment.type !== "ASSIGNMENT" && assessment.allowedViolations !== 0;
+    const isDisqualified = isAntiCheat && Boolean(violationReason);
     const status = isDisqualified
       ? "DISQUALIFIED"
       : hasManualQuestions
