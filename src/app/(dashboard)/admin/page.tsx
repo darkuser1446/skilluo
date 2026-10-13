@@ -1555,8 +1555,8 @@ export default function AdminDashboardPage() {
           TAB 1: CANDIDATE SELECTION PIPELINE
       ══════════════════════════════════════════════════════════ */}
       {/* ══ TESTS & QUIZZES ══ */}
-      {activeTab === "tests" && selectedWorkshopId && (
-        <TestManager workshopId={selectedWorkshopId} labs={labs} />
+      {activeTab === "tests" && (selectedWorkshopId || workshops[0]?.id) && (
+        <TestManager workshopId={selectedWorkshopId || workshops[0]?.id || ""} labs={labs} />
       )}
 
       {/* ══ ANNOUNCEMENTS MANAGEMENT ══ */}
