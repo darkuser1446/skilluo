@@ -2013,7 +2013,11 @@ export default function StudentDashboardPage() {
                       <span>{as.totalMarks} marks</span>
                       <span>•</span>
                       <span>Ends {new Date(as.endsAt).toLocaleDateString()}</span>
-                      {as.allowedViolations && <span>• {as.allowedViolations} strikes max</span>}
+                      {as.allowedViolations && as.allowedViolations > 0 ? (
+                        <span>• {as.allowedViolations} strikes max</span>
+                      ) : (
+                        <span className="text-emerald-700 font-bold">• 📖 Open Book</span>
+                      )}
                     </div>
 
                     {/* Lockout alert notice */}
@@ -2090,7 +2094,7 @@ export default function StudentDashboardPage() {
                           "bg-[#f4f3f3] text-slate-400 cursor-not-allowed opacity-50"
                         }`}
                       >
-                        {isLocked ? "🔒 Locked Out Notice" : res ? "📋 View Scorecard" : isLive ? "🚀 Start Test" : isUpcoming ? "⏳ Not Started" : "Expired"}
+                        {isLocked ? "🔒 Locked Out Notice" : res ? "📋 View Scorecard" : isLive ? (as.type === "ASSIGNMENT" ? "🚀 Start Assignment" : "🚀 Start Test") : isUpcoming ? "⏳ Not Started" : "Expired"}
                       </button>
                     </div>
                   </div>
