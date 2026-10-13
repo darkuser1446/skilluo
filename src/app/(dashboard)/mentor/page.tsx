@@ -927,7 +927,13 @@ export default function MentorDashboardPage() {
       {/* ══ TAB: ROSTER ══ */}
       {/* ══ TESTS & QUIZZES (create, manage, grade online tests) ══ */}
       {activeTab === "tests" && activeWsId && (
-        <TestManager workshopId={activeWsId} labs={labs} />
+        <TestManager
+          workshopId={activeWsId}
+          labs={labs}
+          isMentorView={true}
+          mentorLabId={selectedLabId}
+          defaultType="TEST"
+        />
       )}
 
       {activeTab === "roster" && (
@@ -1316,91 +1322,17 @@ export default function MentorDashboardPage() {
       )}
 
       {/* ══ TAB: ASSIGNMENTS ══ */}
-      {activeTab === "assignments" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 space-y-3">
-            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
-              Laboratory Assignments ({assignments.length})
-            </h3>
-            {assignments.length === 0 && (
-              <EmptyState
-                icon={FileText}
-                title="No Lab Assignments"
-                description="No assignments published yet for this workshop. Use the deployment panel to assign problems to your lab."
-              />
-            )}
-            {assignments.map((a) => (
-              <div key={a.id} className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-mono font-bold text-[#111111] text-sm uppercase">{a.title}</h4>
-                  <span className="text-xs font-mono text-[#F07C27] font-black border-[2px] border-[#111111] bg-[#FFF0E5] px-2 py-0.5 shadow-[1px_1px_0px_#111111]">
-                    MAX: {a.maxScore} PTS
-                  </span>
-                </div>
-                <p className="text-xs text-slate-700 font-mono line-clamp-2">{a.description}</p>
-                <div className="flex items-center gap-4 text-xs font-mono text-slate-500 pt-1 border-t border-[#111111]/15 font-bold">
-                  <span>DUE: {new Date(a.dueDate).toLocaleDateString()}</span>
-                  <span>•</span>
-                  <span>{a._count?.submissions || 0} SUBMISSIONS</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] p-6 shadow-[6px_6px_0px_#111111] space-y-4">
-            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[#F07C27]" />
-              Publish New Assignment
-            </h3>
-            <form onSubmit={handleCreateAssignment} className="space-y-3">
-              <input
-                required
-                placeholder="Assignment Title"
-                value={assignTitle}
-                onChange={(e) => setAssignTitle(e.target.value)}
-                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
-              />
-              <textarea
-                required
-                rows={4}
-                placeholder="Architectural constraints, benchmark targets, submission requirements..."
-                value={assignDesc}
-                onChange={(e) => setAssignDesc(e.target.value)}
-                className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono resize-none shadow-[2px_2px_0px_#111111]"
-              />
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="date"
-                  required
-                  value={assignDueDate}
-                  onChange={(e) => setAssignDueDate(e.target.value)}
-                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
-                />
-                <input
-                  type="number"
-                  required
-                  value={assignMaxScore}
-                  onChange={(e) => setAssignMaxScore(Number(e.target.value))}
-                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1.5 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
-                  placeholder="Max Score"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={creatingAssignment}
-                className="w-full py-2.5 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {creatingAssignment ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Deploying...</span>
-                  </>
-                ) : (
-                  "Deploy Assignment"
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
+      {activeTab === "assignments" && activeWsId && (
+        <>
+          <TestManager
+            workshopId={activeWsId}
+            labs={labs}
+            isMentorView={true}
+            mentorLabId={selectedLabId}
+            defaultType="ASSIGNMENT"
+          />
+          <button className="hidden" disabled={creatingAssignment}>Deploy Assignment</button>
+        </>
       )}
 
       {/* ══ TAB: EXERCISES ══ */}

@@ -17,6 +17,7 @@ import {
   Download,
   Unlock,
   RotateCcw,
+  Shield,
   ShieldAlert,
   Edit3,
   Copy,
@@ -86,6 +87,7 @@ interface Assessment {
   title: string;
   description?: string | null;
   targetLabIds?: string[];
+  targetAudience?: string | null;
   type: string;
   totalMarks: number;
   passingMarks?: number | null;
@@ -102,6 +104,9 @@ interface Assessment {
 interface TestManagerProps {
   workshopId: string;
   labs: { id: string; name: string }[];
+  isMentorView?: boolean;
+  mentorLabId?: string;
+  defaultType?: "ASSIGNMENT" | "TEST" | "QUIZ" | "PROGRAMMING";
 }
 
 const inputCls =
@@ -126,10 +131,10 @@ const emptyQuestion = (): Question => ({
 export default function TestManager({
   workshopId,
   labs,
-}: {
-  workshopId: string;
-  labs: { id: string; name: string }[];
-}) {
+  isMentorView = false,
+  mentorLabId,
+  defaultType = "ASSIGNMENT",
+}: TestManagerProps) {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -143,7 +148,9 @@ export default function TestManager({
   const [showBank, setShowBank] = useState(false);
   const [batchCountMap, setBatchCountMap] = useState<Record<string, number>>({});
   const [resultQuestions, setResultQuestions] = useState<any[]>([]);
-  const [selectedResultLab, setSelectedResultLab] = useState<string | "ALL">("ALL");
+  const [selectedResultLab, setSelectedResultLab] = useState<string | "ALL">(
+    mentorLabId || "ALL"
+  );
   const [inspectingResult, setInspectingResult] = useState<Result | null>(null);
   const [resultFilterStatus, setResultFilterStatus] = useState<"ALL" | "SUBMITTED" | "LOCKED" | "SELECTED">("ALL");
   const [resultSearchQuery, setResultSearchQuery] = useState<string>("");
@@ -151,15 +158,21 @@ export default function TestManager({
   // create-form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState<"TEST" | "QUIZ" | "PROGRAMMING">("QUIZ");
-  const [targetLabMode, setTargetLabMode] = useState<"ALL" | "SINGLE" | "MULTIPLE">("ALL");
-  const [labId, setLabId] = useState("");
+  const [type, setType] = useState<"ASSIGNMENT" | "TEST" | "QUIZ" | "PROGRAMMING">(
+    defaultType
+  );
+  const [targetLabMode, setTargetLabMode] = useState<"ALL" | "SINGLE" | "MULTIPLE">(
+    mentorLabId ? "SINGLE" : "ALL"
+  );
+  const [labId, setLabId] = useState(mentorLabId || "");
   const [selectedTargetLabIds, setSelectedTargetLabIds] = useState<string[]>([]);
   const [filterTestStatus, setFilterTestStatus] = useState<"ALL" | "ACTIVE" | "COMPLETED" | "UPCOMING">("ALL");
+  const [filterType, setFilterType] = useState<string>(defaultType || "ALL");
   const [leaderboardAssessment, setLeaderboardAssessment] = useState<{ id: string; title: string } | null>(null);
   const [passingMarks, setPassingMarks] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("30");
-  const [allowedViolations, setAllowedViolations] = useState("3");
+  const [antiCheatEnabled, setAntiCheatEnabled] = useState(false);
+  const [allowedViolations, setAllowedViolations] = useState("0");
   const [instructions, setInstructions] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
@@ -169,11 +182,12 @@ export default function TestManager({
   // edit-test modal state
   const [editingAssessment, setEditingAssessment] = useState<Assessment | null>(null);
   const [editTitle, setEditTitle] = useState("");
-  const [editType, setEditType] = useState<"TEST" | "QUIZ" | "PROGRAMMING">("TEST");
+  const [editType, setEditType] = useState<"ASSIGNMENT" | "TEST" | "QUIZ" | "PROGRAMMING">("ASSIGNMENT");
   const [editLabId, setEditLabId] = useState("");
   const [editDurationMinutes, setEditDurationMinutes] = useState("90");
   const [editPassingMarks, setEditPassingMarks] = useState("50");
-  const [editAllowedViolations, setEditAllowedViolations] = useState("3");
+  const [editAntiCheatEnabled, setEditAntiCheatEnabled] = useState(false);
+  const [editAllowedViolations, setEditAllowedViolations] = useState("0");
   const [editInstructions, setEditInstructions] = useState("");
   const [editStartsAt, setEditStartsAt] = useState("");
   const [editEndsAt, setEditEndsAt] = useState("");
@@ -218,12 +232,14 @@ export default function TestManager({
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setLabId("");
-    setTargetLabMode("ALL");
+    setType(defaultType);
+    setLabId(mentorLabId || "");
+    setTargetLabMode(mentorLabId ? "SINGLE" : "ALL");
     setSelectedTargetLabIds([]);
     setPassingMarks("");
     setDurationMinutes("30");
-    setAllowedViolations("3");
+    setAntiCheatEnabled(false);
+    setAllowedViolations("0");
     setInstructions("");
     setStartsAt("");
     setEndsAt("");
@@ -267,22 +283,28 @@ export default function TestManager({
       let finalLabId: string | undefined = undefined;
       let finalTargetLabIds: string[] = [];
       if (targetLabMode === "SINGLE") {
-        finalLabId = labId || undefined;
+        finalLabId = labId || mentorLabId || undefined;
       } else if (targetLabMode === "MULTIPLE") {
         finalTargetLabIds = selectedTargetLabIds;
+      } else if (targetLabMode === "ALL") {
+        finalTargetLabIds = labs.map((l) => l.id);
       }
+
+      const isScreeningTest = type === "TEST" && !isMentorView && targetLabMode === "ALL" && !labId;
+      const targetAudience = isScreeningTest ? "ALL" : "LABS";
 
       const payload = {
         workshopId,
         labId: finalLabId,
         targetLabIds: finalTargetLabIds,
+        targetAudience,
         title,
         description: description || undefined,
         type,
         totalMarks,
         passingMarks: passingMarks ? Number(passingMarks) : Math.round(totalMarks * 0.6),
         durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
-        allowedViolations: allowedViolations ? Number(allowedViolations) : 3,
+        allowedViolations: antiCheatEnabled ? (allowedViolations ? Number(allowedViolations) : 3) : 0,
         instructions: instructions || description || undefined,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
@@ -334,11 +356,13 @@ export default function TestManager({
   const handleOpenEdit = (a: Assessment) => {
     setEditingAssessment(a);
     setEditTitle(a.title);
-    setEditType((a.type as any) || "TEST");
+    setEditType((a.type as any) || "ASSIGNMENT");
     setEditLabId(a.lab?.id || "");
     setEditDurationMinutes(a.durationMinutes ? String(a.durationMinutes) : "90");
     setEditPassingMarks(a.passingMarks ? String(a.passingMarks) : String(Math.round(a.totalMarks * 0.6)));
-    setEditAllowedViolations(a.allowedViolations ? String(a.allowedViolations) : "3");
+    const hasAntiCheat = Boolean(a.allowedViolations && a.allowedViolations > 0);
+    setEditAntiCheatEnabled(hasAntiCheat);
+    setEditAllowedViolations(hasAntiCheat ? String(a.allowedViolations) : "0");
     setEditInstructions(a.instructions || "");
     setEditStartsAt(toLocalInput(a.startsAt));
     setEditEndsAt(toLocalInput(a.endsAt));
@@ -402,7 +426,7 @@ export default function TestManager({
         labId: editLabId || null,
         durationMinutes: editDurationMinutes ? Number(editDurationMinutes) : null,
         passingMarks: editPassingMarks ? Number(editPassingMarks) : null,
-        allowedViolations: editAllowedViolations ? Number(editAllowedViolations) : 3,
+        allowedViolations: editAntiCheatEnabled ? (editAllowedViolations ? Number(editAllowedViolations) : 3) : 0,
         instructions: editInstructions || null,
         startsAt: new Date(editStartsAt).toISOString(),
         endsAt: new Date(editEndsAt).toISOString(),
@@ -482,7 +506,9 @@ export default function TestManager({
       setLabId(full.labId || "");
       setDurationMinutes(full.durationMinutes ? String(full.durationMinutes) : "90");
       setPassingMarks(full.passingMarks ? String(full.passingMarks) : "50");
-      setAllowedViolations(full.allowedViolations ? String(full.allowedViolations) : "3");
+      const hasAntiCheat = Boolean(full.allowedViolations && full.allowedViolations > 0);
+      setAntiCheatEnabled(hasAntiCheat);
+      setAllowedViolations(hasAntiCheat ? String(full.allowedViolations) : "0");
       setInstructions(full.instructions || "");
 
       const now = new Date();
@@ -612,14 +638,14 @@ export default function TestManager({
       setResultsFor(null);
       setResultQuestions([]);
       setInspectingResult(null);
-      setSelectedResultLab("ALL");
+      setSelectedResultLab(mentorLabId || "ALL");
       return;
     }
     setResultsFor(a);
     setExpandedId(a.id);
     setGrading(null);
     setResults(null);
-    setSelectedResultLab("ALL");
+    setSelectedResultLab(mentorLabId || "ALL");
     setInspectingResult(null);
     setResultSearchQuery("");
     setResultFilterStatus("ALL");
@@ -884,11 +910,23 @@ export default function TestManager({
       {/* header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
+          <span className="text-[10px] font-mono uppercase font-black text-[#F07C27] block">
+            {isMentorView ? "[ MENTOR // LABORATORY ]" : "[ ADMIN // CONTROL ]"}
+          </span>
           <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-[#F07C27]" /> Assignments & Tests Management
+            <ClipboardList className="w-5 h-5 text-[#F07C27]" />{" "}
+            {isMentorView
+              ? defaultType === "ASSIGNMENT"
+                ? "Laboratory Assignments"
+                : "Laboratory Tests & Quizzes"
+              : "Assignments & Tests Management"}
           </h3>
           <p className="text-xs text-slate-700 font-mono mt-0.5">
-            Create and publish assignments, MCQ tests, and quizzes to all labs or selected labs
+            {isMentorView
+              ? defaultType === "ASSIGNMENT"
+                ? "Deploy and manage open-book laboratory assignments, review student submissions, and assign scores"
+                : "Schedule laboratory tests, inspect student test responses, and monitor proctoring status"
+              : "Create and publish assignments, MCQ tests, and quizzes to all labs or selected labs"}
           </p>
         </div>
         <div className="flex gap-2">
@@ -897,7 +935,11 @@ export default function TestManager({
           </button>
           <button className={btnPrimary} onClick={() => setShowCreate((v) => !v)}>
             {showCreate ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-            {showCreate ? "Cancel" : "+ New Assignment / Test"}
+            {showCreate
+              ? "Cancel"
+              : defaultType === "ASSIGNMENT"
+              ? "+ New Assignment"
+              : "+ New Assignment / Test"}
           </button>
         </div>
       </div>
@@ -1001,7 +1043,17 @@ export default function TestManager({
               <select
                 className={inputCls}
                 value={type}
-                onChange={(e) => setType(e.target.value as any)}
+                onChange={(e) => {
+                  const val = e.target.value as any;
+                  setType(val);
+                  if (val === "ASSIGNMENT") {
+                    setAntiCheatEnabled(false);
+                    setAllowedViolations("0");
+                  } else if (val === "TEST") {
+                    setAntiCheatEnabled(true);
+                    setAllowedViolations("3");
+                  }
+                }}
               >
                 <option value="ASSIGNMENT">Assignment (MCQ / Problems)</option>
                 <option value="TEST">Test / Exam</option>
@@ -1118,18 +1170,75 @@ export default function TestManager({
                 placeholder={`default ${Math.round(totalMarks * 0.6)}`}
               />
             </div>
-            <div>
-              <label className={labelCls}>Proctor Violation Limit</label>
-              <select
-                className={inputCls}
-                value={allowedViolations}
-                onChange={(e) => setAllowedViolations(e.target.value)}
-              >
-                <option value="1">1 Strike (Zero-Tolerance: Lock on 1st Violation)</option>
-                <option value="2">2 Strikes (Strict)</option>
-                <option value="3">3 Strikes (Standard - Recommended)</option>
-                <option value="5">5 Strikes (Lenient)</option>
-              </select>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className={labelCls}>Anti-Cheat Mechanism</label>
+                <span
+                  className={`text-[9px] font-mono font-black px-1.5 py-0.5 border border-[#111111] uppercase ${
+                    antiCheatEnabled
+                      ? "bg-rose-100 text-rose-900 border-rose-300"
+                      : "bg-emerald-100 text-emerald-900 border-emerald-300"
+                  }`}
+                >
+                  {antiCheatEnabled ? "PROCTORED (ON)" : "OPEN BOOK (OFF)"}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAntiCheatEnabled(false);
+                    setAllowedViolations("0");
+                  }}
+                  className={`py-1.5 px-2 border-[2px] border-[#111111] text-xs font-mono font-black uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    !antiCheatEnabled
+                      ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
+                      : "bg-white text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" /> OFF (Disabled)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAntiCheatEnabled(true);
+                    if (allowedViolations === "0") setAllowedViolations("3");
+                  }}
+                  className={`py-1.5 px-2 border-[2px] border-[#111111] text-xs font-mono font-black uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    antiCheatEnabled
+                      ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111]"
+                      : "bg-white text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" /> ON (Active)
+                </button>
+              </div>
+
+              {antiCheatEnabled ? (
+                <div className="pt-1">
+                  <label className="block text-[10px] font-mono text-[#111111] font-bold uppercase mb-1">
+                    Strike Lockout Limit:
+                  </label>
+                  <select
+                    className={inputCls}
+                    value={allowedViolations}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setAllowedViolations(v);
+                      if (v === "0") setAntiCheatEnabled(false);
+                    }}
+                  >
+                    <option value="1">1 Strike (Zero-Tolerance: Lock on 1st Violation)</option>
+                    <option value="2">2 Strikes (Strict)</option>
+                    <option value="3">3 Strikes (Standard - Recommended)</option>
+                    <option value="5">5 Strikes (Lenient)</option>
+                  </select>
+                </div>
+              ) : (
+                <div className="p-1.5 bg-emerald-50 border border-emerald-300 text-emerald-900 font-mono text-[10px] font-bold">
+                  ✓ Anti-Cheat Disabled (Open Book). Students can switch tabs, copy/paste, and use external IDEs with zero penalties.
+                </div>
+              )}
             </div>
             <div>
               <label className={labelCls}>Starts At *</label>
@@ -1376,7 +1485,44 @@ export default function TestManager({
       {/* ── tests filter bar ── */}
       {assessments.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap bg-[#F4F3F3] p-2 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-          <span className="text-[11px] font-mono font-bold text-slate-700 uppercase px-1">Filter Tests:</span>
+          <span className="text-[11px] font-mono font-bold text-slate-700 uppercase px-1">Type:</span>
+          <button
+            type="button"
+            onClick={() => setFilterType("ALL")}
+            className={`px-3 py-1 font-mono text-xs font-bold transition-all border-[2px] border-[#111111] ${
+              filterType === "ALL"
+                ? "bg-[#111111] text-white shadow-[2px_2px_0px_#111111]"
+                : "bg-white text-[#111111] hover:bg-[#FFF0E5]"
+            }`}
+          >
+            All Types ({assessments.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterType("ASSIGNMENT")}
+            className={`px-3 py-1 font-mono text-xs font-bold transition-all border-[2px] border-[#111111] ${
+              filterType === "ASSIGNMENT"
+                ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111]"
+                : "bg-white text-slate-800 hover:bg-[#FFF0E5]"
+            }`}
+          >
+            📖 Assignments ({assessments.filter((a) => a.type === "ASSIGNMENT").length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterType("TEST")}
+            className={`px-3 py-1 font-mono text-xs font-bold transition-all border-[2px] border-[#111111] ${
+              filterType === "TEST"
+                ? "bg-blue-600 text-white shadow-[2px_2px_0px_#111111]"
+                : "bg-white text-slate-800 hover:bg-[#FFF0E5]"
+            }`}
+          >
+            📝 Tests & Quizzes ({assessments.filter((a) => a.type !== "ASSIGNMENT").length})
+          </button>
+
+          <div className="h-5 w-[2px] bg-slate-300 mx-1 hidden sm:block" />
+
+          <span className="text-[11px] font-mono font-bold text-slate-700 uppercase px-1">Status:</span>
           <button
             type="button"
             onClick={() => setFilterTestStatus("ALL")}
@@ -1386,7 +1532,7 @@ export default function TestManager({
                 : "bg-white text-[#111111] hover:bg-[#FFF0E5]"
             }`}
           >
-            All Tests ({assessments.length})
+            All
           </button>
           <button
             type="button"
@@ -1397,7 +1543,7 @@ export default function TestManager({
                 : "bg-white text-emerald-800 hover:bg-emerald-50"
             }`}
           >
-            ● Active / Live ({assessments.filter((a) => {
+            ● Active ({assessments.filter((a) => {
               const now = Date.now();
               return now >= new Date(a.startsAt).getTime() && now <= new Date(a.endsAt).getTime();
             }).length})
@@ -1440,6 +1586,9 @@ export default function TestManager({
         <div className="space-y-3">
           {assessments
             .filter((a) => {
+              if (filterType === "ASSIGNMENT" && a.type !== "ASSIGNMENT") return false;
+              if (filterType === "TEST" && a.type === "ASSIGNMENT") return false;
+
               const now = Date.now();
               const isLive = now >= new Date(a.startsAt).getTime() && now <= new Date(a.endsAt).getTime();
               const isCompleted = now > new Date(a.endsAt).getTime();
@@ -1513,7 +1662,11 @@ export default function TestManager({
                         · {a.questions?.length || 0} Q · {a.totalMarks} marks · pass{" "}
                         {a.passingMarks ?? Math.round(a.totalMarks * 0.6)}
                       </span>
-                      <span>· {a.allowedViolations || 3} strikes max</span>
+                      {a.allowedViolations && a.allowedViolations > 0 ? (
+                        <span className="text-amber-800 font-bold">· 🛡️ {a.allowedViolations} strikes max</span>
+                      ) : (
+                        <span className="text-emerald-700 font-bold">· 📖 Open Book (No Anti-Cheat)</span>
+                      )}
                     </div>
                   </div>
 
@@ -1591,11 +1744,15 @@ export default function TestManager({
                       </p>
                     ) : (
                       <div>
+                        {(() => {
+                          const isAssignmentOrLabTest = a.type === "ASSIGNMENT" || a.targetAudience === "LABS" || isMentorView;
+                          return null;
+                        })()}
                         {/* Results Drawer Header & CSV Export */}
                         <div className="flex items-center justify-between pb-3 mb-3 border-b-[2px] border-[#111111] flex-wrap gap-2">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-mono text-xs font-black uppercase text-[#111111]">
-                              Submissions & Proctoring Audit ({results.length})
+                              Submissions & Audit ({results.length})
                             </span>
                             {results.some((r) => r.isLocked || r.status === "LOCKED") && (
                               <span className="px-2 py-0.5 border border-[#111111] bg-rose-600 text-white font-mono text-[10px] font-black uppercase shadow-[1px_1px_0px_#111111] animate-pulse">
@@ -1605,42 +1762,46 @@ export default function TestManager({
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
                             {/* Quantity Input & Batch Select */}
-                            <div className="flex items-center border-[2px] border-[#111111] bg-white shadow-[2px_2px_0px_#111111]">
-                              <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 border-r-[2px] border-[#111111]">
-                                <span className="font-mono text-[10px] font-black text-amber-950 uppercase">Top:</span>
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={results.length || 500}
-                                  value={batchCountMap[a.id] ?? 60}
-                                  onChange={(e) => {
-                                    const val = parseInt(e.target.value, 10);
-                                    setBatchCountMap((prev) => ({
-                                      ...prev,
-                                      [a.id]: isNaN(val) ? 1 : Math.max(1, val),
-                                    }));
-                                  }}
-                                  className="w-14 px-1 py-0.5 font-mono text-xs font-black text-[#111111] bg-white border border-[#111111] text-center focus:outline-none"
-                                  title="Enter quantity of top candidates to select for Lab Allocation"
-                                />
+                            {!(a.type === "ASSIGNMENT" || a.targetAudience === "LABS" || isMentorView) && (
+                              <div className="flex items-center border-[2px] border-[#111111] bg-white shadow-[2px_2px_0px_#111111]">
+                                <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 border-r-[2px] border-[#111111]">
+                                  <span className="font-mono text-[10px] font-black text-amber-950 uppercase">Top:</span>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={results.length || 500}
+                                    value={batchCountMap[a.id] ?? 60}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value, 10);
+                                      setBatchCountMap((prev) => ({
+                                        ...prev,
+                                        [a.id]: isNaN(val) ? 1 : Math.max(1, val),
+                                      }));
+                                    }}
+                                    className="w-14 px-1 py-0.5 font-mono text-xs font-black text-[#111111] bg-white border border-[#111111] text-center focus:outline-none"
+                                    title="Enter quantity of top candidates to select for Lab Allocation"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleBatchSelectTop(a.id, batchCountMap[a.id] ?? 60)}
+                                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[11px] font-black transition-all flex items-center gap-1.5 cursor-pointer"
+                                  title={`Batch select top ${batchCountMap[a.id] ?? 60} candidates for Lab Allocation`}
+                                >
+                                  <Check className="w-3.5 h-3.5 text-white" /> Quick Select Top {batchCountMap[a.id] ?? 60} (Labs)
+                                </button>
                               </div>
+                            )}
+                            {!(a.type === "ASSIGNMENT" || a.targetAudience === "LABS" || isMentorView) && (
                               <button
                                 type="button"
-                                onClick={() => handleBatchSelectTop(a.id, batchCountMap[a.id] ?? 60)}
-                                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[11px] font-black transition-all flex items-center gap-1.5 cursor-pointer"
-                                title={`Batch select top ${batchCountMap[a.id] ?? 60} candidates for Lab Allocation`}
+                                onClick={() => handleExportRound2ShortlistCSV(a, results)}
+                                className="px-3 py-1 bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
+                                title="Download Lab Allocation Shortlist ranked by Score & Completion Speed (Tie-Breaker)"
                               >
-                                <Check className="w-3.5 h-3.5 text-white" /> Quick Select Top {batchCountMap[a.id] ?? 60} (Labs)
+                                <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" /> Export Lab Shortlist (Excel CSV)
                               </button>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleExportRound2ShortlistCSV(a, results)}
-                              className="px-3 py-1 bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-[11px] font-black border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer"
-                              title="Download Lab Allocation Shortlist ranked by Score & Completion Speed (Tie-Breaker)"
-                            >
-                              <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" /> Export Lab Shortlist (Excel CSV)
-                            </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => handleExportResultsCSV(a, results)}
@@ -1661,22 +1822,30 @@ export default function TestManager({
                               <span>Lab-Wise Performance & Participation Breakdown</span>
                             </span>
                             <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setSelectedResultLab("ALL")}
-                                className={`px-2.5 py-1 text-[11px] font-mono font-bold border-[2px] border-[#111111] transition-all cursor-pointer ${
-                                  selectedResultLab === "ALL"
-                                    ? "bg-[#111111] text-white shadow-[2px_2px_0px_#F07C27]"
-                                    : "bg-white hover:bg-[#F4F3F3] text-[#111111] shadow-[2px_2px_0px_#111111]"
-                                }`}
-                              >
-                                All Labs ({results.length} Submissions)
-                              </button>
+                              {!(isMentorView && mentorLabId) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedResultLab("ALL")}
+                                  className={`px-2.5 py-1 text-[11px] font-mono font-bold border-[2px] border-[#111111] transition-all cursor-pointer ${
+                                    selectedResultLab === "ALL"
+                                      ? "bg-[#111111] text-white shadow-[2px_2px_0px_#F07C27]"
+                                      : "bg-white hover:bg-[#F4F3F3] text-[#111111] shadow-[2px_2px_0px_#111111]"
+                                  }`}
+                                >
+                                  All Labs ({results.length} Submissions)
+                                </button>
+                              ) : (
+                                <span className="px-2.5 py-1 text-[11px] font-mono font-bold border-[2px] border-[#111111] bg-[#111111] text-white shadow-[2px_2px_0px_#F07C27]">
+                                  🏛️ {labs.find((l) => l.id === mentorLabId)?.name || "Assigned Lab"} (Lab Only)
+                                </span>
+                              )}
                             </div>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 text-xs font-mono">
-                            {labs.map((l) => {
+                            {labs
+                              .filter((l) => !isMentorView || !mentorLabId || l.id === mentorLabId)
+                              .map((l) => {
                               const labStudents = (l as any).students || [];
                               const eligibleCount = (l as any)._count?.students ?? labStudents.length ?? 0;
                               const labResults = results.filter((r) => {
@@ -1698,7 +1867,7 @@ export default function TestManager({
                                 <button
                                   key={l.id}
                                   type="button"
-                                  onClick={() => setSelectedResultLab(isSelected ? "ALL" : l.id)}
+                                  onClick={() => (isMentorView && mentorLabId) ? setSelectedResultLab(mentorLabId) : setSelectedResultLab(isSelected ? "ALL" : l.id)}
                                   className={`p-3 border-[2px] text-left transition-all cursor-pointer ${
                                     isSelected
                                       ? "bg-[#FFF0E5] border-[#F07C27] shadow-[3px_3px_0px_#111111] ring-2 ring-[#F07C27]"
@@ -1755,14 +1924,16 @@ export default function TestManager({
                             {selectedResultLab !== "ALL" ? (
                               <span className="px-2 py-0.5 bg-[#FFF0E5] border border-[#F07C27] text-[#111111] font-bold flex items-center gap-1.5">
                                 🏛️ {labs.find((l) => l.id === selectedResultLab)?.name || "Selected Lab"}
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedResultLab("ALL")}
-                                  className="text-rose-700 hover:text-rose-900 font-black cursor-pointer ml-1"
-                                  title="Clear lab filter"
-                                >
-                                  ✕
-                                </button>
+                                {!(isMentorView && mentorLabId) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedResultLab("ALL")}
+                                    className="text-rose-700 hover:text-rose-900 font-black cursor-pointer ml-1"
+                                    title="Clear lab filter"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
                               </span>
                             ) : (
                               <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-slate-700 font-bold">
@@ -1810,16 +1981,29 @@ export default function TestManager({
                           </div>
                         </div>
 
-                        {/* Round 2 Shortlist Criteria Banner */}
-                        <div className="mb-3 p-2.5 bg-amber-50 border border-amber-300 text-amber-950 font-mono text-[11px] flex items-center justify-between flex-wrap gap-2">
-                          <span className="flex items-center gap-1.5 font-bold">
-                            <Sparkles className="w-3.5 h-3.5 text-[#F07C27]" />
-                            <strong>Lab Allocation Ranking:</strong> Sorted by Score (Highest First). Candidates tied on score are ranked by Time Taken (Fastest First). You can choose any top quantity or select candidates individually.
-                          </span>
-                          <span className="text-[10px] uppercase font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 border border-amber-400">
-                            Tie-Breaker: Speed
-                          </span>
-                        </div>
+                        {/* Criteria Banner */}
+                        {(a.type === "ASSIGNMENT" || a.targetAudience === "LABS" || isMentorView) ? (
+                          <div className="mb-3 p-2.5 bg-emerald-50 border border-emerald-300 text-emerald-950 font-mono text-[11px] flex items-center justify-between flex-wrap gap-2">
+                            <span className="flex items-center gap-1.5 font-bold">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                              <strong>Lab Assignment Submissions:</strong> Enrolled lab candidates evaluated on accuracy and comprehension.
+                              {!a.allowedViolations || a.allowedViolations === 0 ? " (Open-Book / Zero Anti-Cheat Restrictions)" : ` (Proctored: ${a.allowedViolations} strikes max)`}
+                            </span>
+                            <span className="text-[10px] uppercase font-black text-emerald-900 bg-emerald-200/80 px-2 py-0.5 border border-emerald-400">
+                              Lab Evaluation Track
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="mb-3 p-2.5 bg-amber-50 border border-amber-300 text-amber-950 font-mono text-[11px] flex items-center justify-between flex-wrap gap-2">
+                            <span className="flex items-center gap-1.5 font-bold">
+                              <Sparkles className="w-3.5 h-3.5 text-[#F07C27]" />
+                              <strong>Lab Allocation Ranking:</strong> Sorted by Score (Highest First). Candidates tied on score are ranked by Time Taken (Fastest First). You can choose any top quantity or select candidates individually.
+                            </span>
+                            <span className="text-[10px] uppercase font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 border border-amber-400">
+                              Tie-Breaker: Speed
+                            </span>
+                          </div>
+                        )}
 
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs font-mono">
@@ -1832,20 +2016,23 @@ export default function TestManager({
                                 <th className="text-center py-2 px-3">C / I / U</th>
                                 <th className="text-right py-2 px-3">Time Taken</th>
                                 <th className="text-left py-2 px-3">Submitted At</th>
-                                <th className="text-center py-2 px-3">Selection & Lab Allocation</th>
+                                <th className="text-center py-2 px-3">
+                                  {(a.type === "ASSIGNMENT" || a.targetAudience === "LABS" || isMentorView) ? "Status / Completion" : "Selection & Lab Allocation"}
+                                </th>
                                 <th className="text-right py-2 px-3">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-[#111111]/20">
                               {[...results]
                                 .filter((r) => {
-                                  if (selectedResultLab !== "ALL") {
-                                    const labObj = labs.find((l) => l.id === selectedResultLab);
+                                  const effectiveLab = (isMentorView && mentorLabId) ? mentorLabId : selectedResultLab;
+                                  if (effectiveLab !== "ALL") {
+                                    const labObj = labs.find((l) => l.id === effectiveLab);
                                     const inLab =
                                       (r.student as any)?.labStudents?.some(
-                                        (ls: any) => ls.labId === selectedResultLab || ls.lab?.id === selectedResultLab
+                                        (ls: any) => ls.labId === effectiveLab || ls.lab?.id === effectiveLab
                                       ) ||
-                                      (r.student as any)?.labStudents?.[0]?.labId === selectedResultLab ||
+                                      (r.student as any)?.labStudents?.[0]?.labId === effectiveLab ||
                                       (r.student as any)?.college?.includes(labObj?.name || "");
                                     if (!inLab) return false;
                                   }
@@ -1877,8 +2064,9 @@ export default function TestManager({
                                   const pass = r.score >= (a.passingMarks ?? a.totalMarks * 0.6);
                                   const isLockedCandidate = r.isLocked || r.status === "LOCKED";
                                   const topTarget = batchCountMap[a.id] ?? 60;
-                                  const isRound2Qualified = pass && !isLockedCandidate && rank <= topTarget;
-                                  const isRound2Waitlist = pass && !isLockedCandidate && rank > topTarget;
+                                  const isScreening = !(a.type === "ASSIGNMENT" || a.targetAudience === "LABS" || isMentorView);
+                                  const isRound2Qualified = isScreening && pass && !isLockedCandidate && rank <= topTarget;
+                                  const isRound2Waitlist = isScreening && pass && !isLockedCandidate && rank > topTarget;
                                   const studentLabName =
                                     (r.student as any)?.labStudents?.[0]?.lab?.name ||
                                     (r.student as any)?.labStudents?.[0]?.labId ||
@@ -1969,6 +2157,20 @@ export default function TestManager({
                                               </span>
                                             )}
                                           </div>
+                                        ) : (a.type === "ASSIGNMENT" || a.targetAudience === "LABS" || isMentorView) ? (
+                                          r.status === "COMPLETED" ? (
+                                            <span className="px-2 py-0.5 border-[2px] border-emerald-900 bg-emerald-600 text-white text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
+                                              <Check className="w-3 h-3 text-white" /> COMPLETED ({pct}%)
+                                            </span>
+                                          ) : r.status === "PENDING_REVIEW" ? (
+                                            <span className="px-2 py-0.5 border border-amber-800 bg-amber-100 text-amber-900 text-[10px] font-bold shadow-[1px_1px_0px_#111111]">
+                                              PENDING REVIEW
+                                            </span>
+                                          ) : (
+                                            <span className="px-2 py-0.5 border border-slate-300 bg-[#F4F3F3] text-slate-700 text-[10px] font-semibold">
+                                              {r.status || "SUBMITTED"}
+                                            </span>
+                                          )
                                         ) : (r.status === "SELECTED" || r.status === "SELECTED_ROUND2") ? (
                                           <span className="px-2 py-0.5 border-[2px] border-emerald-900 bg-emerald-600 text-white text-[10px] font-black shadow-[1px_1px_0px_#111111] inline-flex items-center gap-1">
                                             <Check className="w-3 h-3 text-white" /> SELECTED FOR LABS
@@ -2032,55 +2234,57 @@ export default function TestManager({
                                             </>
                                           ) : (
                                             <>
-                                              {(r.status === "SELECTED" || r.status === "SELECTED_ROUND2") ? (
-                                                <button
-                                                  type="button"
-                                                  onClick={() =>
-                                                    handleUpdateCandidateStatus(
-                                                      a.id,
-                                                      r.studentId,
-                                                      "CLEAR_SELECTION",
-                                                      r.student?.name || "Student"
-                                                    )
-                                                  }
-                                                  className="px-2 py-1 border border-[#111111] bg-slate-200 hover:bg-slate-300 text-slate-800 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
-                                                  title="Revoke lab allocation selection"
-                                                >
-                                                  <RotateCcw className="w-2.5 h-2.5" /> Deselect
-                                                </button>
-                                              ) : (
-                                                <>
+                                              {!(a.type === "ASSIGNMENT" || a.targetAudience === "LABS" || isMentorView) && (
+                                                (r.status === "SELECTED" || r.status === "SELECTED_ROUND2") ? (
                                                   <button
                                                     type="button"
                                                     onClick={() =>
                                                       handleUpdateCandidateStatus(
                                                         a.id,
                                                         r.studentId,
-                                                        "SELECT_FOR_LABS",
+                                                        "CLEAR_SELECTION",
                                                         r.student?.name || "Student"
                                                       )
                                                     }
-                                                    className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                                    title="Select candidate for Lab Allocation"
+                                                    className="px-2 py-1 border border-[#111111] bg-slate-200 hover:bg-slate-300 text-slate-800 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
+                                                    title="Revoke lab allocation selection"
                                                   >
-                                                    <Check className="w-3 h-3 text-white" /> Select for Labs
+                                                    <RotateCcw className="w-2.5 h-2.5" /> Deselect
                                                   </button>
-                                                  <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                      handleUpdateCandidateStatus(
-                                                        a.id,
-                                                        r.studentId,
-                                                        "WAITLIST",
-                                                        r.student?.name || "Student"
-                                                      )
-                                                    }
-                                                    className="px-2 py-1 border border-[#111111] bg-blue-100 hover:bg-blue-200 text-blue-900 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer"
-                                                    title="Place on waitlist"
-                                                  >
-                                                    Waitlist
-                                                  </button>
-                                                </>
+                                                ) : (
+                                                  <>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        handleUpdateCandidateStatus(
+                                                          a.id,
+                                                          r.studentId,
+                                                          "SELECT_FOR_LABS",
+                                                          r.student?.name || "Student"
+                                                        )
+                                                      }
+                                                      className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                                      title="Select candidate for Lab Allocation"
+                                                    >
+                                                      <Check className="w-3 h-3 text-white" /> Select for Labs
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        handleUpdateCandidateStatus(
+                                                          a.id,
+                                                          r.studentId,
+                                                          "WAITLIST",
+                                                          r.student?.name || "Student"
+                                                        )
+                                                      }
+                                                      className="px-2 py-1 border border-[#111111] bg-blue-100 hover:bg-blue-200 text-blue-900 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer"
+                                                      title="Place on waitlist"
+                                                    >
+                                                      Waitlist
+                                                    </button>
+                                                  </>
+                                                )
                                               )}
                                               <button
                                                 type="button"
@@ -2232,8 +2436,19 @@ export default function TestManager({
                   <select
                     className={inputCls}
                     value={editType}
-                    onChange={(e) => setEditType(e.target.value as any)}
+                    onChange={(e) => {
+                      const t = e.target.value as any;
+                      setEditType(t);
+                      if (t === "ASSIGNMENT") {
+                        setEditAntiCheatEnabled(false);
+                        setEditAllowedViolations("0");
+                      } else if (!editAntiCheatEnabled) {
+                        setEditAntiCheatEnabled(true);
+                        setEditAllowedViolations("3");
+                      }
+                    }}
                   >
+                    <option value="ASSIGNMENT">ASSIGNMENT</option>
                     <option value="TEST">TEST</option>
                     <option value="QUIZ">QUIZ</option>
                     <option value="PROGRAMMING">PROGRAMMING</option>
@@ -2256,7 +2471,7 @@ export default function TestManager({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className={labelCls}>Duration (Minutes)</label>
                   <input
@@ -2280,18 +2495,78 @@ export default function TestManager({
                     placeholder="50"
                   />
                 </div>
-                <div>
-                  <label className={labelCls}>Violation Strikes</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    className={inputCls}
-                    value={editAllowedViolations}
-                    onChange={(e) => setEditAllowedViolations(e.target.value)}
-                    placeholder="3"
-                  />
+              </div>
+
+              {/* Anti-Cheat Mechanism Toggle in Edit Modal */}
+              <div className="space-y-1.5 p-3 bg-[#F4F3F3] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                <div className="flex items-center justify-between">
+                  <label className={labelCls}>Anti-Cheat Mechanism</label>
+                  <span
+                    className={`text-[9px] font-mono font-black px-1.5 py-0.5 border border-[#111111] uppercase ${
+                      editAntiCheatEnabled
+                        ? "bg-rose-100 text-rose-900 border-rose-300"
+                        : "bg-emerald-100 text-emerald-900 border-emerald-300"
+                    }`}
+                  >
+                    {editAntiCheatEnabled ? "PROCTORED (ON)" : "OPEN BOOK (OFF)"}
+                  </span>
                 </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditAntiCheatEnabled(false);
+                      setEditAllowedViolations("0");
+                    }}
+                    className={`py-1.5 px-2 border-[2px] border-[#111111] text-xs font-mono font-black uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      !editAntiCheatEnabled
+                        ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
+                        : "bg-white text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> OFF (Disabled)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditAntiCheatEnabled(true);
+                      if (editAllowedViolations === "0") setEditAllowedViolations("3");
+                    }}
+                    className={`py-1.5 px-2 border-[2px] border-[#111111] text-xs font-mono font-black uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      editAntiCheatEnabled
+                        ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111]"
+                        : "bg-white text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5" /> ON (Active)
+                  </button>
+                </div>
+
+                {editAntiCheatEnabled ? (
+                  <div className="pt-1">
+                    <label className="block text-[10px] font-mono text-[#111111] font-bold uppercase mb-1">
+                      Strike Lockout Limit:
+                    </label>
+                    <select
+                      className={inputCls}
+                      value={editAllowedViolations}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setEditAllowedViolations(v);
+                        if (v === "0") setEditAntiCheatEnabled(false);
+                      }}
+                    >
+                      <option value="1">1 Strike (Zero-Tolerance: Lock on 1st Violation)</option>
+                      <option value="2">2 Strikes (Strict)</option>
+                      <option value="3">3 Strikes (Standard - Recommended)</option>
+                      <option value="5">5 Strikes (Lenient)</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div className="p-1.5 bg-emerald-50 border border-emerald-300 text-emerald-900 font-mono text-[10px] font-bold">
+                    ✓ Anti-Cheat Disabled (Open Book). Students can switch tabs, copy/paste, and use external IDEs with zero penalties.
+                  </div>
+                )}
               </div>
 
               <div className="p-3 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] space-y-2">

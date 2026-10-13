@@ -139,11 +139,11 @@ const AssessmentCreateSchema = z.object({
   targetAudience: z.enum(["ALL", "NON_SELECTED", "LABS"]).optional().default("ALL"),
   title: z.string().min(3),
   description: z.string().optional().nullable(),
-  type: z.enum(["TEST", "QUIZ", "PROGRAMMING", "ASSIGNMENT"]).default("QUIZ"),
+  type: z.enum(["TEST", "QUIZ", "PROGRAMMING", "ASSIGNMENT"]).default("ASSIGNMENT"),
   totalMarks: z.number().positive().default(100),
   passingMarks: z.number().min(0).optional().nullable(),
   durationMinutes: z.number().int().positive().optional().nullable(),
-  allowedViolations: z.number().int().positive().default(3),
+  allowedViolations: z.number().int().min(0).optional(),
   instructions: z.string().optional().nullable(),
   startsAt: z.string(),
   endsAt: z.string(),
@@ -193,6 +193,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const defaultViolations = data.type === "ASSIGNMENT" ? 0 : 3;
+    const allowedViolations =
+      data.allowedViolations !== undefined ? data.allowedViolations : defaultViolations;
+
     const assessment = await prisma.assessment.create({
       data: {
         workshopId: data.workshopId,
@@ -205,7 +209,7 @@ export async function POST(req: NextRequest) {
         totalMarks: data.totalMarks,
         passingMarks: data.passingMarks ?? null,
         durationMinutes: data.durationMinutes ?? null,
-        allowedViolations: data.allowedViolations ?? 3,
+        allowedViolations,
         instructions: data.instructions || data.description || null,
         startsAt: new Date(data.startsAt),
         endsAt: new Date(data.endsAt),

@@ -25,11 +25,11 @@ export async function GET(req: NextRequest) {
     };
 
     if (user.role === "MENTOR") {
-      const mentorLabs = await prisma.labMentor.findMany({
+      const mentorLabs = (await prisma.labMentor?.findMany?.({
         where: { mentorId: user.sub, lab: { workshopId } },
         select: { labId: true },
-      });
-      const labIds = mentorLabs.map((l) => l.labId);
+      })) || [];
+      const labIds = mentorLabs.map((l: any) => l.labId);
       where.OR = [
         { mentorId: user.sub },
         ...(labIds.length > 0 ? [{ labId: { in: labIds } }] : []),

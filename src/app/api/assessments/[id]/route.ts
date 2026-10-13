@@ -75,7 +75,7 @@ const AssessmentUpdateSchema = z.object({
   endsAt: z.string().optional(),
   durationMinutes: z.number().int().positive().nullable().optional(),
   passingMarks: z.number().min(0).nullable().optional(),
-  allowedViolations: z.number().int().positive().optional(),
+  allowedViolations: z.number().int().min(0).optional(),
   instructions: z.string().nullable().optional(),
   publishedAt: z.string().nullable().optional(),
   totalMarks: z.number().int().positive().optional(),

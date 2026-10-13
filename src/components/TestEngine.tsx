@@ -124,11 +124,10 @@ export default function TestEngine({
 }: TestEngineProps) {
   const questions = assessment.questions || [];
   const totalQuestions = questions.length;
+  const defaultViolations = assessment.type === "ASSIGNMENT" ? 0 : 3;
   const isAntiCheatEnabled =
-    assessment.type !== "ASSIGNMENT" &&
     assessment.allowedViolations !== 0 &&
-    assessment.allowedViolations !== null &&
-    (assessment.allowedViolations ?? 3) > 0;
+    (assessment.allowedViolations ?? defaultViolations) > 0;
 
   const maxAllowedViolations = isAntiCheatEnabled
     ? assessment.allowedViolations && assessment.allowedViolations > 0

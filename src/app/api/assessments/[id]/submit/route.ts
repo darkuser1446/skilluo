@@ -144,7 +144,8 @@ export async function POST(
       }
     }
 
-    const isAntiCheat = assessment.type !== "ASSIGNMENT" && assessment.allowedViolations !== 0;
+    const defaultViolations = assessment.type === "ASSIGNMENT" ? 0 : 3;
+    const isAntiCheat = (assessment.allowedViolations ?? defaultViolations) > 0;
     const isDisqualified = isAntiCheat && Boolean(violationReason);
     const status = isDisqualified
       ? "DISQUALIFIED"
