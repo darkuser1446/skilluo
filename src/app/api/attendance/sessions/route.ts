@@ -10,13 +10,19 @@ export async function GET(req: NextRequest) {
     const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
+    const labId = searchParams.get("labId");
 
     if (!workshopId) {
       return errorResponse("workshopId query parameter is required", "BAD_REQUEST", 400);
     }
 
+    const where: any = { workshopId };
+    if (labId) {
+      where.labId = labId;
+    }
+
     const sessions = await prisma.session.findMany({
-      where: { workshopId },
+      where,
       include: {
         lab: true,
         attendanceRecords: user.role === "STUDENT"
@@ -57,12 +63,40 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = SessionSchema.parse(body);
 
+    const sessionDate = new Date(data.date);
+    const startOfDay = new Date(sessionDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(sessionDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Strict constraint: Only one session / attendance per lab per day
+    const existingSession = await prisma.session.findFirst({
+      where: {
+        workshopId: data.workshopId,
+        labId: data.labId || null,
+        date: { gte: startOfDay, lte: endOfDay },
+      },
+    });
+
+    if (existingSession) {
+      const session = await prisma.session.update({
+        where: { id: existingSession.id },
+        data: {
+          title: data.title,
+          startTime: data.startTime ?? existingSession.startTime,
+          endTime: data.endTime ?? existingSession.endTime,
+          topic: data.topic ?? existingSession.topic,
+        },
+      });
+      return successResponse({ session, isExisting: true });
+    }
+
     const session = await prisma.session.create({
       data: {
         workshopId: data.workshopId,
         labId: data.labId || null,
         title: data.title,
-        date: new Date(data.date),
+        date: sessionDate,
         startTime: data.startTime || null,
         endTime: data.endTime || null,
         topic: data.topic,

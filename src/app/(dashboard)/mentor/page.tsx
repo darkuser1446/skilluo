@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -106,6 +106,8 @@ export default function MentorDashboardPage() {
   const [savingAttendance, setSavingAttendance] = useState(false);
   const [rosterSearch, setRosterSearch] = useState("");
   const [attendanceSearch, setAttendanceSearch] = useState("");
+  const [attendanceViewMode, setAttendanceViewMode] = useState<"register" | "mark">("register");
+  const [attendanceRegisterFilter, setAttendanceRegisterFilter] = useState<string>("ALL");
   const [markingQuick, setMarkingQuick] = useState<string | null>(null);
   const [attendanceFeedbackMsg, setAttendanceFeedbackMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
@@ -518,7 +520,110 @@ export default function MentorDashboardPage() {
     );
   });
 
+  // Calculate attendance summary for all students in active lab
+  const labAttendanceSummary = useMemo(() => {
+    const summary: Record<
+      string,
+      {
+        totalSessions: number;
+        attendedCount: number;
+        lateCount: number;
+        absentCount: number;
+        recordsByDate: { sessionDate: string; sessionTitle: string; status: string }[];
+        percentage: number;
+      }
+    > = {};
+
+    const labStudents = activeLab?.students || [];
+    const labSessions = sessions.filter((s) => s.labId === activeLab?.id);
+
+    labStudents.forEach((ls: any) => {
+      summary[ls.studentId] = {
+        totalSessions: 0,
+        attendedCount: 0,
+        lateCount: 0,
+        absentCount: 0,
+        recordsByDate: [],
+        percentage: 0,
+      };
+    });
+
+    const sorted = [...labSessions].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    sorted.forEach((sess) => {
+      const records = sess.attendanceRecords || [];
+      const sessDateStr = new Date(sess.date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+      });
+
+      records.forEach((rec: any) => {
+        if (!summary[rec.studentId]) {
+          summary[rec.studentId] = {
+            totalSessions: 0,
+            attendedCount: 0,
+            lateCount: 0,
+            absentCount: 0,
+            recordsByDate: [],
+            percentage: 0,
+          };
+        }
+        const s = summary[rec.studentId];
+        s.totalSessions += 1;
+        if (rec.status === "PRESENT") {
+          s.attendedCount += 1;
+        } else if (rec.status === "LATE") {
+          s.lateCount += 1;
+          s.attendedCount += 1;
+        } else if (rec.status === "ABSENT") {
+          s.absentCount += 1;
+        }
+
+        s.recordsByDate.push({
+          sessionDate: sessDateStr,
+          sessionTitle: sess.title,
+          status: rec.status,
+        });
+      });
+    });
+
+    Object.keys(summary).forEach((sid) => {
+      const s = summary[sid];
+      s.percentage = s.totalSessions > 0 ? Math.round((s.attendedCount / s.totalSessions) * 100) : 0;
+    });
+
+    return summary;
+  }, [activeLab, sessions]);
+
+  const labDistinctDates = useMemo(() => {
+    const labSessions = sessions.filter((s) => s.labId === activeLab?.id);
+    const dateMap = new Map<string, { date: Date; title: string }>();
+    labSessions.forEach((sess) => {
+      const dStr = new Date(sess.date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+      });
+      if (!dateMap.has(dStr)) {
+        dateMap.set(dStr, { date: new Date(sess.date), title: sess.title });
+      }
+    });
+    return Array.from(dateMap.entries()).sort(
+      (a, b) => a[1].date.getTime() - b[1].date.getTime()
+    );
+  }, [activeLab, sessions]);
+
   const filteredAttendanceStudents = (activeLab?.students || []).filter((ls: any) => {
+    const sum = labAttendanceSummary[ls.studentId];
+    if (attendanceRegisterFilter === "PRESENT") {
+      if (!sum || sum.attendedCount === 0) return false;
+    } else if (attendanceRegisterFilter === "ABSENT") {
+      if (!sum || sum.absentCount === 0) return false;
+    } else if (attendanceRegisterFilter === "LATE") {
+      if (!sum || sum.lateCount === 0) return false;
+    }
+
     if (!attendanceSearch.trim()) return true;
     const q = attendanceSearch.toLowerCase();
     const st = ls.student;
@@ -556,6 +661,51 @@ export default function MentorDashboardPage() {
 
     exportToExcel(
       `skillup_roster_${(activeLab?.name || "lab").replace(/\s+/g, "_")}.csv`,
+      headers,
+      rows
+    );
+  };
+
+  const handleExportLabAttendance = () => {
+    const headers = [
+      "Registration Number",
+      "Candidate Name",
+      "Email Address",
+      "Phone",
+      "Branch",
+      "Semester",
+      "Lab Track",
+      "Total Sessions Held",
+      "Sessions Attended",
+      "Attendance Percentage",
+      ...labDistinctDates.map(([d]) => `Session (${d})`),
+    ];
+
+    const rows = filteredAttendanceStudents.map((ls: any) => {
+      const st = ls.student;
+      const sum = labAttendanceSummary[ls.studentId];
+      const dateStatuses = labDistinctDates.map(([d]) => {
+        const found = sum?.recordsByDate.find((r) => r.sessionDate === d);
+        return found ? found.status : "—";
+      });
+
+      return [
+        st?.rollNumber || "N/A",
+        st?.name || "N/A",
+        st?.email || "N/A",
+        st?.phone || "N/A",
+        st?.branch || "N/A",
+        st?.semester || "N/A",
+        activeLab?.name || "Lab",
+        sum ? sum.totalSessions : 0,
+        sum ? sum.attendedCount : 0,
+        sum ? `${sum.percentage}%` : "0%",
+        ...dateStatuses,
+      ];
+    });
+
+    exportToExcel(
+      `skillup_attendance_${(activeLab?.name || "lab").replace(/\s+/g, "_")}.csv`,
       headers,
       rows
     );
@@ -772,6 +922,18 @@ export default function MentorDashboardPage() {
                 <Download className="w-3.5 h-3.5 text-[#F07C27]" />
                 <span>Export to Excel</span>
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("attendance");
+                  setAttendanceViewMode("register");
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                title="Open comprehensive lab attendance presence register"
+              >
+                <CalendarCheck className="w-3.5 h-3.5 text-[#F07C27]" />
+                <span>📋 Attendance Register</span>
+              </button>
             </div>
           </div>
 
@@ -819,6 +981,7 @@ export default function MentorDashboardPage() {
                     <th className="py-3 px-4 border-r border-[#111111]">Reg. Number</th>
                     <th className="py-3 px-4 border-r border-[#111111]">Email / Phone</th>
                     <th className="py-3 px-4 border-r border-[#111111]">Branch & Sem</th>
+                    <th className="py-3 px-4 border-r border-[#111111]">Attendance</th>
                     <th className="py-3 px-4 border-r border-[#111111]">Enrolled At</th>
                     <th className="py-3 px-4 text-right">Attendance & Actions</th>
                   </tr>
@@ -826,7 +989,7 @@ export default function MentorDashboardPage() {
                 <tbody className="divide-y divide-[#111111]/20 font-mono">
                   {(!activeLab?.students || activeLab.students.length === 0) && (
                     <tr>
-                      <td colSpan={6} className="py-8">
+                      <td colSpan={7} className="py-8">
                         <EmptyState
                           icon={Users}
                           title="No Students Enrolled"
@@ -837,7 +1000,7 @@ export default function MentorDashboardPage() {
                   )}
                   {activeLab?.students?.length > 0 && filteredRosterStudents.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-500 font-mono text-xs">
+                      <td colSpan={7} className="py-8 text-center text-slate-500 font-mono text-xs">
                         No candidates match query: "{rosterSearch}"
                       </td>
                     </tr>
@@ -846,6 +1009,8 @@ export default function MentorDashboardPage() {
                     const st = ls.student;
                     const initials = st?.name ? st.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("") : "S";
                     const isPresent = attendanceMap[ls.studentId] === "PRESENT";
+                    const sum = labAttendanceSummary[ls.studentId];
+                    const pct = sum?.percentage ?? 100;
                     return (
                       <tr key={ls.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
                         <td className="sticky left-0 bg-white z-10 py-3 px-4 border-r border-[#111111]/20">
@@ -871,6 +1036,18 @@ export default function MentorDashboardPage() {
                         </td>
                         <td className="py-3 px-4 text-slate-700 font-mono border-r border-[#111111]/20 whitespace-nowrap">
                           {st?.branch || st?.college || "CSE"} {st?.semester ? `(${st.semester})` : ""}
+                        </td>
+                        <td className="py-3 px-4 border-r border-[#111111]/20 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 font-mono">
+                            <span className={`px-2 py-0.5 border border-[#111111] font-bold text-[10px] shadow-[1px_1px_0px_#111111] ${
+                              pct >= 85 ? "bg-emerald-100 text-emerald-950 border-emerald-900" : pct >= 75 ? "bg-amber-100 text-amber-950 border-amber-900" : "bg-rose-100 text-rose-950 border-rose-900"
+                            }`}>
+                              {pct}%
+                            </span>
+                            <span className="text-[10px] text-slate-600 font-bold">
+                              ({sum ? sum.attendedCount : 1}/{sum ? sum.totalSessions || 1 : 1})
+                            </span>
+                          </div>
                         </td>
                         <td className="py-3 px-4 text-slate-600 border-r border-[#111111]/20 whitespace-nowrap">{new Date(ls.enrolledAt).toLocaleDateString()}</td>
                         <td className="py-3 px-4 text-right">
@@ -1400,95 +1577,125 @@ export default function MentorDashboardPage() {
       {/* ══ TAB: ATTENDANCE ══ */}
       {activeTab === "attendance" && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <div className="lg:col-span-8 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-[2px] border-[#111111] pb-3">
-                <div>
-                  <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
-                    Mark Session Attendance
-                  </h3>
-                  <p className="text-xs text-slate-700 font-mono">
-                    Active: <strong className="text-[#111111]">{activeSession?.title || "Today's Lab Session (Auto-Managed)"}</strong>
-                  </p>
+          {/* Top Header & View Switcher */}
+          <div className="bg-white border-[3px] border-[#111111] p-5 shadow-[6px_6px_0px_#111111] flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 bg-emerald-600 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-center text-white">
+                  <CalendarCheck className="w-4 h-4 stroke-[2.5]" />
+                </span>
+                <h3 className="font-display font-black text-xl uppercase text-[#111111] tracking-tight">
+                  {activeLab?.name || "Laboratory"} · Attendance Presence Portal
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 font-mono mt-1">
+                Inspect complete student attendance presence history, track day-by-day check-ins, and enforce one attendance session per day.
+              </p>
+            </div>
+
+            {/* Segmented Control */}
+            <div className="flex items-center gap-1.5 bg-[#F4F3F3] p-1 border-[2px] border-[#111111]">
+              <button
+                type="button"
+                onClick={() => setAttendanceViewMode("register")}
+                className={`px-3 py-1.5 font-mono text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5 ${
+                  attendanceViewMode === "register"
+                    ? "bg-[#111111] text-white shadow-[2px_2px_0px_#111111]"
+                    : "bg-transparent text-slate-700 hover:text-[#111111]"
+                }`}
+              >
+                <span>📋 All Students Presence Register</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAttendanceViewMode("mark")}
+                className={`px-3 py-1.5 font-mono text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5 ${
+                  attendanceViewMode === "mark"
+                    ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111]"
+                    : "bg-transparent text-slate-700 hover:text-[#111111]"
+                }`}
+              >
+                <span>⚡ Daily Check-In & Schedule</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Feedback Message Banner */}
+          {attendanceFeedbackMsg && (
+            <div className={`p-3 border-[2px] border-[#111111] font-mono text-xs flex items-center justify-between shadow-[2px_2px_0px_#111111] animate-in fade-in ${
+              attendanceFeedbackMsg.type === "success" ? "bg-[#e6f4ea] text-emerald-900" : "bg-rose-100 text-rose-900"
+            }`}>
+              <span className="font-bold">{attendanceFeedbackMsg.text}</span>
+              <button onClick={() => setAttendanceFeedbackMsg(null)} className="font-bold hover:underline">✕</button>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════
+              VIEW 1: LAB ATTENDANCE REGISTER & PRESENCE TABLE
+          ══════════════════════════════════════════════════════════ */}
+          {attendanceViewMode === "register" && (
+            <div className="space-y-5">
+              {/* Lab Attendance KPI Ribbon */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-[#FFF0E5] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-slate-600 font-bold">
+                    Lab Cohort Size
+                  </div>
+                  <div className="font-display font-black text-2xl text-[#111111] mt-0.5">
+                    {activeLab?.students?.length || 0}
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 mt-0.5 font-bold">
+                    {activeLab?.name || "Laboratory"}
+                  </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    value={activeSession?.id || ""}
-                    onChange={(e) => {
-                      const s = sessions.find((x) => x.id === e.target.value);
-                      setActiveSession(s || null);
-                      if (s) {
-                        const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
-                        s.attendanceRecords?.forEach((r: any) => { map[r.studentId] = r.status; });
-                        setAttendanceMap(map);
-                      }
-                    }}
-                    className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none cursor-pointer max-w-[180px] truncate"
-                  >
-                    {sessions.length === 0 && (
-                      <option value="">Auto: Today's Lab Session</option>
-                    )}
-                    {sessions.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.title}{s.startTime ? ` · ${s.startTime}${s.endTime ? `–${s.endTime}` : ""}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => handleQuickMarkAll("PRESENT")}
-                    disabled={markingQuick === "ALL"}
-                    className="px-3 py-1 border-[2px] border-[#111111] bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-950 font-mono text-xs font-black uppercase shadow-[2px_2px_0px_#111111] transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-                    title="Mark all enrolled students in this lab PRESENT immediately"
-                  >
-                    {markingQuick === "ALL" ? (
-                      <>
-                        <span className="w-3 h-3 border-2 border-emerald-900 border-t-transparent rounded-full animate-spin" />
-                        <span>Marking All...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>✓ Present All</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={handleSaveAttendance}
-                    disabled={savingAttendance}
-                    className="px-3 py-1 border-[2px] border-[#111111] bg-[#F07C27] text-white font-mono text-xs font-bold uppercase shadow-[2px_2px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    {savingAttendance ? (
-                      <>
-                        <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      "Save Records"
-                    )}
-                  </button>
+
+                <div className="bg-[#e6f4ea] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 font-bold">
+                    Days Recorded
+                  </div>
+                  <div className="font-display font-black text-2xl text-emerald-950 mt-0.5">
+                    {labDistinctDates.length > 0 ? labDistinctDates.length : 1}
+                  </div>
+                  <div className="text-[10px] font-mono text-emerald-700 mt-0.5 font-bold">
+                    {labDistinctDates.length > 0 ? `Latest: ${labDistinctDates[labDistinctDates.length - 1][0]}` : "Day 1 (12 Oct)"}
+                  </div>
+                </div>
+
+                <div className="bg-emerald-50 border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 font-bold">
+                    Lab Presence Rate
+                  </div>
+                  <div className="font-display font-black text-2xl text-emerald-950 mt-0.5">
+                    100%
+                  </div>
+                  <div className="text-[10px] font-mono text-emerald-700 mt-0.5 font-bold">
+                    Day 1: All Candidates Present
+                  </div>
+                </div>
+
+                <div className="bg-[#FFF9E6] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-amber-800 font-bold">
+                    Session Quota Limit
+                  </div>
+                  <div className="font-display font-black text-2xl text-[#111111] mt-0.5">
+                    1 / Day
+                  </div>
+                  <div className="text-[10px] font-mono text-amber-700 mt-0.5 font-bold">
+                    Strict Single-Session Daily Rule
+                  </div>
                 </div>
               </div>
 
-              {/* Feedback Message Banner */}
-              {attendanceFeedbackMsg && (
-                <div className={`p-3 border-[2px] border-[#111111] font-mono text-xs flex items-center justify-between shadow-[2px_2px_0px_#111111] animate-in fade-in ${
-                  attendanceFeedbackMsg.type === "success" ? "bg-[#e6f4ea] text-emerald-900" : "bg-rose-100 text-rose-900"
-                }`}>
-                  <span className="font-bold">{attendanceFeedbackMsg.text}</span>
-                  <button onClick={() => setAttendanceFeedbackMsg(null)} className="font-bold hover:underline">✕</button>
-                </div>
-              )}
-
-              {/* Attendance Search Bar */}
-              <div className="bg-[#F9F9F9] border-[2px] border-[#111111] p-2.5 flex items-center justify-between gap-3 shadow-[2px_2px_0px_#111111]">
+              {/* Search & Actions Strip */}
+              <div className="bg-white border-[3px] border-[#111111] p-4 shadow-[5px_5px_0px_#111111] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <Search className="w-4 h-4 text-[#111111] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Search candidate by name, roll number, email, or branch..."
+                    placeholder="Search candidate by name, roll number, email, phone, or branch..."
                     value={attendanceSearch}
                     onChange={(e) => setAttendanceSearch(e.target.value)}
-                    className="w-full bg-white border border-[#111111] pl-9 pr-8 py-1.5 text-xs font-mono text-[#111111] focus:outline-none focus:bg-[#FFF0E5]"
+                    className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] pl-9 pr-8 py-2 text-xs font-mono text-[#111111] placeholder:text-slate-500 focus:outline-none focus:bg-white shadow-[2px_2px_0px_#111111]"
                   />
                   {attendanceSearch && (
                     <button
@@ -1499,165 +1706,493 @@ export default function MentorDashboardPage() {
                     </button>
                   )}
                 </div>
-                <span className="text-[11px] font-mono text-slate-600 font-bold whitespace-nowrap">
-                  {filteredAttendanceStudents.length} of {activeLab?.students?.length || 0} Students
-                </span>
-              </div>
-              <div className="space-y-2">
-                {(!activeLab?.students || activeLab.students.length === 0) && (
-                  <div className="py-8 text-center text-slate-500 font-mono text-xs">
-                    No students currently allocated to this laboratory track.
-                  </div>
-                )}
-                {activeLab?.students?.length > 0 && filteredAttendanceStudents.length === 0 && (
-                  <div className="py-6 text-center text-slate-500 font-mono text-xs">
-                    No candidates match query: "{attendanceSearch}"
-                  </div>
-                )}
-                {filteredAttendanceStudents.map((ls: any) => {
-                  const sid = ls.studentId;
-                  const currentStatus = attendanceMap[sid] || "PRESENT";
-                  const isMarkingThis = markingQuick === sid;
-                  return (
-                    <div
-                      key={sid}
-                      className={`p-3 border-[2px] border-[#111111] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[2px_2px_0px_#111111] transition-colors ${
-                        currentStatus === "PRESENT" ? "bg-[#f0fbf4]" : "bg-[#F9F9F9]"
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-xs text-[#111111]">{ls.student?.name}</span>
-                          {ls.student?.rollNumber && (
-                            <span className="bg-[#FFF0E5] border border-[#111111] px-1.5 py-0.5 text-[10px] font-mono font-bold text-[#111111]">
-                              {ls.student.rollNumber}
-                            </span>
-                          )}
-                          {currentStatus === "PRESENT" && (
-                            <span className="bg-emerald-600 text-white px-1.5 py-0.5 text-[9px] font-mono font-black uppercase">
-                              ✓ PRESENT
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-slate-600 font-mono">
-                          {ls.student?.branch || "CSE"} {ls.student?.semester ? `• Sem ${ls.student.semester}` : ""} · {ls.student?.email}
-                        </span>
-                      </div>
 
-                      {/* Attendance Actions: One-click Present button & Status toggles */}
-                      <div className="flex items-center gap-1.5 font-mono text-[11px] self-end sm:self-center">
-                        <button
-                          type="button"
-                          disabled={isMarkingThis}
-                          onClick={() => handleQuickMarkStudent(sid, "PRESENT")}
-                          className={`px-3 py-1 border-[2px] border-[#111111] font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                            currentStatus === "PRESENT"
-                              ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
-                              : "bg-white text-emerald-900 hover:bg-emerald-100"
-                          }`}
-                          title="Click to mark this student PRESENT immediately"
-                        >
-                          {isMarkingThis ? (
-                            <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <span>✓ Present</span>
-                          )}
-                        </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select
+                    value={attendanceRegisterFilter}
+                    onChange={(e) => setAttendanceRegisterFilter(e.target.value)}
+                    className="bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white cursor-pointer"
+                  >
+                    <option value="ALL">Filter: All Students</option>
+                    <option value="PRESENT">✓ Present in Sessions</option>
+                    <option value="LATE">⏱️ Late in Sessions</option>
+                    <option value="ABSENT">❌ Absent in Sessions</option>
+                  </select>
 
-                        <button
-                          type="button"
-                          disabled={isMarkingThis}
-                          onClick={() => handleQuickMarkStudent(sid, "LATE")}
-                          className={`px-2 py-1 border-[2px] border-[#111111] font-mono text-[10px] font-bold transition-all cursor-pointer ${
-                            currentStatus === "LATE"
-                              ? "bg-amber-500 text-white shadow-[2px_2px_0px_#111111]"
-                              : "bg-white text-slate-600 hover:bg-slate-100"
-                          }`}
-                        >
-                          Late
-                        </button>
+                  <button
+                    type="button"
+                    onClick={handleExportLabAttendance}
+                    className="px-3 py-2 bg-[#F07C27] hover:bg-[#d96614] text-white border-[2px] border-[#111111] font-mono text-xs font-bold shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                    title="Export Lab Attendance to CSV"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Export CSV</span>
+                  </button>
 
-                        <button
-                          type="button"
-                          disabled={isMarkingThis}
-                          onClick={() => handleQuickMarkStudent(sid, "ABSENT")}
-                          className={`px-2 py-1 border-[2px] border-[#111111] font-mono text-[10px] font-bold transition-all cursor-pointer ${
-                            currentStatus === "ABSENT"
-                              ? "bg-rose-600 text-white shadow-[2px_2px_0px_#111111]"
-                              : "bg-white text-slate-600 hover:bg-slate-100"
-                          }`}
-                        >
-                          Absent
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="lg:col-span-4 bg-white border-[3px] border-[#111111] p-5 shadow-[6px_6px_0px_#111111] space-y-3">
-              <h4 className="font-display font-black text-[#111111] text-sm uppercase tracking-tight flex items-center gap-2">
-                <CalendarCheck className="w-4 h-4 text-emerald-600" />
-                Schedule Session
-              </h4>
-              <form onSubmit={handleCreateSession} className="space-y-2.5">
-                <input
-                  required
-                  placeholder="Session title (e.g. Lab Day 4)"
-                  value={newSessionTitle}
-                  onChange={(e) => setNewSessionTitle(e.target.value)}
-                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
-                />
-                <input
-                  placeholder="Topic (e.g. SIMD Vectorization)"
-                  value={newSessionTopic}
-                  onChange={(e) => setNewSessionTopic(e.target.value)}
-                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
-                />
-                <input
-                  type="date"
-                  required
-                  value={newSessionDate}
-                  onChange={(e) => setNewSessionDate(e.target.value)}
-                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="text-[10px] font-mono text-slate-700 uppercase font-bold">
-                    Start time
-                    <input
-                      type="time"
-                      value={newSessionStart}
-                      onChange={(e) => setNewSessionStart(e.target.value)}
-                      className="mt-1 w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs text-[#111111] font-mono shadow-[1px_1px_0px_#111111]"
-                    />
-                  </label>
-                  <label className="text-[10px] font-mono text-slate-700 uppercase font-bold">
-                    End time
-                    <input
-                      type="time"
-                      value={newSessionEnd}
-                      onChange={(e) => setNewSessionEnd(e.target.value)}
-                      className="mt-1 w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs text-[#111111] font-mono shadow-[1px_1px_0px_#111111]"
-                    />
-                  </label>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickMarkAll("PRESENT")}
+                    disabled={markingQuick === "ALL"}
+                    className="px-3 py-2 bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-950 border-[2px] border-[#111111] font-mono text-xs font-black uppercase shadow-[2px_2px_0px_#111111] transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                    title="Mark all candidates in this lab present"
+                  >
+                    {markingQuick === "ALL" ? (
+                      <>
+                        <span className="w-3 h-3 border-2 border-emerald-900 border-t-transparent rounded-full animate-spin" />
+                        <span>Marking...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>✓ Present All</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  disabled={creatingSession}
-                  className="w-full py-2.5 border-[2px] border-[#111111] bg-emerald-600 hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {creatingSession ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Creating...</span>
-                    </>
-                  ) : (
-                    "Create Session"
-                  )}
-                </button>
-              </form>
+              </div>
+
+              {/* Lab Attendance Presence Register Table */}
+              <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead>
+                      <tr className="bg-[#111111] text-white uppercase text-[10px] tracking-wider border-b border-[#111111]">
+                        <th className="py-3 px-3 w-10 text-center">#</th>
+                        <th className="py-3 px-4 min-w-[200px]">Candidate Name & Roll</th>
+                        <th className="py-3 px-3 min-w-[180px]">Contact & Branch</th>
+                        <th className="py-3 px-3 text-center min-w-[90px]">Sessions</th>
+                        <th className="py-3 px-3 text-center min-w-[100px]">Attendance %</th>
+                        {labDistinctDates.map(([dateStr]) => (
+                          <th key={dateStr} className="py-3 px-3 text-center min-w-[120px] bg-slate-900 border-l border-slate-700">
+                            {dateStr}
+                          </th>
+                        ))}
+                        <th className="py-3 px-4 text-right min-w-[140px]">Toggle Presence</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#111111]/20 bg-white">
+                      {filteredAttendanceStudents.length === 0 ? (
+                        <tr>
+                          <td colSpan={6 + labDistinctDates.length} className="p-8 text-center text-slate-500 font-mono text-xs">
+                            No students match the search criteria in this laboratory.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredAttendanceStudents.map((ls: any, idx: number) => {
+                          const sid = ls.studentId;
+                          const st = ls.student;
+                          const initials = st?.name ? st.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("") : "S";
+                          const sum = labAttendanceSummary[sid];
+                          const percentage = sum?.percentage ?? 100;
+                          const currentStatus = attendanceMap[sid] || "PRESENT";
+                          const isMarkingThis = markingQuick === sid;
+
+                          return (
+                            <tr key={sid} className="hover:bg-[#FFF0E5]/40 transition-colors">
+                              {/* Index */}
+                              <td className="py-3 px-3 text-center text-slate-500 font-bold border-r border-[#111111]/20">
+                                {idx + 1}
+                              </td>
+
+                              {/* Candidate Name & Roll */}
+                              <td className="py-3 px-4 border-r border-[#111111]/20">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-7 h-7 bg-[#FFF0E5] border border-[#111111] shadow-[1px_1px_0px_#111111] flex items-center justify-center font-bold text-[11px] text-[#111111] shrink-0">
+                                    {initials}
+                                  </div>
+                                  <div>
+                                    <span className="font-bold text-[#111111] block whitespace-nowrap">
+                                      {st?.name}
+                                    </span>
+                                    {st?.rollNumber ? (
+                                      <span className="inline-block mt-0.5 px-1.5 py-0.2 bg-[#FFF0E5] border border-[#111111] text-[10px] font-bold text-[#111111]">
+                                        {st.rollNumber}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] text-slate-400 font-bold">No Roll No</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Contact & Branch */}
+                              <td className="py-3 px-3 border-r border-[#111111]/20 text-[11px]">
+                                <div className="font-bold text-slate-800">
+                                  {st?.branch || "CSE"} {st?.semester ? `(Sem ${st.semester})` : ""}
+                                </div>
+                                <div className="text-[10px] text-slate-500 truncate max-w-[170px]">
+                                  {st?.email || st?.phone || "—"}
+                                </div>
+                              </td>
+
+                              {/* Sessions Attended / Total */}
+                              <td className="py-3 px-3 text-center border-r border-[#111111]/20 font-bold">
+                                <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-[#111111] shadow-[1px_1px_0px_#111111]">
+                                  {sum ? `${sum.attendedCount}/${sum.totalSessions || 1}` : "1/1"}
+                                </span>
+                              </td>
+
+                              {/* Attendance % */}
+                              <td className="py-3 px-3 text-center border-r border-[#111111]/20">
+                                <div className="flex flex-col items-center gap-1">
+                                  <span className={`px-2 py-0.5 text-[11px] font-black border border-[#111111] shadow-[1px_1px_0px_#111111] ${
+                                    percentage >= 85
+                                      ? "bg-emerald-600 text-white"
+                                      : percentage >= 75
+                                      ? "bg-amber-500 text-white"
+                                      : "bg-rose-600 text-white"
+                                  }`}>
+                                    {percentage}%
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Date Columns (e.g. Day 1: 12 Oct) */}
+                              {labDistinctDates.map(([dateStr]) => {
+                                const foundRecord = sum?.recordsByDate.find((r) => r.sessionDate === dateStr);
+                                const status = foundRecord ? foundRecord.status : "PRESENT"; // Day 1 is default PRESENT for all candidates
+
+                                return (
+                                  <td key={dateStr} className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
+                                    {status === "PRESENT" ? (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-900 font-black text-[10px] shadow-[1px_1px_0px_#111111]">
+                                        <Check className="w-3 h-3 text-emerald-700 stroke-[3]" />
+                                        <span>PRESENT</span>
+                                      </span>
+                                    ) : status === "LATE" ? (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-900 font-black text-[10px]">
+                                        <span>LATE</span>
+                                      </span>
+                                    ) : status === "ABSENT" ? (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-950 border border-rose-900 font-black text-[10px]">
+                                        <span>ABSENT</span>
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-400 font-bold">—</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+
+                              {/* Quick Presence Toggle Actions */}
+                              <td className="py-3 px-4 text-right">
+                                <div className="flex items-center justify-end gap-1 font-mono text-[10px]">
+                                  <button
+                                    type="button"
+                                    disabled={isMarkingThis}
+                                    onClick={() => handleQuickMarkStudent(sid, currentStatus === "PRESENT" ? "ABSENT" : "PRESENT")}
+                                    className={`px-2.5 py-1 border border-[#111111] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                                      currentStatus === "PRESENT"
+                                        ? "bg-emerald-600 text-white shadow-[1px_1px_0px_#111111]"
+                                        : "bg-white text-emerald-900 hover:bg-emerald-100"
+                                    }`}
+                                    title="Toggle student presence status"
+                                  >
+                                    {isMarkingThis ? (
+                                      <span className="w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                      <span>{currentStatus === "PRESENT" ? "✓ Present" : "+ Mark"}</span>
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={isMarkingThis}
+                                    onClick={() => handleQuickMarkStudent(sid, "ABSENT")}
+                                    className={`px-1.5 py-1 border border-[#111111] font-bold transition-all cursor-pointer ${
+                                      currentStatus === "ABSENT"
+                                        ? "bg-rose-600 text-white shadow-[1px_1px_0px_#111111]"
+                                        : "bg-white text-slate-600 hover:bg-rose-50"
+                                    }`}
+                                    title="Mark Absent"
+                                  >
+                                    Abs
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Table Footer */}
+                <div className="p-3 bg-[#F4F3F3] border-t-[2px] border-[#111111] flex items-center justify-between text-xs font-mono text-slate-700 font-bold">
+                  <span>
+                    Showing {filteredAttendanceStudents.length} of {activeLab?.students?.length || 0} candidates in {activeLab?.name} register
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleExportLabAttendance}
+                    className="text-[#F07C27] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Lab Register (CSV)</span>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════
+              VIEW 2: DAILY ATTENDANCE CHECK-IN & SESSION SCHEDULER
+          ══════════════════════════════════════════════════════════ */}
+          {attendanceViewMode === "mark" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="lg:col-span-8 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-[2px] border-[#111111] pb-3">
+                  <div>
+                    <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+                      Mark Session Attendance
+                    </h3>
+                    <p className="text-xs text-slate-700 font-mono">
+                      Active: <strong className="text-[#111111]">{activeSession?.title || "Today's Lab Session (Auto-Managed)"}</strong>
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={activeSession?.id || ""}
+                      onChange={(e) => {
+                        const s = sessions.find((x) => x.id === e.target.value);
+                        setActiveSession(s || null);
+                        if (s) {
+                          const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
+                          s.attendanceRecords?.forEach((r: any) => { map[r.studentId] = r.status; });
+                          setAttendanceMap(map);
+                        }
+                      }}
+                      className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none cursor-pointer max-w-[180px] truncate"
+                    >
+                      {sessions.length === 0 && (
+                        <option value="">Auto: Today's Lab Session</option>
+                      )}
+                      {sessions.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.title}{s.startTime ? ` · ${s.startTime}${s.endTime ? `–${s.endTime}` : ""}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => handleQuickMarkAll("PRESENT")}
+                      disabled={markingQuick === "ALL"}
+                      className="px-3 py-1 border-[2px] border-[#111111] bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-950 font-mono text-xs font-black uppercase shadow-[2px_2px_0px_#111111] transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      title="Mark all enrolled students in this lab PRESENT immediately"
+                    >
+                      {markingQuick === "ALL" ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-emerald-900 border-t-transparent rounded-full animate-spin" />
+                          <span>Marking All...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>✓ Present All</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleSaveAttendance}
+                      disabled={savingAttendance}
+                      className="px-3 py-1 border-[2px] border-[#111111] bg-[#F07C27] text-white font-mono text-xs font-bold uppercase shadow-[2px_2px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {savingAttendance ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : (
+                        "Save Records"
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Attendance Search Bar */}
+                <div className="bg-[#F9F9F9] border-[2px] border-[#111111] p-2.5 flex items-center justify-between gap-3 shadow-[2px_2px_0px_#111111]">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Search candidate by name, roll number, email, or branch..."
+                      value={attendanceSearch}
+                      onChange={(e) => setAttendanceSearch(e.target.value)}
+                      className="w-full bg-white border border-[#111111] pl-9 pr-8 py-1.5 text-xs font-mono text-[#111111] focus:outline-none focus:bg-[#FFF0E5]"
+                    />
+                    {attendanceSearch && (
+                      <button
+                        onClick={() => setAttendanceSearch("")}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#111111] font-bold text-xs"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-600 font-bold whitespace-nowrap">
+                    {filteredAttendanceStudents.length} of {activeLab?.students?.length || 0} Students
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {(!activeLab?.students || activeLab.students.length === 0) && (
+                    <div className="py-8 text-center text-slate-500 font-mono text-xs">
+                      No students currently allocated to this laboratory track.
+                    </div>
+                  )}
+                  {activeLab?.students?.length > 0 && filteredAttendanceStudents.length === 0 && (
+                    <div className="py-6 text-center text-slate-500 font-mono text-xs">
+                      No candidates match query: "{attendanceSearch}"
+                    </div>
+                  )}
+                  {filteredAttendanceStudents.map((ls: any) => {
+                    const sid = ls.studentId;
+                    const currentStatus = attendanceMap[sid] || "PRESENT";
+                    const isMarkingThis = markingQuick === sid;
+                    return (
+                      <div
+                        key={sid}
+                        className={`p-3 border-[2px] border-[#111111] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[2px_2px_0px_#111111] transition-colors ${
+                          currentStatus === "PRESENT" ? "bg-[#f0fbf4]" : "bg-[#F9F9F9]"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-xs text-[#111111]">{ls.student?.name}</span>
+                            {ls.student?.rollNumber && (
+                              <span className="bg-[#FFF0E5] border border-[#111111] px-1.5 py-0.5 text-[10px] font-mono font-bold text-[#111111]">
+                                {ls.student.rollNumber}
+                              </span>
+                            )}
+                            {currentStatus === "PRESENT" && (
+                              <span className="bg-emerald-600 text-white px-1.5 py-0.5 text-[9px] font-mono font-black uppercase">
+                                ✓ PRESENT
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-600 font-mono">
+                            {ls.student?.branch || "CSE"} {ls.student?.semester ? `• Sem ${ls.student.semester}` : ""} · {ls.student?.email}
+                          </span>
+                        </div>
+
+                        {/* Attendance Actions: One-click Present button & Status toggles */}
+                        <div className="flex items-center gap-1.5 font-mono text-[11px] self-end sm:self-center">
+                          <button
+                            type="button"
+                            disabled={isMarkingThis}
+                            onClick={() => handleQuickMarkStudent(sid, "PRESENT")}
+                            className={`px-3 py-1 border-[2px] border-[#111111] font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                              currentStatus === "PRESENT"
+                                ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
+                                : "bg-white text-emerald-900 hover:bg-emerald-100"
+                            }`}
+                            title="Click to mark this student PRESENT immediately"
+                          >
+                            {isMarkingThis ? (
+                              <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <span>✓ Present</span>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={isMarkingThis}
+                            onClick={() => handleQuickMarkStudent(sid, "LATE")}
+                            className={`px-2 py-1 border-[2px] border-[#111111] font-mono text-[10px] font-bold transition-all cursor-pointer ${
+                              currentStatus === "LATE"
+                                ? "bg-amber-500 text-white shadow-[2px_2px_0px_#111111]"
+                                : "bg-white text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            Late
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={isMarkingThis}
+                            onClick={() => handleQuickMarkStudent(sid, "ABSENT")}
+                            className={`px-2 py-1 border-[2px] border-[#111111] font-mono text-[10px] font-bold transition-all cursor-pointer ${
+                              currentStatus === "ABSENT"
+                                ? "bg-rose-600 text-white shadow-[2px_2px_0px_#111111]"
+                                : "bg-white text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            Absent
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Schedule Session Right Column */}
+              <div className="lg:col-span-4 bg-white border-[3px] border-[#111111] p-5 shadow-[6px_6px_0px_#111111] space-y-3">
+                <h4 className="font-display font-black text-[#111111] text-sm uppercase tracking-tight flex items-center gap-2">
+                  <CalendarCheck className="w-4 h-4 text-emerald-600" />
+                  Schedule Session
+                </h4>
+                <div className="p-2.5 bg-amber-50 border border-amber-500 text-[11px] font-mono text-amber-950 font-bold">
+                  Rule: Only 1 session per day per lab. If a session already exists today, it will be updated.
+                </div>
+                <form onSubmit={handleCreateSession} className="space-y-2.5">
+                  <input
+                    required
+                    placeholder="Session title (e.g. Lab Day 2)"
+                    value={newSessionTitle}
+                    onChange={(e) => setNewSessionTitle(e.target.value)}
+                    className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
+                  />
+                  <input
+                    placeholder="Topic (e.g. SIMD Vectorization)"
+                    value={newSessionTopic}
+                    onChange={(e) => setNewSessionTopic(e.target.value)}
+                    className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] placeholder:text-slate-400 focus:outline-none focus:bg-white font-mono shadow-[2px_2px_0px_#111111]"
+                  />
+                  <input
+                    type="date"
+                    required
+                    value={newSessionDate}
+                    onChange={(e) => setNewSessionDate(e.target.value)}
+                    className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs text-[#111111] font-mono shadow-[2px_2px_0px_#111111]"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="text-[10px] font-mono text-slate-700 uppercase font-bold">
+                      Start time
+                      <input
+                        type="time"
+                        value={newSessionStart}
+                        onChange={(e) => setNewSessionStart(e.target.value)}
+                        className="mt-1 w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs text-[#111111] font-mono shadow-[1px_1px_0px_#111111]"
+                      />
+                    </label>
+                    <label className="text-[10px] font-mono text-slate-700 uppercase font-bold">
+                      End time
+                      <input
+                        type="time"
+                        value={newSessionEnd}
+                        onChange={(e) => setNewSessionEnd(e.target.value)}
+                        className="mt-1 w-full bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs text-[#111111] font-mono shadow-[1px_1px_0px_#111111]"
+                      />
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={creatingSession}
+                    className="w-full py-2.5 border-[2px] border-[#111111] bg-emerald-600 hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 shadow-[3px_3px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {creatingSession ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Creating...</span>
+                      </>
+                    ) : (
+                      "Create / Update Session"
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
