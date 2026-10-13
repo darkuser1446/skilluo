@@ -696,7 +696,7 @@ export default function StudentDashboardPage() {
                 [ STUDENT // MODULES ]
               </span>
               <span className="text-[10px] font-mono font-bold bg-[#FFF0E5] px-1.5 py-0.5 border border-[#111111] text-[#111111]">
-                8 STATIONS
+                7 STATIONS
               </span>
             </div>
 
@@ -704,16 +704,10 @@ export default function StudentDashboardPage() {
             <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0 scrollbar-none">
               {[
                 { id: "overview", label: "OVERVIEW", icon: Trophy, count: null },
-                {
-                  id: "assignments",
-                  label: "ASSIGNMENTS",
-                  icon: FileCode,
-                  count: assignments.length,
-                },
+                { id: "assessments", label: "ASSIGNMENT AND TEST", icon: Award, count: assessments.length },
                 { id: "exercises", label: "EXERCISES", icon: Code2, count: exercises.length },
                 { id: "notes", label: "LEARNING MATERIALS", icon: BookOpen, count: notes.length },
                 { id: "attendance", label: "ATTENDANCE RECORD", icon: CalendarCheck, count: `${performance?.attendancePercentage ?? 100}%` },
-                { id: "assessments", label: "ASSESSMENTS & TESTS", icon: Award, count: assessments.length },
                 { id: "doubts", label: "DOUBTS THREAD", icon: HelpCircle, count: doubts.length },
                 { id: "feedback", label: "MENTOR FEEDBACK", icon: MessageSquareHeart, count: null },
               ].map((tab) => {
@@ -949,7 +943,7 @@ export default function StudentDashboardPage() {
                   when: `due ${new Date(a.dueDate).toLocaleString()}`,
                   ts: new Date(a.dueDate).getTime(),
                   color: "bg-[#F07C27] text-white border-[#111111]",
-                  tab: "assignments",
+                  tab: "assessments",
                 })
               );
             assessments
@@ -1138,7 +1132,7 @@ export default function StudentDashboardPage() {
                   Active Assignments
                 </h3>
                 <button
-                  onClick={() => setActiveTab("assignments")}
+                  onClick={() => setActiveTab("assessments")}
                   className="text-xs font-mono font-bold text-[#111111] bg-[#FFF0E5] px-2.5 py-1 border-[2px] border-[#111111] hover:bg-[#F07C27] hover:text-white transition-all flex items-center gap-1 shadow-[2px_2px_0px_#111111]"
                 >
                   VIEW ALL ({assignments.length}) <ChevronRight className="w-3.5 h-3.5" />
@@ -1910,8 +1904,8 @@ export default function StudentDashboardPage() {
       {activeTab === "assessments" && !activeAssessment && (
         <div className="space-y-6">
           <div>
-            <h3 className="font-mono font-bold text-[#111111] text-base uppercase tracking-wider">Assessments & Benchmark Tests</h3>
-            <p className="text-xs text-slate-600 font-mono mt-0.5">Tests account for <strong className="text-[#F07C27]">35%</strong> of your Super 60 evaluation scorecard</p>
+            <h3 className="font-mono font-bold text-[#111111] text-base uppercase tracking-wider">Assignments & Tests</h3>
+            <p className="text-xs text-slate-600 font-mono mt-0.5">Assignments and tests account for <strong className="text-[#F07C27]">65%</strong> of your Super 60 evaluation scorecard</p>
           </div>
 
           {/* Screening Test Syllabus Banner */}
