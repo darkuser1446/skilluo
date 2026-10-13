@@ -779,10 +779,10 @@ export default function TestManager({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-[#F07C27]" /> Tests & Quizzes Management
+            <ClipboardList className="w-5 h-5 text-[#F07C27]" /> Assignments & Tests Management
           </h3>
           <p className="text-xs text-slate-700 font-mono mt-0.5">
-            Create online tests, monitor live submissions and grade student answers
+            Create and publish assignments, MCQ tests, and quizzes to all labs or selected labs
           </p>
         </div>
         <div className="flex gap-2">
@@ -791,7 +791,7 @@ export default function TestManager({
           </button>
           <button className={btnPrimary} onClick={() => setShowCreate((v) => !v)}>
             {showCreate ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-            {showCreate ? "Cancel" : "New Test"}
+            {showCreate ? "Cancel" : "+ New Assignment / Test"}
           </button>
         </div>
       </div>
@@ -897,8 +897,9 @@ export default function TestManager({
                 value={type}
                 onChange={(e) => setType(e.target.value as any)}
               >
+                <option value="ASSIGNMENT">Assignment (MCQ / Problems)</option>
+                <option value="TEST">Test / Exam</option>
                 <option value="QUIZ">Quiz</option>
-                <option value="TEST">Test</option>
                 <option value="PROGRAMMING">Programming (code answers, manual review)</option>
               </select>
             </div>

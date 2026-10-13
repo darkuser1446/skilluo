@@ -1298,7 +1298,7 @@ export default function AdminDashboardPage() {
     { id: "labs", label: "Labs & Allocation", icon: Layers, count: labs.length },
     { id: "attendance", label: "Attendance Register", icon: CalendarCheck, count: selectedCandidates.length },
     { id: "users", label: "Platform Users", icon: Users, count: users.length },
-    { id: "tests", label: "Tests & Quizzes", icon: ClipboardList, count: null },
+    { id: "tests", label: "Assignments & MCQ Tests", icon: ClipboardList, count: null },
     { id: "announcements", label: "Announcements", icon: Megaphone, count: announcements.length },
     { id: "weights", label: "Evaluation Formula Weights", icon: Sliders, count: null },
     { id: "feedback", label: "Feedback Explorer", icon: MessageSquare, count: feedbacks.length },
