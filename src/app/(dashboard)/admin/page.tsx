@@ -274,6 +274,7 @@ export default function AdminDashboardPage() {
             loadAnnouncements(firstId),
             loadAudit(),
             loadAttendanceSessions(firstId),
+            loadFeedbacks(firstId),
           ]);
         }
       }
@@ -317,10 +318,12 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const loadFeedbacks = async (labId?: string) => {
+  const loadFeedbacks = async (wId?: string, labId?: string) => {
+    const targetWId = wId || selectedWorkshopId || workshops[0]?.id;
+    if (!targetWId) return;
     const url = labId
-      ? `/api/feedback?workshopId=${selectedWorkshopId}&labId=${labId}`
-      : `/api/feedback?workshopId=${selectedWorkshopId}`;
+      ? `/api/feedback?workshopId=${targetWId}&labId=${labId}`
+      : `/api/feedback?workshopId=${targetWId}`;
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
@@ -423,6 +426,7 @@ export default function AdminDashboardPage() {
       loadMentors(id),
       loadAnnouncements(id),
       loadAttendanceSessions(id),
+      loadFeedbacks(id),
     ]);
   };
 
@@ -4079,7 +4083,7 @@ export default function AdminDashboardPage() {
               value={feedbackLabId}
               onChange={(e) => {
                 setFeedbackLabId(e.target.value);
-                loadFeedbacks(e.target.value);
+                loadFeedbacks(selectedWorkshopId, e.target.value);
               }}
               className="bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white cursor-pointer"
             >
