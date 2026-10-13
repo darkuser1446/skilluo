@@ -299,6 +299,7 @@ model Assessment {
   labId           String?
   lab             Lab?           @relation(fields: [labId], references: [id], onDelete: SetNull)
   targetLabIds    String[]       @default([])
+  targetAudience  String         @default("ALL") // "ALL" | "NON_SELECTED" | "LABS"
   title           String
   description     String?
   type            AssessmentType @default(TEST)

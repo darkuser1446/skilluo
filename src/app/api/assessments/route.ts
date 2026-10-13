@@ -12,36 +12,46 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
 
-    if (!workshopId) {
+    let targetWorkshopId = workshopId;
+    if (!targetWorkshopId) {
+      const activeWs = await prisma.workshop.findFirst({
+        where: { status: "ACTIVE" },
+        select: { id: true },
+        orderBy: { createdAt: "desc" },
+      });
+      targetWorkshopId = activeWs?.id || null;
+    }
+
+    if (!targetWorkshopId) {
       return errorResponse("workshopId query parameter is required", "BAD_REQUEST", 400);
     }
 
+    let isSelectedStudent = false;
     let studentLabId: string | null = null;
-    if (user.role === "STUDENT" && prisma.labStudent?.findFirst) {
+    if (user.role === "STUDENT") {
       try {
-        const enrollment = await prisma.labStudent.findFirst({
-          where: { studentId: user.sub },
-          select: { labId: true },
-        });
-        studentLabId = enrollment?.labId || null;
+        if (prisma.workshopEnrollment?.findFirst) {
+          const enr = await prisma.workshopEnrollment.findFirst({
+            where: { workshopId: targetWorkshopId, studentId: user.sub },
+            select: { status: true },
+          });
+          isSelectedStudent = enr?.status === "SELECTED";
+        }
+        if (prisma.labStudent?.findFirst) {
+          const enrollment = await prisma.labStudent.findFirst({
+            where: { studentId: user.sub },
+            select: { labId: true },
+          });
+          studentLabId = enrollment?.labId || null;
+          if (studentLabId) isSelectedStudent = true;
+        }
       } catch {
         studentLabId = null;
       }
     }
 
-    const assessments = await prisma.assessment.findMany({
-      where: {
-        workshopId,
-        ...(user.role === "STUDENT" && studentLabId
-          ? {
-              OR: [
-                { labId: null, targetLabIds: { isEmpty: true } },
-                { labId: studentLabId },
-                { targetLabIds: { has: studentLabId } },
-              ],
-            }
-          : {}),
-      },
+    const allAssessments = await prisma.assessment.findMany({
+      where: { workshopId: targetWorkshopId },
       include: {
         lab: true,
         questions: true,
@@ -49,12 +59,39 @@ export async function GET(req: NextRequest) {
           ? { where: { studentId: user.sub } }
           : {
               include: {
-                student: { select: { id: true, name: true, email: true } },
+                student: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    rollNumber: true,
+                    labStudents: {
+                      include: { lab: { select: { id: true, name: true } } },
+                    },
+                  },
+                },
               },
             },
       },
       orderBy: { startsAt: "desc" },
     });
+
+    const assessments = user.role === "STUDENT"
+      ? allAssessments.filter((a) => {
+          const hasResult = a.results && a.results.length > 0;
+          // Submissions must permanently remain visible in student's Test History!
+          if (hasResult) return true;
+
+          if (a.targetAudience === "NON_SELECTED") {
+            return !isSelectedStudent;
+          }
+          if (a.targetAudience === "LABS" || (a.targetLabIds && a.targetLabIds.length > 0) || a.labId) {
+            if (!studentLabId) return false;
+            return a.labId === studentLabId || (a.targetLabIds && a.targetLabIds.includes(studentLabId));
+          }
+          return true;
+        })
+      : allAssessments;
 
     // SECURITY: only ADMIN and MENTOR may see correctAnswer and student results/scores
     const isPrivileged = user.role === "ADMIN" || user.role === "MENTOR";
@@ -99,6 +136,7 @@ const AssessmentCreateSchema = z.object({
   workshopId: z.string(),
   labId: z.string().optional().nullable(),
   targetLabIds: z.array(z.string()).optional().default([]),
+  targetAudience: z.enum(["ALL", "NON_SELECTED", "LABS"]).optional().default("ALL"),
   title: z.string().min(3),
   description: z.string().optional().nullable(),
   type: z.enum(["TEST", "QUIZ", "PROGRAMMING", "ASSIGNMENT"]).default("QUIZ"),
@@ -127,6 +165,7 @@ export async function POST(req: NextRequest) {
         workshopId: data.workshopId,
         labId: data.labId || null,
         targetLabIds: data.targetLabIds || [],
+        targetAudience: data.targetAudience || (data.targetLabIds && data.targetLabIds.length > 0 ? "LABS" : "ALL"),
         title: data.title,
         description: data.description || null,
         type: data.type,

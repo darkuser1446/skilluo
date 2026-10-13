@@ -25,6 +25,10 @@ import {
   Check,
   Trophy,
   Sparkles,
+  Eye,
+  FileText,
+  Search,
+  Filter,
 } from "lucide-react";
 import LeaderboardModal from "@/components/LeaderboardModal";
 
@@ -136,6 +140,11 @@ export default function TestManager({
   const [bank, setBank] = useState<BankQuestion[]>([]);
   const [showBank, setShowBank] = useState(false);
   const [batchCountMap, setBatchCountMap] = useState<Record<string, number>>({});
+  const [resultQuestions, setResultQuestions] = useState<any[]>([]);
+  const [selectedResultLab, setSelectedResultLab] = useState<string | "ALL">("ALL");
+  const [inspectingResult, setInspectingResult] = useState<Result | null>(null);
+  const [resultFilterStatus, setResultFilterStatus] = useState<"ALL" | "SUBMITTED" | "LOCKED" | "SELECTED">("ALL");
+  const [resultSearchQuery, setResultSearchQuery] = useState<string>("");
 
   // create-form state
   const [title, setTitle] = useState("");
@@ -513,20 +522,29 @@ export default function TestManager({
       setExpandedId(null);
       setResults(null);
       setResultsFor(null);
+      setResultQuestions([]);
+      setInspectingResult(null);
+      setSelectedResultLab("ALL");
       return;
     }
     setResultsFor(a);
     setExpandedId(a.id);
     setGrading(null);
     setResults(null);
+    setSelectedResultLab("ALL");
+    setInspectingResult(null);
+    setResultSearchQuery("");
+    setResultFilterStatus("ALL");
     try {
       const res = await fetch(`/api/assessments/${a.id}/results`);
       if (res.ok) {
         const d = await res.json();
         setResults(d.data?.results || []);
+        setResultQuestions(d.data?.questions || a.questions || []);
       }
     } catch {
       setResults([]);
+      setResultQuestions(a.questions || []);
     }
   };
 
@@ -1477,31 +1495,160 @@ export default function TestManager({
                         </div>
 
                         {/* Lab-Wise Performance Stats */}
-                        <div className="bg-white border-[2px] border-[#111111] p-3 shadow-[2px_2px_0px_#111111] mb-3">
-                          <div className="font-display font-black text-xs uppercase text-[#111111] mb-2 flex items-center justify-between">
-                            <span>Lab-Wise Performance & Participation Breakdown</span>
-                            <span className="text-[10px] font-mono text-slate-500 font-bold">Total: {results.length} Submissions</span>
+                        {/* Lab-Wise Performance Stats */}
+                        <div className="bg-white border-[2px] border-[#111111] p-3.5 shadow-[2px_2px_0px_#111111] mb-3">
+                          <div className="font-display font-black text-xs uppercase text-[#111111] mb-2.5 flex items-center justify-between flex-wrap gap-2">
+                            <span className="flex items-center gap-1.5">
+                              <Users className="w-4 h-4 text-[#F07C27]" />
+                              <span>Lab-Wise Performance & Participation Breakdown</span>
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedResultLab("ALL")}
+                                className={`px-2.5 py-1 text-[11px] font-mono font-bold border-[2px] border-[#111111] transition-all cursor-pointer ${
+                                  selectedResultLab === "ALL"
+                                    ? "bg-[#111111] text-white shadow-[2px_2px_0px_#F07C27]"
+                                    : "bg-white hover:bg-[#F4F3F3] text-[#111111] shadow-[2px_2px_0px_#111111]"
+                                }`}
+                              >
+                                All Labs ({results.length} Submissions)
+                              </button>
+                            </div>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 text-xs font-mono">
                             {labs.map((l) => {
+                              const labStudents = (l as any).students || [];
+                              const eligibleCount = (l as any)._count?.students ?? labStudents.length ?? 0;
                               const labResults = results.filter((r) => {
-                                return (r.student as any)?.labStudents?.[0]?.labId === l.id || (r.student as any)?.college?.includes(l.name);
+                                return (
+                                  (r.student as any)?.labStudents?.some((ls: any) => ls.labId === l.id || ls.lab?.id === l.id) ||
+                                  (r.student as any)?.labStudents?.[0]?.labId === l.id ||
+                                  (r.student as any)?.college?.includes(l.name)
+                                );
                               });
                               const lSub = labResults.length;
+                              const lPending = Math.max(0, eligibleCount - lSub);
                               const lAvg = lSub > 0 ? (labResults.reduce((s, r) => s + r.score, 0) / lSub).toFixed(1) : "0";
+                              const lHigh = lSub > 0 ? Math.max(...labResults.map((r) => r.score)) : 0;
                               const passMark = a.passingMarks ?? Math.round(a.totalMarks * 0.6);
                               const passCount = labResults.filter((r) => r.score >= passMark).length;
+                              const isSelected = selectedResultLab === l.id;
+
                               return (
-                                <div key={l.id} className="p-2.5 bg-[#F4F3F3] border border-[#111111]">
-                                  <div className="font-bold text-[#111111] truncate">🏛️ {l.name}</div>
-                                  <div className="text-[11px] text-slate-700 mt-1 space-y-0.5">
-                                    <div>Submissions: <strong>{lSub}</strong></div>
-                                    <div>Average Score: <strong>{lAvg} / {a.totalMarks}</strong></div>
-                                    <div>Passed: <strong>{passCount}</strong></div>
+                                <button
+                                  key={l.id}
+                                  type="button"
+                                  onClick={() => setSelectedResultLab(isSelected ? "ALL" : l.id)}
+                                  className={`p-3 border-[2px] text-left transition-all cursor-pointer ${
+                                    isSelected
+                                      ? "bg-[#FFF0E5] border-[#F07C27] shadow-[3px_3px_0px_#111111] ring-2 ring-[#F07C27]"
+                                      : "bg-[#F4F3F3] border-[#111111] hover:bg-white hover:border-[#F07C27] shadow-[2px_2px_0px_#111111]"
+                                  }`}
+                                  title={`Click to filter student results for ${l.name}`}
+                                >
+                                  <div className="flex items-center justify-between gap-1 mb-1">
+                                    <span className="font-bold text-[#111111] truncate">🏛️ {l.name}</span>
+                                    {isSelected && (
+                                      <span className="text-[9px] bg-[#F07C27] text-white px-1.5 py-0.2 font-black uppercase tracking-wider">
+                                        FILTERED
+                                      </span>
+                                    )}
                                   </div>
-                                </div>
+                                  <div className="text-[11px] text-slate-700 space-y-0.5">
+                                    <div className="flex justify-between">
+                                      <span>Eligible:</span>
+                                      <strong>{eligibleCount > 0 ? eligibleCount : (lSub > 0 ? lSub : "—")}</strong>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Submitted:</span>
+                                      <strong className="text-emerald-700">{lSub}</strong>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Pending:</span>
+                                      <strong className="text-rose-700">{eligibleCount > 0 ? lPending : (lSub === 0 ? "—" : 0)}</strong>
+                                    </div>
+                                    <div className="flex justify-between border-t border-[#111111]/20 pt-1 mt-1">
+                                      <span>Avg Score:</span>
+                                      <strong>{lAvg} / {a.totalMarks}</strong>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Highest:</span>
+                                      <strong className="text-[#F07C27]">{lHigh} / {a.totalMarks}</strong>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Passed:</span>
+                                      <strong className="text-emerald-800">{passCount}</strong>
+                                    </div>
+                                  </div>
+                                </button>
                               );
                             })}
+                          </div>
+                        </div>
+
+                        {/* Interactive Filter & Search Bar */}
+                        <div className="mb-3 p-3 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] flex items-center justify-between flex-wrap gap-2.5 font-mono text-xs">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[11px] font-bold text-slate-700 uppercase flex items-center gap-1">
+                              <Filter className="w-3.5 h-3.5 text-[#F07C27]" /> View Filter:
+                            </span>
+                            {selectedResultLab !== "ALL" ? (
+                              <span className="px-2 py-0.5 bg-[#FFF0E5] border border-[#F07C27] text-[#111111] font-bold flex items-center gap-1.5">
+                                🏛️ {labs.find((l) => l.id === selectedResultLab)?.name || "Selected Lab"}
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedResultLab("ALL")}
+                                  className="text-rose-700 hover:text-rose-900 font-black cursor-pointer ml-1"
+                                  title="Clear lab filter"
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-slate-700 font-bold">
+                                All Labs
+                              </span>
+                            )}
+                            <div className="flex items-center gap-1 ml-2">
+                              {(["ALL", "SUBMITTED", "LOCKED", "SELECTED"] as const).map((st) => (
+                                <button
+                                  key={st}
+                                  type="button"
+                                  onClick={() => setResultFilterStatus(st)}
+                                  className={`px-2 py-0.5 border text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                                    resultFilterStatus === st
+                                      ? "bg-[#111111] text-white border-[#111111]"
+                                      : "bg-white text-slate-700 border-slate-300 hover:border-[#111111]"
+                                  }`}
+                                >
+                                  {st === "ALL" ? "All" : st === "SUBMITTED" ? "Submitted" : st === "LOCKED" ? "Locked" : "Selected"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-1 max-w-sm">
+                            <div className="relative w-full">
+                              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                              <input
+                                type="text"
+                                value={resultSearchQuery}
+                                onChange={(e) => setResultSearchQuery(e.target.value)}
+                                placeholder="Search by name, roll no, email…"
+                                className="w-full pl-8 pr-3 py-1.5 bg-[#F4F3F3] border-[2px] border-[#111111] text-xs font-mono focus:outline-none focus:bg-white shadow-[1px_1px_0px_#111111]"
+                              />
+                              {resultSearchQuery && (
+                                <button
+                                  type="button"
+                                  onClick={() => setResultSearchQuery("")}
+                                  className="absolute right-2 top-2 text-slate-500 hover:text-[#111111] text-xs"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -1526,12 +1673,40 @@ export default function TestManager({
                                 <th className="text-right py-2 px-3">%</th>
                                 <th className="text-center py-2 px-3">C / I / U</th>
                                 <th className="text-right py-2 px-3">Time Taken</th>
+                                <th className="text-left py-2 px-3">Submitted At</th>
                                 <th className="text-center py-2 px-3">Selection & Lab Allocation</th>
                                 <th className="text-right py-2 px-3">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-[#111111]/20">
                               {[...results]
+                                .filter((r) => {
+                                  if (selectedResultLab !== "ALL") {
+                                    const labObj = labs.find((l) => l.id === selectedResultLab);
+                                    const inLab =
+                                      (r.student as any)?.labStudents?.some(
+                                        (ls: any) => ls.labId === selectedResultLab || ls.lab?.id === selectedResultLab
+                                      ) ||
+                                      (r.student as any)?.labStudents?.[0]?.labId === selectedResultLab ||
+                                      (r.student as any)?.college?.includes(labObj?.name || "");
+                                    if (!inLab) return false;
+                                  }
+                                  if (resultSearchQuery.trim()) {
+                                    const q = resultSearchQuery.toLowerCase().trim();
+                                    const name = (r.student?.name || "").toLowerCase();
+                                    const roll = (r.student?.rollNumber || "").toLowerCase();
+                                    const email = (r.student?.email || "").toLowerCase();
+                                    if (!name.includes(q) && !roll.includes(q) && !email.includes(q)) return false;
+                                  }
+                                  if (resultFilterStatus === "SUBMITTED") {
+                                    if (r.isLocked || r.status === "LOCKED") return false;
+                                  } else if (resultFilterStatus === "LOCKED") {
+                                    if (!r.isLocked && r.status !== "LOCKED") return false;
+                                  } else if (resultFilterStatus === "SELECTED") {
+                                    if (r.status !== "SELECTED" && r.status !== "SELECTED_ROUND2") return false;
+                                  }
+                                  return true;
+                                })
                                 .sort((x, y) => {
                                   if (y.score !== x.score) return y.score - x.score;
                                   const xDur = x.durationSec != null ? x.durationSec : 999999;
@@ -1543,9 +1718,15 @@ export default function TestManager({
                                   const pct = Math.round((r.score / a.totalMarks) * 100);
                                   const pass = r.score >= (a.passingMarks ?? a.totalMarks * 0.6);
                                   const isLockedCandidate = r.isLocked || r.status === "LOCKED";
-                                   const topTarget = batchCountMap[a.id] ?? 60;
-                                   const isRound2Qualified = pass && !isLockedCandidate && rank <= topTarget;
-                                   const isRound2Waitlist = pass && !isLockedCandidate && rank > topTarget;
+                                  const topTarget = batchCountMap[a.id] ?? 60;
+                                  const isRound2Qualified = pass && !isLockedCandidate && rank <= topTarget;
+                                  const isRound2Waitlist = pass && !isLockedCandidate && rank > topTarget;
+                                  const studentLabName =
+                                    (r.student as any)?.labStudents?.[0]?.lab?.name ||
+                                    (r.student as any)?.labStudents?.[0]?.labId ||
+                                    (r.student as any)?.college ||
+                                    null;
+
                                   return (
                                     <tr key={r.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
                                       <td className="py-2.5 px-2 text-center font-black">
@@ -1573,6 +1754,11 @@ export default function TestManager({
                                               REG: {r.student.rollNumber}
                                             </span>
                                           )}
+                                          {studentLabName && (
+                                            <span className="px-1.5 py-0.2 bg-[#FFF0E5] border border-[#111111] text-[10px] font-mono text-[#F07C27] font-bold shadow-[1px_1px_0px_#111111]">
+                                              🏛️ {studentLabName}
+                                            </span>
+                                          )}
                                         </div>
                                         <span className="block text-[10px] text-slate-600 font-normal">
                                           {r.student?.email}
@@ -1596,6 +1782,18 @@ export default function TestManager({
                                         {r.durationSec
                                           ? `${Math.floor(r.durationSec / 60)}m ${r.durationSec % 60}s`
                                           : "–"}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-left text-slate-700 font-mono text-[10px]">
+                                        {r.submittedAt ? (
+                                          <div>
+                                            <span className="font-bold">{new Date(r.submittedAt).toLocaleDateString()}</span>
+                                            <span className="text-slate-500 block">
+                                              {new Date(r.submittedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          "—"
+                                        )}
                                       </td>
                                       <td className="py-2.5 px-3 text-center">
                                         {isLockedCandidate ? (
@@ -1639,113 +1837,123 @@ export default function TestManager({
                                           </span>
                                         )}
                                       </td>
-                                    <td className="py-2.5 px-3 text-right">
-                                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                                        {isLockedCandidate ? (
-                                          <>
-                                            <button
-                                              type="button"
-                                              className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                              onClick={() =>
-                                                handleUnlockCandidate(a.id, r.studentId, r.student?.name || "Student")
-                                              }
-                                              title="Clear proctoring lockout and allow review"
-                                            >
-                                              <Unlock className="w-3 h-3" /> Unlock
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="px-2 py-1 border-[2px] border-[#111111] bg-amber-400 hover:bg-amber-300 text-[#111111] font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                              onClick={() =>
-                                                handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
-                                              }
-                                              title="Reset test attempt and grant retest"
-                                            >
-                                              <RotateCcw className="w-3 h-3" /> Retest
-                                            </button>
-                                          </>
-                                        ) : (
-                                          <>
-                                            {(r.status === "SELECTED" || r.status === "SELECTED_ROUND2") ? (
+                                      <td className="py-2.5 px-3 text-right">
+                                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                          {/* View student question-by-question responses */}
+                                          <button
+                                            type="button"
+                                            className="px-2 py-1 border-[2px] border-[#111111] bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-950 font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                            onClick={() => setInspectingResult(r)}
+                                            title="View student's question-by-question responses, correct answers, and evaluation"
+                                          >
+                                            <Eye className="w-3 h-3 inline" /> Responses
+                                          </button>
+
+                                          {isLockedCandidate ? (
+                                            <>
                                               <button
                                                 type="button"
+                                                className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
                                                 onClick={() =>
-                                                  handleUpdateCandidateStatus(
-                                                    a.id,
-                                                    r.studentId,
-                                                    "CLEAR_SELECTION",
-                                                    r.student?.name || "Student"
-                                                  )
+                                                  handleUnlockCandidate(a.id, r.studentId, r.student?.name || "Student")
                                                 }
-                                                className="px-2 py-1 border border-[#111111] bg-slate-200 hover:bg-slate-300 text-slate-800 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
-                                                title="Revoke lab allocation selection"
+                                                title="Clear proctoring lockout and allow review"
                                               >
-                                                <RotateCcw className="w-2.5 h-2.5" /> Deselect
+                                                <Unlock className="w-3 h-3" /> Unlock
                                               </button>
-                                            ) : (
-                                              <>
+                                              <button
+                                                type="button"
+                                                className="px-2 py-1 border-[2px] border-[#111111] bg-amber-400 hover:bg-amber-300 text-[#111111] font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                                onClick={() =>
+                                                  handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
+                                                }
+                                                title="Reset test attempt and grant retest"
+                                              >
+                                                <RotateCcw className="w-3 h-3" /> Retest
+                                              </button>
+                                            </>
+                                          ) : (
+                                            <>
+                                              {(r.status === "SELECTED" || r.status === "SELECTED_ROUND2") ? (
                                                 <button
                                                   type="button"
                                                   onClick={() =>
                                                     handleUpdateCandidateStatus(
                                                       a.id,
                                                       r.studentId,
-                                                      "SELECT_FOR_LABS",
+                                                      "CLEAR_SELECTION",
                                                       r.student?.name || "Student"
                                                     )
                                                   }
-                                                  className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                                  title="Select candidate for Lab Allocation"
+                                                  className="px-2 py-1 border border-[#111111] bg-slate-200 hover:bg-slate-300 text-slate-800 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
+                                                  title="Revoke lab allocation selection"
                                                 >
-                                                  <Check className="w-3 h-3 text-white" /> Select for Labs
+                                                  <RotateCcw className="w-2.5 h-2.5" /> Deselect
                                                 </button>
-                                                <button
-                                                  type="button"
-                                                  onClick={() =>
-                                                    handleUpdateCandidateStatus(
-                                                      a.id,
-                                                      r.studentId,
-                                                      "WAITLIST",
-                                                      r.student?.name || "Student"
-                                                    )
-                                                  }
-                                                  className="px-2 py-1 border border-[#111111] bg-blue-100 hover:bg-blue-200 text-blue-900 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer"
-                                                  title="Place on waitlist"
-                                                >
-                                                  Waitlist
-                                                </button>
-                                              </>
-                                            )}
-                                            <button
-                                              type="button"
-                                              className="px-2 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-[10px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                              onClick={() =>
-                                                setGrading({
-                                                  studentId: r.studentId,
-                                                  score: String(r.score),
-                                                  feedback: r.feedback || "",
-                                                })
-                                              }
-                                            >
-                                              <Award className="w-3 h-3 inline" /> Grade
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="px-2 py-1 border border-[#111111] bg-[#F4F3F3] hover:bg-amber-200 text-[#111111] font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
-                                              onClick={() =>
-                                                handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
-                                              }
-                                              title="Allow student a fresh retest"
-                                            >
-                                              <RotateCcw className="w-2.5 h-2.5" /> Retest
-                                            </button>
-                                          </>
-                                        )}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
+                                              ) : (
+                                                <>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      handleUpdateCandidateStatus(
+                                                        a.id,
+                                                        r.studentId,
+                                                        "SELECT_FOR_LABS",
+                                                        r.student?.name || "Student"
+                                                      )
+                                                    }
+                                                    className="px-2 py-1 border-[2px] border-[#111111] bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-[10px] font-black shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                                    title="Select candidate for Lab Allocation"
+                                                  >
+                                                    <Check className="w-3 h-3 text-white" /> Select for Labs
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      handleUpdateCandidateStatus(
+                                                        a.id,
+                                                        r.studentId,
+                                                        "WAITLIST",
+                                                        r.student?.name || "Student"
+                                                      )
+                                                    }
+                                                    className="px-2 py-1 border border-[#111111] bg-blue-100 hover:bg-blue-200 text-blue-900 font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer"
+                                                    title="Place on waitlist"
+                                                  >
+                                                    Waitlist
+                                                  </button>
+                                                </>
+                                              )}
+                                              <button
+                                                type="button"
+                                                className="px-2 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-[10px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                                                onClick={() =>
+                                                  setGrading({
+                                                    studentId: r.studentId,
+                                                    score: String(r.score),
+                                                    feedback: r.feedback || "",
+                                                  })
+                                                }
+                                              >
+                                                <Award className="w-3 h-3 inline" /> Grade
+                                              </button>
+                                              <button
+                                                type="button"
+                                                className="px-2 py-1 border border-[#111111] bg-[#F4F3F3] hover:bg-amber-200 text-[#111111] font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] transition-all cursor-pointer flex items-center gap-1"
+                                                onClick={() =>
+                                                  handleRetestCandidate(a.id, r.studentId, r.student?.name || "Student")
+                                                }
+                                                title="Allow student a fresh retest"
+                                              >
+                                                <RotateCcw className="w-2.5 h-2.5" /> Retest
+                                              </button>
+                                            </>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
                             </tbody>
                           </table>
                         </div>
@@ -2007,6 +2215,239 @@ export default function TestManager({
           assessmentTitle={leaderboardAssessment.title}
           onClose={() => setLeaderboardAssessment(null)}
         />
+      )}
+
+      {/* ── Student Question-by-Question Response Inspection Modal ── */}
+      {inspectingResult && resultsFor && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="border-[4px] border-[#111111] bg-white shadow-[10px_10px_0px_#111111] max-w-4xl w-full p-5 sm:p-6 space-y-4 my-8 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b-[2px] border-[#111111] pb-3 gap-3 flex-shrink-0">
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="px-2 py-0.5 bg-[#111111] text-white font-mono text-[10px] font-black uppercase">
+                    STUDENT RESPONSE DOSSIER
+                  </span>
+                  <span className="px-2 py-0.5 bg-[#F07C27] text-white font-mono text-[10px] font-black uppercase">
+                    {resultsFor.title}
+                  </span>
+                  {inspectingResult.isLocked && (
+                    <span className="px-2 py-0.5 bg-rose-600 text-white font-mono text-[10px] font-black uppercase flex items-center gap-1">
+                      <ShieldAlert className="w-3 h-3" /> PROCTORING LOCKED
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
+                  {inspectingResult.student?.name || "Student"}
+                </h3>
+                <p className="text-xs font-mono text-slate-600">
+                  {inspectingResult.student?.email} {inspectingResult.student?.rollNumber ? `• Reg: ${inspectingResult.student.rollNumber}` : ""}
+                  {(inspectingResult.student as any)?.labStudents?.[0]?.lab?.name ? ` • Lab: ${(inspectingResult.student as any).labStudents[0].lab.name}` : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInspectingResult(null)}
+                className="p-1.5 hover:bg-[#F4F3F3] border-[2px] border-[#111111] text-[#111111] shadow-[2px_2px_0px_#111111] cursor-pointer"
+              >
+                <X className="w-5 h-5 stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* Score & Accuracy Highlights */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono text-xs flex-shrink-0">
+              <div className="p-3 bg-[#FFF0E5] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                <span className="text-[10px] text-slate-600 uppercase font-bold block">Score Achieved</span>
+                <span className="font-display font-black text-2xl text-[#111111]">
+                  {inspectingResult.score} / {resultsFor.totalMarks}
+                </span>
+                <span className="text-[10px] text-[#F07C27] font-bold block">
+                  {Math.round((inspectingResult.score / resultsFor.totalMarks) * 100)}%
+                </span>
+              </div>
+              <div className="p-3 bg-emerald-50 border-[2px] border-emerald-900 shadow-[2px_2px_0px_#111111]">
+                <span className="text-[10px] text-emerald-800 uppercase font-black block">Correct Answers</span>
+                <span className="font-display font-black text-2xl text-emerald-700">
+                  ✓ {inspectingResult.correctCount ?? 0}
+                </span>
+              </div>
+              <div className="p-3 bg-rose-50 border-[2px] border-rose-900 shadow-[2px_2px_0px_#111111]">
+                <span className="text-[10px] text-rose-800 uppercase font-black block">Incorrect Answers</span>
+                <span className="font-display font-black text-2xl text-rose-700">
+                  ✕ {inspectingResult.incorrectCount ?? 0}
+                </span>
+              </div>
+              <div className="p-3 bg-[#F4F3F3] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                <span className="text-[10px] text-slate-600 uppercase font-bold block">Time & Submission</span>
+                <span className="font-bold text-xs text-[#111111] block">
+                  {inspectingResult.durationSec ? `${Math.floor(inspectingResult.durationSec / 60)}m ${inspectingResult.durationSec % 60}s` : "—"}
+                </span>
+                <span className="text-[10px] text-slate-500 truncate block">
+                  {new Date(inspectingResult.submittedAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Proctoring Flag Notice if applicable */}
+            {inspectingResult.violationReason && (
+              <div className="p-3 bg-rose-100 border-[2px] border-rose-900 text-rose-950 font-mono text-xs flex-shrink-0">
+                <span className="font-black flex items-center gap-1.5">
+                  <ShieldAlert className="w-4 h-4 text-rose-700" /> Proctoring Log:
+                </span>
+                <p className="mt-1">{inspectingResult.violationReason} ({inspectingResult.violationCount ?? 1} strikes)</p>
+              </div>
+            )}
+
+            {/* Question by Question Inspection List */}
+            <div className="overflow-y-auto space-y-4 pr-1 flex-1">
+              <div className="font-display font-black text-xs uppercase text-[#111111] flex items-center justify-between pb-1 border-b border-[#111111]/30">
+                <span>Question-by-Question Submission Breakdown ({resultQuestions.length} Questions)</span>
+                <span className="text-[10px] font-mono text-slate-500 font-bold">Predefined Key Verification</span>
+              </div>
+
+              {resultQuestions.map((q, idx) => {
+                const studentAns = inspectingResult.answers?.[q.id];
+                const hasAnswer = Boolean(studentAns && String(studentAns).trim().length > 0);
+                const isCorrect = hasAnswer && q.correctAnswer && String(studentAns).trim() === String(q.correctAnswer).trim();
+                const rawOpts = q.options;
+                const optionsList: string[] = Array.isArray(rawOpts)
+                  ? rawOpts
+                  : typeof rawOpts === "string"
+                  ? (() => { try { return JSON.parse(rawOpts); } catch { return [rawOpts]; } })()
+                  : [];
+
+                return (
+                  <div
+                    key={q.id || idx}
+                    className={`p-4 border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] space-y-2.5 ${
+                      !hasAnswer ? "bg-slate-50/60" : isCorrect ? "bg-emerald-50/30" : "bg-rose-50/30"
+                    }`}
+                  >
+                    {/* Question Header */}
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-[#111111] text-white font-mono text-[10px] font-black">
+                          Q{idx + 1}
+                        </span>
+                        <span className="text-[10px] font-mono font-bold text-slate-600">
+                          {q.marks || 1} {q.marks === 1 ? "Mark" : "Marks"}
+                        </span>
+                      </div>
+                      <div>
+                        {!hasAnswer ? (
+                          <span className="px-2 py-0.5 bg-slate-200 text-slate-800 font-mono text-[10px] font-bold border border-slate-400">
+                            — Unanswered
+                          </span>
+                        ) : isCorrect ? (
+                          <span className="px-2 py-0.5 bg-emerald-600 text-white font-mono text-[10px] font-black border border-emerald-800 flex items-center gap-1 shadow-[1px_1px_0px_#111111]">
+                            <Check className="w-3 h-3" /> Correct (+{q.marks || 1})
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 bg-rose-600 text-white font-mono text-[10px] font-black border border-rose-800 flex items-center gap-1 shadow-[1px_1px_0px_#111111]">
+                            <X className="w-3 h-3" /> Incorrect (0 Marks)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Question Prompt */}
+                    <p className="font-mono text-xs font-bold text-[#111111] whitespace-pre-wrap leading-relaxed">
+                      {q.prompt}
+                    </p>
+
+                    {/* Options List */}
+                    {optionsList.length > 0 ? (
+                      <div className="space-y-1.5 pt-1">
+                        {optionsList.map((opt, oIdx) => {
+                          const isStudentPick = hasAnswer && String(studentAns).trim() === String(opt).trim();
+                          const isPredefinedCorrect = q.correctAnswer && String(opt).trim() === String(q.correctAnswer).trim();
+
+                          return (
+                            <div
+                              key={oIdx}
+                              className={`p-2.5 border-[2px] font-mono text-xs flex items-center justify-between gap-2 transition-all ${
+                                isStudentPick && isPredefinedCorrect
+                                  ? "bg-emerald-100 border-emerald-900 text-emerald-950 font-black shadow-[2px_2px_0px_#111111]"
+                                  : isStudentPick && !isPredefinedCorrect
+                                  ? "bg-rose-100 border-rose-900 text-rose-950 font-black shadow-[2px_2px_0px_#111111]"
+                                  : isPredefinedCorrect
+                                  ? "bg-emerald-50/80 border-emerald-700 text-emerald-900 font-bold border-dashed"
+                                  : "bg-white border-[#111111]/30 text-slate-800 font-normal"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="w-5 h-5 flex items-center justify-center border border-[#111111] text-[10px] font-black bg-white flex-shrink-0">
+                                  {String.fromCharCode(65 + oIdx)}
+                                </span>
+                                <span>{opt}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0 text-[10px]">
+                                {isStudentPick && (
+                                  <span className={`px-1.5 py-0.5 border font-bold ${
+                                    isPredefinedCorrect ? "bg-emerald-700 text-white border-emerald-900" : "bg-rose-700 text-white border-rose-900"
+                                  }`}>
+                                    Student Choice
+                                  </span>
+                                )}
+                                {isPredefinedCorrect && (
+                                  <span className="px-1.5 py-0.5 bg-emerald-800 text-white border border-emerald-950 font-black">
+                                    ✓ Predefined Correct
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      /* Text / Code Question Display */
+                      <div className="p-3 bg-white border border-[#111111] font-mono text-xs space-y-1">
+                        <div className="text-[10px] text-slate-500 uppercase font-bold">Student Response:</div>
+                        <div className="p-2 bg-[#F4F3F3] border border-slate-300 whitespace-pre-wrap">
+                          {studentAns || "(Not Answered)"}
+                        </div>
+                        {q.correctAnswer && (
+                          <div className="text-[10px] text-emerald-800 font-bold pt-1">
+                            Expected / Reference Answer: {q.correctAnswer}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between border-t-[2px] border-[#111111] pt-3 flex-shrink-0 flex-wrap gap-2">
+              <div className="text-xs font-mono text-slate-600 font-bold">
+                Status: <strong className="text-[#111111]">{inspectingResult.status}</strong>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGrading({
+                      studentId: inspectingResult.studentId,
+                      score: String(inspectingResult.score),
+                      feedback: inspectingResult.feedback || "",
+                    });
+                  }}
+                  className="px-3 py-1.5 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase shadow-[2px_2px_0px_#111111] cursor-pointer"
+                >
+                  <Award className="w-3.5 h-3.5 inline mr-1" /> Adjust Grade / Feedback
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInspectingResult(null)}
+                  className="px-4 py-1.5 border-[2px] border-[#111111] bg-[#111111] hover:bg-slate-800 text-white font-mono text-xs font-bold uppercase shadow-[2px_2px_0px_#111111] cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -324,6 +324,40 @@ export default function StudentDashboardPage() {
     }
   };
 
+  const handleViewStudentResult = async (as: any, res: any) => {
+    const isLocked = Boolean(res?.isLocked || res?.status === "LOCKED");
+    setActiveAssessment(as);
+    setQuizResult({
+      submitted: true,
+      assessmentId: as.id,
+      assessmentTitle: as.title,
+      score: res.score,
+      totalMarks: as.totalMarks,
+      correctCount: res.correctCount,
+      incorrectCount: res.incorrectCount,
+      unansweredCount: res.unansweredCount,
+      durationSec: res.durationSec,
+      answeredCount: as.questions?.length || 0,
+      totalQuestions: as.questions?.length || 0,
+      status: res.status,
+      isLocked: isLocked,
+      violationCount: res.violationCount,
+      violationReason: res.violationReason,
+      submittedAt: res.submittedAt,
+      history: true,
+      questions: [],
+    });
+    try {
+      const rRes = await fetch(`/api/assessments/${as.id}/results`);
+      if (rRes.ok) {
+        const rData = await rRes.json();
+        if (rData.data?.questions) {
+          setQuizResult((prev: any) => (prev ? { ...prev, questions: rData.data.questions } : prev));
+        }
+      }
+    } catch {}
+  };
+
   const handleSubmitQuiz = async (
     e?: React.FormEvent,
     violationReason?: string,
@@ -2039,28 +2073,10 @@ export default function StudentDashboardPage() {
                       <button
                         disabled={!isLocked && (isUpcoming || (isExpired && !res))}
                         onClick={() => {
-                          setActiveAssessment(as);
                           if (res) {
-                            setQuizResult({
-                              submitted: true,
-                              assessmentId: as.id,
-                              assessmentTitle: as.title,
-                              score: res.score,
-                              totalMarks: as.totalMarks,
-                              correctCount: res.correctCount,
-                              incorrectCount: res.incorrectCount,
-                              unansweredCount: res.unansweredCount,
-                              durationSec: res.durationSec,
-                              answeredCount: as.questions?.length || 0,
-                              totalQuestions: as.questions?.length || 0,
-                              status: res.status,
-                              isLocked: isLocked,
-                              violationCount: res.violationCount,
-                              violationReason: res.violationReason,
-                              submittedAt: res.submittedAt,
-                              history: true,
-                            });
+                            handleViewStudentResult(as, res);
                           } else {
+                            setActiveAssessment(as);
                             setQuizResult(null);
                             setQuizAnswers({});
                             setQuizError(null);

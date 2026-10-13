@@ -56,6 +56,38 @@ export async function POST(
       }
     }
 
+    // ── Target Audience Validation ──
+    if (assessment.targetAudience === "NON_SELECTED") {
+      try {
+        if (prisma.workshopEnrollment?.findFirst) {
+          const enr = await prisma.workshopEnrollment.findFirst({
+            where: { workshopId: assessment.workshopId, studentId: user.sub },
+            select: { status: true },
+          });
+          if (enr?.status === "SELECTED") {
+            return errorResponse(
+              "This screening test is for non-selected candidates. You have already been selected for laboratory tracks.",
+              "FORBIDDEN",
+              403
+            );
+          }
+        }
+        if (prisma.labStudent?.findFirst) {
+          const ls = await prisma.labStudent.findFirst({
+            where: { studentId: user.sub },
+            select: { id: true },
+          });
+          if (ls) {
+            return errorResponse(
+              "This screening test is for non-selected candidates. You have already been allocated to a laboratory track.",
+              "FORBIDDEN",
+              403
+            );
+          }
+        }
+      } catch {}
+    }
+
     // ── Availability window (server-side; client timer is not trusted) ──
     const now = Date.now();
     const startsAt = new Date(assessment.startsAt).getTime();

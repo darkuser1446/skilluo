@@ -115,6 +115,18 @@ export async function DELETE(
   try {
     await requireRole(["MENTOR", "ADMIN"]);
     const { id } = await params;
+    const existing = await prisma.assessment.findUnique({
+      where: { id },
+      include: { _count: { select: { results: true } } },
+    });
+    if (!existing) return errorResponse("Assessment not found", "NOT_FOUND", 404);
+    if (existing._count.results > 0) {
+      return errorResponse(
+        `Cannot delete this test because ${existing._count.results} students have already submitted results. Test responses and score records are permanently preserved.`,
+        "BAD_REQUEST",
+        400
+      );
+    }
     await prisma.assessment.delete({ where: { id } });
     return successResponse({ message: "Assessment deleted" });
   } catch (err) {

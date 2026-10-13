@@ -17,11 +17,12 @@ export async function GET(
     const assessment = await prisma.assessment.findUnique({
       where: { id: assessmentId },
       include: {
+        questions: true,
         results:
           user.role === "STUDENT"
             ? {
                 where: { studentId: user.sub },
-                include: { student: { select: { id: true, name: true } } },
+                include: { student: { select: { id: true, name: true, rollNumber: true } } },
               }
             : {
                 include: {
@@ -34,6 +35,11 @@ export async function GET(
                       college: true,
                       rollNumber: true,
                       branch: true,
+                      labStudents: {
+                        include: {
+                          lab: { select: { id: true, name: true } },
+                        },
+                      },
                     },
                   },
                 },
@@ -50,6 +56,8 @@ export async function GET(
       return successResponse({
         assessmentId,
         title: assessment.title,
+        totalMarks: assessment.totalMarks,
+        passingMarks: assessment.passingMarks,
         submitted: Boolean(myResult),
         results: myResult
           ? [
@@ -57,6 +65,12 @@ export async function GET(
                 id: myResult.id,
                 studentId: myResult.studentId,
                 status: myResult.status,
+                score: myResult.score,
+                totalMarks: assessment.totalMarks,
+                correctCount: myResult.correctCount ?? 0,
+                incorrectCount: myResult.incorrectCount ?? 0,
+                unansweredCount: myResult.unansweredCount ?? 0,
+                answers: myResult.answers,
                 isLocked: myResult.isLocked,
                 violationCount: myResult.violationCount,
                 violationReason: myResult.violationReason,
@@ -64,6 +78,24 @@ export async function GET(
                 durationSec: myResult.durationSec,
               },
             ]
+          : [],
+        questions: myResult
+          ? assessment.questions.map((q) => {
+              const studentAnswer = (myResult.answers as any)?.[q.id] || null;
+              const isCorrect =
+                q.correctAnswer &&
+                studentAnswer &&
+                String(studentAnswer).trim() === String(q.correctAnswer).trim();
+              return {
+                id: q.id,
+                prompt: q.prompt,
+                options: q.options,
+                marks: q.marks,
+                studentAnswer,
+                isCorrect: Boolean(isCorrect),
+                correctAnswer: q.correctAnswer,
+              };
+            })
           : [],
       });
     }
@@ -80,6 +112,7 @@ export async function GET(
       passingMarks: assessment.passingMarks,
       submittedCount: assessment._count.results,
       averageScore: average ? Number(average) : null,
+      questions: assessment.questions,
       results: assessment.results,
     });
   } catch (err) {
