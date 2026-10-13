@@ -104,6 +104,10 @@ export default function MentorDashboardPage() {
   const [activeSession, setActiveSession] = useState<any>(null);
   const [attendanceMap, setAttendanceMap] = useState<Record<string, "PRESENT" | "ABSENT" | "LATE">>({});
   const [savingAttendance, setSavingAttendance] = useState(false);
+  const [rosterSearch, setRosterSearch] = useState("");
+  const [attendanceSearch, setAttendanceSearch] = useState("");
+  const [markingQuick, setMarkingQuick] = useState<string | null>(null);
+  const [attendanceFeedbackMsg, setAttendanceFeedbackMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   // Doubt Reply state
   const [selectedDoubt, setSelectedDoubt] = useState<any>(null);
@@ -303,24 +307,127 @@ export default function MentorDashboardPage() {
     } finally { setCreatingSession(false); }
   };
 
-  const handleSaveAttendance = async () => {
-    if (!activeSession) return;
-    setSavingAttendance(true);
+  const handleQuickMarkStudent = async (studentId: string, status: "PRESENT" | "ABSENT" | "LATE" = "PRESENT") => {
+    const currentLab = labs.find((l) => l.id === selectedLabId) || labs[0];
+    if (!activeWsId || !currentLab?.id) return;
+    setMarkingQuick(studentId);
+    setAttendanceFeedbackMsg(null);
     try {
-      const records = Object.entries(attendanceMap).map(([studentId, status]) => ({ studentId, status }));
-      await fetch(`/api/attendance/sessions/${activeSession.id}/mark`, {
+      const res = await fetch("/api/attendance/quick-mark", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ records }),
+        body: JSON.stringify({
+          workshopId: activeWsId,
+          labId: currentLab.id,
+          sessionId: activeSession?.id,
+          studentId,
+          status,
+          markAll: false,
+        }),
       });
-    } finally { setSavingAttendance(false); }
+      const data = await res.json();
+      if (res.ok) {
+        setAttendanceMap((prev) => ({ ...prev, [studentId]: status }));
+        if (data.data?.session) {
+          setActiveSession(data.data.session);
+          setSessions((prev) => {
+            const exists = prev.some((s) => s.id === data.data.session.id);
+            if (exists) {
+              return prev.map((s) => (s.id === data.data.session.id ? data.data.session : s));
+            }
+            return [data.data.session, ...prev];
+          });
+        }
+        setAttendanceFeedbackMsg({ text: `✓ Marked candidate as ${status}!`, type: "success" });
+        setTimeout(() => setAttendanceFeedbackMsg(null), 3000);
+      } else {
+        setAttendanceFeedbackMsg({ text: data.error?.message || "Failed to mark attendance", type: "error" });
+      }
+    } catch (err) {
+      setAttendanceFeedbackMsg({ text: "Network error while marking attendance", type: "error" });
+    } finally {
+      setMarkingQuick(null);
+    }
+  };
+
+  const handleQuickMarkAll = async (status: "PRESENT" | "ABSENT" | "LATE" = "PRESENT") => {
+    const currentLab = labs.find((l) => l.id === selectedLabId) || labs[0];
+    if (!activeWsId || !currentLab?.id) return;
+    setMarkingQuick("ALL");
+    setAttendanceFeedbackMsg(null);
+    try {
+      const res = await fetch("/api/attendance/quick-mark", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workshopId: activeWsId,
+          labId: currentLab.id,
+          sessionId: activeSession?.id,
+          markAll: true,
+          status,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const newMap = { ...attendanceMap };
+        currentLab?.students?.forEach((s: any) => {
+          newMap[s.studentId] = status;
+        });
+        setAttendanceMap(newMap);
+        if (data.data?.session) {
+          setActiveSession(data.data.session);
+          setSessions((prev) => {
+            const exists = prev.some((s) => s.id === data.data.session.id);
+            if (exists) {
+              return prev.map((s) => (s.id === data.data.session.id ? data.data.session : s));
+            }
+            return [data.data.session, ...prev];
+          });
+        }
+        setAttendanceFeedbackMsg({
+          text: `✓ Successfully marked all ${data.data?.count || currentLab?.students?.length || 0} candidates as ${status}!`,
+          type: "success",
+        });
+        setTimeout(() => setAttendanceFeedbackMsg(null), 4000);
+      } else {
+        setAttendanceFeedbackMsg({ text: data.error?.message || "Failed to mark all candidates", type: "error" });
+      }
+    } catch (err) {
+      setAttendanceFeedbackMsg({ text: "Network error while marking attendance", type: "error" });
+    } finally {
+      setMarkingQuick(null);
+    }
+  };
+
+  const handleSaveAttendance = async () => {
+    const currentLab = labs.find((l) => l.id === selectedLabId) || labs[0];
+    if (!activeWsId || !currentLab?.id) return;
+    setSavingAttendance(true);
+    setAttendanceFeedbackMsg(null);
+    try {
+      if (activeSession) {
+        const records = Object.entries(attendanceMap).map(([studentId, status]) => ({ studentId, status }));
+        const res = await fetch(`/api/attendance/sessions/${activeSession.id}/mark`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ records }),
+        });
+        if (res.ok) {
+          setAttendanceFeedbackMsg({ text: "✓ Attendance records successfully saved!", type: "success" });
+          setTimeout(() => setAttendanceFeedbackMsg(null), 3000);
+        } else {
+          setAttendanceFeedbackMsg({ text: "Failed to save attendance records", type: "error" });
+        }
+      } else {
+        await handleQuickMarkAll("PRESENT");
+      }
+    } finally {
+      setSavingAttendance(false);
+    }
   };
 
   const handleMarkAll = (status: "PRESENT" | "ABSENT" | "LATE") => {
-    const activeLab = labs.find((l) => l.id === selectedLabId) || labs[0];
-    const map = { ...attendanceMap };
-    activeLab?.students?.forEach((s: any) => { map[s.studentId] = status; });
-    setAttendanceMap(map);
+    handleQuickMarkAll(status);
   };
 
   const handleSendReply = async (e: React.FormEvent) => {
@@ -396,6 +503,34 @@ export default function MentorDashboardPage() {
   const pendingSubmissions = allSubmissions.filter((s) => s.score === null || s.score === undefined);
   const activeLab = labs.find((l) => l.id === selectedLabId) || labs[0];
   const profile = user?.mentorProfile;
+
+  const filteredRosterStudents = (activeLab?.students || []).filter((ls: any) => {
+    if (!rosterSearch.trim()) return true;
+    const q = rosterSearch.toLowerCase();
+    const st = ls.student;
+    return (
+      st?.name?.toLowerCase().includes(q) ||
+      st?.rollNumber?.toLowerCase().includes(q) ||
+      st?.email?.toLowerCase().includes(q) ||
+      st?.phone?.toLowerCase().includes(q) ||
+      st?.branch?.toLowerCase().includes(q) ||
+      st?.college?.toLowerCase().includes(q)
+    );
+  });
+
+  const filteredAttendanceStudents = (activeLab?.students || []).filter((ls: any) => {
+    if (!attendanceSearch.trim()) return true;
+    const q = attendanceSearch.toLowerCase();
+    const st = ls.student;
+    return (
+      st?.name?.toLowerCase().includes(q) ||
+      st?.rollNumber?.toLowerCase().includes(q) ||
+      st?.email?.toLowerCase().includes(q) ||
+      st?.phone?.toLowerCase().includes(q) ||
+      st?.branch?.toLowerCase().includes(q) ||
+      st?.college?.toLowerCase().includes(q)
+    );
+  });
 
   const handleExportRoster = () => {
     const headers = [
@@ -599,13 +734,36 @@ export default function MentorDashboardPage() {
       {activeTab === "roster" && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
-              Enrolled Candidates — {activeLab?.name}
-            </h3>
-            <div className="flex items-center gap-2">
+            <div>
+              <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+                Enrolled Candidates — {activeLab?.name}
+              </h3>
+              <p className="text-xs text-slate-600 font-mono">
+                Inspect candidate credentials, search cohort, and mark real-time laboratory attendance.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-mono font-bold text-[#111111] bg-[#FFF0E5] px-3 py-1.5 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
                 Total: {activeLab?.students?.length || 0} Engineers
               </span>
+              <button
+                onClick={() => handleQuickMarkAll("PRESENT")}
+                disabled={markingQuick === "ALL"}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-950 font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer disabled:opacity-50"
+                title="Mark all candidates in this lab present for today's session"
+              >
+                {markingQuick === "ALL" ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-emerald-900 border-t-transparent rounded-full animate-spin" />
+                    <span>Marking All...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>✓ Present All</span>
+                  </>
+                )}
+              </button>
               <button
                 onClick={handleExportRoster}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#FFF0E5] text-[#111111] font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
@@ -616,6 +774,42 @@ export default function MentorDashboardPage() {
               </button>
             </div>
           </div>
+
+          {/* Feedback banner */}
+          {attendanceFeedbackMsg && (
+            <div className={`p-3 border-[2px] border-[#111111] font-mono text-xs flex items-center justify-between shadow-[2px_2px_0px_#111111] animate-in fade-in ${
+              attendanceFeedbackMsg.type === "success" ? "bg-[#e6f4ea] text-emerald-900" : "bg-rose-100 text-rose-900"
+            }`}>
+              <span className="font-bold">{attendanceFeedbackMsg.text}</span>
+              <button onClick={() => setAttendanceFeedbackMsg(null)} className="font-bold hover:underline">✕</button>
+            </div>
+          )}
+
+          {/* Student Search Area */}
+          <div className="bg-white border-[2px] border-[#111111] p-3 shadow-[3px_3px_0px_#111111] flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="relative w-full sm:max-w-md">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search candidates by name, roll number, email, or branch..."
+                value={rosterSearch}
+                onChange={(e) => setRosterSearch(e.target.value)}
+                className="w-full bg-[#F9F9F9] border border-[#111111] pl-9 pr-8 py-2 text-xs font-mono text-[#111111] focus:outline-none focus:bg-[#FFF0E5] shadow-[1px_1px_0px_#111111]"
+              />
+              {rosterSearch && (
+                <button
+                  onClick={() => setRosterSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#111111] font-bold text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <div className="text-[11px] font-mono text-slate-600 font-bold self-end sm:self-center">
+              Showing {filteredRosterStudents.length} of {activeLab?.students?.length || 0} candidates
+            </div>
+          </div>
+
           <div className="bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] overflow-hidden">
             <div className="overflow-x-auto scrollbar-none">
               <table className="w-full text-left text-xs">
@@ -626,7 +820,7 @@ export default function MentorDashboardPage() {
                     <th className="py-3 px-4 border-r border-[#111111]">Email / Phone</th>
                     <th className="py-3 px-4 border-r border-[#111111]">Branch & Sem</th>
                     <th className="py-3 px-4 border-r border-[#111111]">Enrolled At</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-3 px-4 text-right">Attendance & Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#111111]/20 font-mono">
@@ -641,9 +835,17 @@ export default function MentorDashboardPage() {
                       </td>
                     </tr>
                   )}
-                  {activeLab?.students?.map((ls: any) => {
+                  {activeLab?.students?.length > 0 && filteredRosterStudents.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-500 font-mono text-xs">
+                        No candidates match query: "{rosterSearch}"
+                      </td>
+                    </tr>
+                  )}
+                  {filteredRosterStudents.map((ls: any) => {
                     const st = ls.student;
                     const initials = st?.name ? st.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("") : "S";
+                    const isPresent = attendanceMap[ls.studentId] === "PRESENT";
                     return (
                       <tr key={ls.id} className="hover:bg-[#FFF0E5]/40 transition-colors">
                         <td className="sticky left-0 bg-white z-10 py-3 px-4 border-r border-[#111111]/20">
@@ -672,12 +874,38 @@ export default function MentorDashboardPage() {
                         </td>
                         <td className="py-3 px-4 text-slate-600 border-r border-[#111111]/20 whitespace-nowrap">{new Date(ls.enrolledAt).toLocaleDateString()}</td>
                         <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => setActiveTab("review")}
-                            className="px-2.5 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-[11px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all whitespace-nowrap cursor-pointer"
-                          >
-                            View Submissions →
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            {/* Quick Present Button beside each student */}
+                            {isPresent ? (
+                              <button
+                                onClick={() => handleQuickMarkStudent(ls.studentId, "ABSENT")}
+                                disabled={markingQuick === ls.studentId}
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-rose-600 text-white font-mono text-[10px] font-black uppercase border border-[#111111] shadow-[1px_1px_0px_#111111] transition-all flex items-center gap-1 cursor-pointer"
+                                title="Marked Present — Click to toggle Absent"
+                              >
+                                <span>✓ PRESENT</span>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleQuickMarkStudent(ls.studentId, "PRESENT")}
+                                disabled={markingQuick === ls.studentId}
+                                className="px-2.5 py-1 bg-[#FFF0E5] hover:bg-emerald-600 hover:text-white text-[#111111] font-mono text-[10px] font-black uppercase border border-[#111111] shadow-[1px_1px_0px_#111111] transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                title="Click to mark this student PRESENT"
+                              >
+                                {markingQuick === ls.studentId ? (
+                                  <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <span>+ Present</span>
+                                )}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setActiveTab("review")}
+                              className="px-2 py-1 border border-[#111111] bg-white hover:bg-[#111111] hover:text-white text-[#111111] font-mono text-[10px] font-bold shadow-[1px_1px_0px_#111111] hover:shadow-none transition-all whitespace-nowrap cursor-pointer"
+                            >
+                              Review →
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1180,7 +1408,7 @@ export default function MentorDashboardPage() {
                     Mark Session Attendance
                   </h3>
                   <p className="text-xs text-slate-700 font-mono">
-                    Active: <strong className="text-[#111111]">{activeSession?.title || "Select a session"}</strong>
+                    Active: <strong className="text-[#111111]">{activeSession?.title || "Today's Lab Session (Auto-Managed)"}</strong>
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -1188,15 +1416,18 @@ export default function MentorDashboardPage() {
                     value={activeSession?.id || ""}
                     onChange={(e) => {
                       const s = sessions.find((x) => x.id === e.target.value);
-                      setActiveSession(s);
+                      setActiveSession(s || null);
                       if (s) {
                         const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
                         s.attendanceRecords?.forEach((r: any) => { map[r.studentId] = r.status; });
                         setAttendanceMap(map);
                       }
                     }}
-                    className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none cursor-pointer"
+                    className="bg-[#F4F3F3] border-[2px] border-[#111111] px-2.5 py-1 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none cursor-pointer max-w-[180px] truncate"
                   >
+                    {sessions.length === 0 && (
+                      <option value="">Auto: Today's Lab Session</option>
+                    )}
                     {sessions.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.title}{s.startTime ? ` · ${s.startTime}${s.endTime ? `–${s.endTime}` : ""}` : ""}
@@ -1204,15 +1435,27 @@ export default function MentorDashboardPage() {
                     ))}
                   </select>
                   <button
-                    onClick={() => handleMarkAll("PRESENT")}
-                    className="px-2.5 py-1 border-[2px] border-[#111111] bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-900 font-mono text-[11px] font-bold shadow-[2px_2px_0px_#111111] transition-all cursor-pointer"
+                    onClick={() => handleQuickMarkAll("PRESENT")}
+                    disabled={markingQuick === "ALL"}
+                    className="px-3 py-1 border-[2px] border-[#111111] bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-950 font-mono text-xs font-black uppercase shadow-[2px_2px_0px_#111111] transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                    title="Mark all enrolled students in this lab PRESENT immediately"
                   >
-                    Mark All Present
+                    {markingQuick === "ALL" ? (
+                      <>
+                        <span className="w-3 h-3 border-2 border-emerald-900 border-t-transparent rounded-full animate-spin" />
+                        <span>Marking All...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>✓ Present All</span>
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={handleSaveAttendance}
                     disabled={savingAttendance}
-                    className="px-3.5 py-1 border-[2px] border-[#111111] bg-[#F07C27] text-white font-mono text-xs font-bold uppercase shadow-[2px_2px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1 border-[2px] border-[#111111] bg-[#F07C27] text-white font-mono text-xs font-bold uppercase shadow-[2px_2px_0px_#111111] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     {savingAttendance ? (
                       <>
@@ -1225,14 +1468,62 @@ export default function MentorDashboardPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Feedback Message Banner */}
+              {attendanceFeedbackMsg && (
+                <div className={`p-3 border-[2px] border-[#111111] font-mono text-xs flex items-center justify-between shadow-[2px_2px_0px_#111111] animate-in fade-in ${
+                  attendanceFeedbackMsg.type === "success" ? "bg-[#e6f4ea] text-emerald-900" : "bg-rose-100 text-rose-900"
+                }`}>
+                  <span className="font-bold">{attendanceFeedbackMsg.text}</span>
+                  <button onClick={() => setAttendanceFeedbackMsg(null)} className="font-bold hover:underline">✕</button>
+                </div>
+              )}
+
+              {/* Attendance Search Bar */}
+              <div className="bg-[#F9F9F9] border-[2px] border-[#111111] p-2.5 flex items-center justify-between gap-3 shadow-[2px_2px_0px_#111111]">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Search candidate by name, roll number, email, or branch..."
+                    value={attendanceSearch}
+                    onChange={(e) => setAttendanceSearch(e.target.value)}
+                    className="w-full bg-white border border-[#111111] pl-9 pr-8 py-1.5 text-xs font-mono text-[#111111] focus:outline-none focus:bg-[#FFF0E5]"
+                  />
+                  {attendanceSearch && (
+                    <button
+                      onClick={() => setAttendanceSearch("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#111111] font-bold text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <span className="text-[11px] font-mono text-slate-600 font-bold whitespace-nowrap">
+                  {filteredAttendanceStudents.length} of {activeLab?.students?.length || 0} Students
+                </span>
+              </div>
               <div className="space-y-2">
-                {activeLab?.students?.map((ls: any) => {
+                {(!activeLab?.students || activeLab.students.length === 0) && (
+                  <div className="py-8 text-center text-slate-500 font-mono text-xs">
+                    No students currently allocated to this laboratory track.
+                  </div>
+                )}
+                {activeLab?.students?.length > 0 && filteredAttendanceStudents.length === 0 && (
+                  <div className="py-6 text-center text-slate-500 font-mono text-xs">
+                    No candidates match query: "{attendanceSearch}"
+                  </div>
+                )}
+                {filteredAttendanceStudents.map((ls: any) => {
                   const sid = ls.studentId;
                   const currentStatus = attendanceMap[sid] || "PRESENT";
+                  const isMarkingThis = markingQuick === sid;
                   return (
                     <div
                       key={sid}
-                      className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9] flex items-center justify-between gap-4 shadow-[2px_2px_0px_#111111]"
+                      className={`p-3 border-[2px] border-[#111111] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[2px_2px_0px_#111111] transition-colors ${
+                        currentStatus === "PRESENT" ? "bg-[#f0fbf4]" : "bg-[#F9F9F9]"
+                      }`}
                     >
                       <div>
                         <div className="flex items-center gap-2">
@@ -1242,30 +1533,62 @@ export default function MentorDashboardPage() {
                               {ls.student.rollNumber}
                             </span>
                           )}
+                          {currentStatus === "PRESENT" && (
+                            <span className="bg-emerald-600 text-white px-1.5 py-0.5 text-[9px] font-mono font-black uppercase">
+                              ✓ PRESENT
+                            </span>
+                          )}
                         </div>
                         <span className="text-[10px] text-slate-600 font-mono">
-                          {ls.student?.branch || "CSE"} {ls.student?.semester ? `• Sem ${ls.student.semester}` : ""}
+                          {ls.student?.branch || "CSE"} {ls.student?.semester ? `• Sem ${ls.student.semester}` : ""} · {ls.student?.email}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                        {(["PRESENT", "LATE", "ABSENT"] as const).map((st) => (
-                          <button
-                            key={st}
-                            type="button"
-                            onClick={() => setAttendanceMap((prev) => ({ ...prev, [sid]: st }))}
-                            className={`px-2.5 py-1 border-[2px] border-[#111111] transition-all font-bold cursor-pointer ${
-                              currentStatus === st
-                                ? st === "PRESENT"
-                                  ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
-                                  : st === "LATE"
-                                  ? "bg-amber-500 text-white shadow-[2px_2px_0px_#111111]"
-                                  : "bg-rose-600 text-white shadow-[2px_2px_0px_#111111]"
-                                : "bg-white text-slate-600 hover:bg-slate-100"
-                            }`}
-                          >
-                            {st}
-                          </button>
-                        ))}
+
+                      {/* Attendance Actions: One-click Present button & Status toggles */}
+                      <div className="flex items-center gap-1.5 font-mono text-[11px] self-end sm:self-center">
+                        <button
+                          type="button"
+                          disabled={isMarkingThis}
+                          onClick={() => handleQuickMarkStudent(sid, "PRESENT")}
+                          className={`px-3 py-1 border-[2px] border-[#111111] font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                            currentStatus === "PRESENT"
+                              ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
+                              : "bg-white text-emerald-900 hover:bg-emerald-100"
+                          }`}
+                          title="Click to mark this student PRESENT immediately"
+                        >
+                          {isMarkingThis ? (
+                            <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <span>✓ Present</span>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isMarkingThis}
+                          onClick={() => handleQuickMarkStudent(sid, "LATE")}
+                          className={`px-2 py-1 border-[2px] border-[#111111] font-mono text-[10px] font-bold transition-all cursor-pointer ${
+                            currentStatus === "LATE"
+                              ? "bg-amber-500 text-white shadow-[2px_2px_0px_#111111]"
+                              : "bg-white text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          Late
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isMarkingThis}
+                          onClick={() => handleQuickMarkStudent(sid, "ABSENT")}
+                          className={`px-2 py-1 border-[2px] border-[#111111] font-mono text-[10px] font-bold transition-all cursor-pointer ${
+                            currentStatus === "ABSENT"
+                              ? "bg-rose-600 text-white shadow-[2px_2px_0px_#111111]"
+                              : "bg-white text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          Absent
+                        </button>
                       </div>
                     </div>
                   );

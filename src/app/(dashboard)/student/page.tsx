@@ -425,10 +425,15 @@ export default function StudentDashboardPage() {
         }),
       });
 
+      const d = await res.json();
       if (res.ok) {
         setFeedbackSuccess(true);
         setFeedbackComment("");
+      } else {
+        alert(d?.error?.message || "Failed to submit feedback.");
       }
+    } catch (err) {
+      alert("Error submitting feedback. Please try again.");
     } finally {
       setSubmittingFeedback(false);
     }
@@ -2453,111 +2458,180 @@ export default function StudentDashboardPage() {
             </p>
           </div>
 
-          <form onSubmit={handleFeedbackSubmit} className="space-y-5">
-            {/* Interactive Star Rating */}
-            <div className="flex flex-col items-center gap-2 py-2">
-              <span className="text-xs font-mono text-slate-600 font-bold uppercase">Rating (1 to 5 Stars)</span>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setRating(star)}
-                    onMouseEnter={() => setHoverRating(star)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    className="p-1 transition-transform hover:scale-110 focus:outline-none"
+          {(() => {
+            const isMarkedPresent = Boolean(
+              sessions?.some((s: any) =>
+                s.attendanceRecords?.some((r: any) => r.status === "PRESENT")
+              )
+            );
+
+            if (!isMarkedPresent) {
+              return (
+                <div className="p-8 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] text-center space-y-4">
+                  <div className="w-16 h-16 bg-white border-[3px] border-[#111111] flex items-center justify-center mx-auto shadow-[3px_3px_0px_#111111]">
+                    <ShieldAlert className="w-8 h-8 text-[#F07C27]" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono font-black uppercase text-rose-700 bg-rose-100 border border-[#111111] px-2.5 py-0.5 inline-block shadow-[1px_1px_0px_#111111]">
+                      [ RATING TERMINAL LOCKED // ATTENDANCE REQUIRED ]
+                    </span>
+                    <h4 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
+                      Lab Attendance Verification Required
+                    </h4>
+                    <p className="text-xs text-slate-700 font-mono max-w-lg mx-auto">
+                      Per Super 60 examination & evaluation protocols, only students who have been verified as{" "}
+                      <strong className="text-[#111111] underline">PRESENT</strong> in a laboratory session by their lead mentor are permitted to evaluate faculty and submit ratings.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-white border-[2px] border-[#111111] max-w-md mx-auto font-mono text-xs text-left shadow-[3px_3px_0px_#111111] space-y-2">
+                    <div className="flex justify-between items-center text-slate-600 font-bold border-b border-[#111111]/20 pb-1.5">
+                      <span>Verification Status:</span>
+                      <span className="text-rose-600 font-black flex items-center gap-1 bg-rose-50 px-2 py-0.5 border border-rose-300">
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                        NOT MARKED PRESENT
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600 font-bold border-b border-[#111111]/20 pb-1.5">
+                      <span>Assigned Laboratory:</span>
+                      <span className="text-[#111111] font-black">
+                        {user?.labStudents?.[0]?.lab?.name || "Lab Track"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600 font-bold">
+                      <span>Action Required:</span>
+                      <span className="text-slate-800 font-bold">
+                        Attend lab & request mentor check-in
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-600 font-mono">
+                    Once your mentor clicks <span className="font-bold text-[#111111]">"Present"</span> next to your name, this evaluation terminal will unlock automatically.
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <form onSubmit={handleFeedbackSubmit} className="space-y-5">
+                {/* Attendance Verified Notice */}
+                <div className="p-3 bg-[#e6f4ea] border-[2px] border-[#111111] text-emerald-900 font-mono text-xs flex items-center justify-between shadow-[2px_2px_0px_#111111]">
+                  <span className="flex items-center gap-2 font-bold">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                    <span>Lab Attendance Verified: You are cleared to rate your lead mentor.</span>
+                  </span>
+                  <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 font-mono font-black uppercase border border-[#111111]">
+                    ✓ PRESENT
+                  </span>
+                </div>
+
+                {/* Interactive Star Rating */}
+                <div className="flex flex-col items-center gap-2 py-2">
+                  <span className="text-xs font-mono text-slate-600 font-bold uppercase">Rating (1 to 5 Stars)</span>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                      >
+                        <Star
+                          className={`w-7 h-7 transition-colors ${
+                            (hoverRating || rating) >= star
+                              ? "text-[#F07C27] fill-[#F07C27]"
+                              : "text-slate-300"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-xs font-mono text-[#F07C27] font-black uppercase">
+                    {rating === 5
+                      ? "5 / 5 — World Class Mentorship"
+                      : rating === 4
+                      ? "4 / 5 — Very Good Guidance"
+                      : rating === 3
+                      ? "3 / 5 — Satisfactory"
+                      : "Needs Improvement"}
+                  </span>
+                </div>
+
+                {/* Category Dropdown */}
+                <div>
+                  <label className="block text-xs font-mono text-slate-700 uppercase font-bold mb-1">
+                    Appraisal Category
+                  </label>
+                  <select
+                    value={feedbackCategory}
+                    onChange={(e) => setFeedbackCategory(e.target.value)}
+                    className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-[#111111] font-bold focus:outline-none focus:bg-[#FFF0E5] shadow-[2px_2px_0px_#111111]"
                   >
-                    <Star
-                      className={`w-7 h-7 transition-colors ${
-                        (hoverRating || rating) >= star
-                          ? "text-[#F07C27] fill-[#F07C27]"
-                          : "text-slate-300"
-                      }`}
-                    />
-                  </button>
-                ))}
-              </div>
-              <span className="text-xs font-mono text-[#F07C27] font-black uppercase">
-                {rating === 5
-                  ? "5 / 5 — World Class Mentorship"
-                  : rating === 4
-                  ? "4 / 5 — Very Good Guidance"
-                  : rating === 3
-                  ? "3 / 5 — Satisfactory"
-                  : "Needs Improvement"}
-              </span>
-            </div>
+                    <option value="MENTORSHIP">Technical Mentorship & Depth</option>
+                    <option value="CODE_REVIEW">Code Review Quality & Speed</option>
+                    <option value="PEDAGOGY">Systems Architecture Explanation</option>
+                    <option value="COMMUNICATION">Doubt Resolution & Availability</option>
+                  </select>
+                </div>
 
-            {/* Category Dropdown */}
-            <div>
-              <label className="block text-xs font-mono text-slate-700 uppercase font-bold mb-1">
-                Appraisal Category
-              </label>
-              <select
-                value={feedbackCategory}
-                onChange={(e) => setFeedbackCategory(e.target.value)}
-                className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono text-[#111111] font-bold focus:outline-none focus:bg-[#FFF0E5] shadow-[2px_2px_0px_#111111]"
-              >
-                <option value="MENTORSHIP">Technical Mentorship & Depth</option>
-                <option value="CODE_REVIEW">Code Review Quality & Speed</option>
-                <option value="PEDAGOGY">Systems Architecture Explanation</option>
-                <option value="COMMUNICATION">Doubt Resolution & Availability</option>
-              </select>
-            </div>
+                {/* Comment Area */}
+                <div>
+                  <label className="block text-xs font-mono text-slate-700 uppercase font-bold mb-1">
+                    Written Feedback
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={feedbackComment}
+                    onChange={(e) => setFeedbackComment(e.target.value)}
+                    placeholder="Share specific examples of mentor code review feedback, guidance on memory concurrency, or areas of improvement..."
+                    className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-500 focus:outline-none focus:bg-[#FFF0E5] font-mono resize-none shadow-[2px_2px_0px_#111111]"
+                  />
+                </div>
 
-            {/* Comment Area */}
-            <div>
-              <label className="block text-xs font-mono text-slate-700 uppercase font-bold mb-1">
-                Written Feedback
-              </label>
-              <textarea
-                required
-                rows={4}
-                value={feedbackComment}
-                onChange={(e) => setFeedbackComment(e.target.value)}
-                placeholder="Share specific examples of mentor code review feedback, guidance on memory concurrency, or areas of improvement..."
-                className="w-full bg-[#F9F9F9] border-[2px] border-[#111111] p-3 text-xs text-[#111111] placeholder:text-slate-500 focus:outline-none focus:bg-[#FFF0E5] font-mono resize-none shadow-[2px_2px_0px_#111111]"
-              />
-            </div>
+                {/* Anonymous Toggle */}
+                <div className="flex items-center justify-between p-3.5 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
+                  <div>
+                    <span className="text-xs font-bold text-[#111111] block uppercase font-mono">Submit Anonymously</span>
+                    <span className="text-[10px] text-slate-600 font-mono">
+                      Your identity will not be visible to your mentor.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isAnonymous}
+                    onChange={(e) => setIsAnonymous(e.target.checked)}
+                    className="w-5 h-5 accent-[#F07C27] rounded-none cursor-pointer border-[2px] border-[#111111]"
+                  />
+                </div>
 
-            {/* Anonymous Toggle */}
-            <div className="flex items-center justify-between p-3.5 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-              <div>
-                <span className="text-xs font-bold text-[#111111] block uppercase font-mono">Submit Anonymously</span>
-                <span className="text-[10px] text-slate-600 font-mono">
-                  Your identity will not be visible to your mentor.
-                </span>
-              </div>
-              <input
-                type="checkbox"
-                checked={isAnonymous}
-                onChange={(e) => setIsAnonymous(e.target.checked)}
-                className="w-5 h-5 accent-[#F07C27] rounded-none cursor-pointer border-[2px] border-[#111111]"
-              />
-            </div>
+                {feedbackSuccess && (
+                  <div className="p-3.5 bg-[#e6f4ea] border-[2px] border-[#111111] text-emerald-900 font-mono text-xs flex items-center gap-2 shadow-[2px_2px_0px_#111111]">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                    <span>Feedback recorded successfully! Thank you for helping elevate Super 60.</span>
+                  </div>
+                )}
 
-            {feedbackSuccess && (
-              <div className="p-3.5 bg-[#e6f4ea] border-[2px] border-[#111111] text-emerald-900 font-mono text-xs flex items-center gap-2 shadow-[2px_2px_0px_#111111]">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                <span>Feedback recorded successfully! Thank you for helping elevate Super 60.</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={submittingFeedback}
-              className="w-full py-3 bg-[#F07C27] hover:brightness-110 text-white font-mono text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 border-[2px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center gap-2"
-            >
-              {submittingFeedback ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Submitting Review...</span>
-                </>
-              ) : (
-                "Submit Confidential Feedback →"
-              )}
-            </button>
-          </form>
+                <button
+                  type="submit"
+                  disabled={submittingFeedback}
+                  className="w-full py-3 bg-[#F07C27] hover:brightness-110 text-white font-mono text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 border-[2px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center gap-2"
+                >
+                  {submittingFeedback ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Submitting Review...</span>
+                    </>
+                  ) : (
+                    "Submit Confidential Feedback →"
+                  )}
+                </button>
+              </form>
+            );
+          })()}
         </div>
       )}
         </main>

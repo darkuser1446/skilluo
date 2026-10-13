@@ -161,6 +161,11 @@ export default function AdminDashboardPage() {
   const [selectedLabFilter, setSelectedLabFilter] = useState("ALL");
   const [selectionActionLoading, setSelectionActionLoading] = useState<string | null>(null);
 
+  // Dedicated Lab Student Search (Top of Labs Tab)
+  const [labStudentSearch, setLabStudentSearch] = useState("");
+  const [labStudentFilter, setLabStudentFilter] = useState("ALL");
+  const [movingCandidateId, setMovingCandidateId] = useState<string | null>(null);
+
   // Workshop creation
   const [wsName, setWsName] = useState("");
   const [wsYear, setWsYear] = useState<number>(2027);
@@ -765,6 +770,48 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const getCandidateLab = (c: Candidate) => {
+    if (c.labId && c.labName && c.labName !== "Unassigned") {
+      return { labId: c.labId, labName: c.labName };
+    }
+    const foundLab = labs.find((l) =>
+      l.students?.some((ls: any) => ls.studentId === c.studentId || ls.student?.id === c.studentId)
+    );
+    if (foundLab) {
+      return { labId: foundLab.id, labName: foundLab.name };
+    }
+    return { labId: null, labName: "Unassigned" };
+  };
+
+  const handleMoveCandidateLab = async (studentId: string, targetLabId: string) => {
+    if (!selectedWorkshopId) return;
+    setMovingCandidateId(studentId);
+    try {
+      if (targetLabId === "REMOVE") {
+        const currentLab = labs.find((l) =>
+          l.students?.some((ls: any) => ls.studentId === studentId || ls.student?.id === studentId)
+        );
+        if (currentLab) {
+          const res = await fetch(`/api/labs/${currentLab.id}/students/${studentId}`, { method: "DELETE" });
+          if (res.ok) {
+            await Promise.all([loadLabs(selectedWorkshopId), loadReports(selectedWorkshopId)]);
+          }
+        }
+        return;
+      }
+      const res = await fetch(`/api/labs/${targetLabId}/students`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, workshopId: selectedWorkshopId }),
+      });
+      if (res.ok) {
+        await Promise.all([loadLabs(selectedWorkshopId), loadReports(selectedWorkshopId)]);
+      }
+    } finally {
+      setMovingCandidateId(null);
+    }
+  };
+
   const handleAssignMentor = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignMentorLabId || !assignMentorId) return;
@@ -844,6 +891,28 @@ export default function AdminDashboardPage() {
     const matchScore = c.overallScore >= minScoreFilter;
     const matchLab = selectedLabFilter === "ALL" || c.labId === selectedLabFilter;
     return matchSearch && matchStatus && matchScore && matchLab;
+  });
+
+  // Filter candidates specifically for top-of-labs directory
+  const searchedLabCandidates = candidates.filter((c) => {
+    const labInfo = getCandidateLab(c);
+    if (labStudentFilter !== "ALL") {
+      if (labStudentFilter === "UNASSIGNED" && labInfo.labId !== null) return false;
+      if (labStudentFilter !== "UNASSIGNED" && labInfo.labId !== labStudentFilter) return false;
+    }
+    if (!labStudentSearch.trim()) {
+      return labStudentFilter !== "ALL";
+    }
+    const q = labStudentSearch.toLowerCase().trim();
+    return (
+      c.studentName?.toLowerCase().includes(q) ||
+      c.rollNumber?.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.phone?.toLowerCase().includes(q) ||
+      c.branch?.toLowerCase().includes(q) ||
+      c.college?.toLowerCase().includes(q) ||
+      labInfo.labName?.toLowerCase().includes(q)
+    );
   });
 
   const handleExportCSV = () => {
@@ -1984,6 +2053,216 @@ export default function AdminDashboardPage() {
               </div>
             );
           })()}
+
+          {/* ══════════════════════════════════════════════════════════
+              STUDENT SEARCH & LABORATORY DIRECTORY (TOP OF ALL LABS)
+          ══════════════════════════════════════════════════════════ */}
+          <div className="bg-white border-[3px] border-[#111111] p-5 shadow-[6px_6px_0px_#111111] space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b-[2px] border-[#111111] pb-3.5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 bg-[#F07C27] border border-[#111111]" />
+                  <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
+                    Search Students & Laboratory Track Directory
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-600 font-mono mt-0.5">
+                  Lookup any candidate's details, credentials, and verify which laboratory track they are enrolled in.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-1 bg-[#FFF0E5] border border-[#111111] font-mono text-xs font-bold text-[#111111] shadow-[2px_2px_0px_#111111]">
+                  Total Cohort: {candidates.length} Students
+                </span>
+                <span className="px-2.5 py-1 bg-emerald-100 border border-[#111111] font-mono text-xs font-bold text-emerald-950 shadow-[2px_2px_0px_#111111]">
+                  Placed: {candidates.filter((c) => getCandidateLab(c).labId !== null).length} Allocated
+                </span>
+              </div>
+            </div>
+
+            {/* Search Input and Filter Bar */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-[#111111] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search student by name, roll number, email, phone, branch, college, or lab track..."
+                  value={labStudentSearch}
+                  onChange={(e) => setLabStudentSearch(e.target.value)}
+                  className="w-full bg-[#F4F3F3] border-[2px] border-[#111111] pl-9 pr-8 py-2 text-xs text-[#111111] placeholder:text-slate-500 font-mono shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white"
+                />
+                {labStudentSearch && (
+                  <button
+                    onClick={() => setLabStudentSearch("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#111111] font-bold text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Lab Filter Selector */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={labStudentFilter}
+                  onChange={(e) => setLabStudentFilter(e.target.value)}
+                  className="bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white cursor-pointer"
+                >
+                  <option value="ALL">Filter: All Lab Tracks ({candidates.length})</option>
+                  {labs.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      🏛️ {l.name} ({l.students?.length || 0} students)
+                    </option>
+                  ))}
+                  <option value="UNASSIGNED">
+                    ⚠️ Unassigned Candidates ({candidates.filter((c) => getCandidateLab(c).labId === null).length})
+                  </option>
+                </select>
+
+                {(labStudentSearch || labStudentFilter !== "ALL") && (
+                  <button
+                    onClick={() => {
+                      setLabStudentSearch("");
+                      setLabStudentFilter("ALL");
+                    }}
+                    className="px-3 py-2 bg-white hover:bg-[#FFF0E5] border-[2px] border-[#111111] font-mono text-xs font-bold text-[#111111] shadow-[2px_2px_0px_#111111] transition-all whitespace-nowrap cursor-pointer"
+                  >
+                    Clear Filter
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Search Results Display */}
+            {(labStudentSearch.trim() || labStudentFilter !== "ALL") ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs font-mono text-slate-600 font-bold px-1">
+                  <span>
+                    Found <strong className="text-[#111111]">{searchedLabCandidates.length}</strong> matching candidate{searchedLabCandidates.length === 1 ? "" : "s"}
+                  </span>
+                  {labStudentSearch && <span>Query: "{labStudentSearch}"</span>}
+                </div>
+
+                {searchedLabCandidates.length === 0 ? (
+                  <div className="p-8 bg-[#F9F9F9] border-[2px] border-[#111111] text-center font-mono text-xs text-slate-600 space-y-1">
+                    <p className="font-bold">No students found matching your search criteria.</p>
+                    <p className="text-[11px] text-slate-500">Try searching with a different name, roll number, or clear the lab filter.</p>
+                  </div>
+                ) : (
+                  <div className="border-[2px] border-[#111111] overflow-hidden shadow-[4px_4px_0px_#111111]">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs font-mono">
+                        <thead>
+                          <tr className="bg-[#111111] text-white uppercase text-[10px] tracking-wider border-b border-[#111111]">
+                            <th className="py-2.5 px-3">Candidate</th>
+                            <th className="py-2.5 px-3">Roll Number</th>
+                            <th className="py-2.5 px-3">Contact Details</th>
+                            <th className="py-2.5 px-3">Branch & College</th>
+                            <th className="py-2.5 px-3">Current Laboratory Track</th>
+                            <th className="py-2.5 px-3 text-right">Reassign / Move</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#111111]/20 bg-white">
+                          {searchedLabCandidates.map((c) => {
+                            const labInfo = getCandidateLab(c);
+                            const isAssigned = labInfo.labId !== null;
+                            const isMoving = movingCandidateId === c.studentId;
+                            const initials = c.studentName ? c.studentName.split(" ").map((n) => n[0]).slice(0, 2).join("") : "S";
+
+                            return (
+                              <tr key={c.studentId} className="hover:bg-[#FFF0E5]/40 transition-colors">
+                                <td className="py-3 px-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 bg-[#FFF0E5] border border-[#111111] flex items-center justify-center font-bold text-[11px] text-[#111111] shadow-[1px_1px_0px_#111111]">
+                                      {initials}
+                                    </div>
+                                    <div>
+                                      <span className="font-bold text-[#111111] block">{c.studentName}</span>
+                                      <span className="text-[10px] text-slate-500 font-bold uppercase">{c.status}</span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-3">
+                                  {c.rollNumber ? (
+                                    <span className="px-2 py-0.5 bg-[#FFF0E5] border border-[#111111] font-bold text-[11px] text-[#111111] shadow-[1px_1px_0px_#111111]">
+                                      {c.rollNumber}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-400">—</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-3">
+                                  <div className="text-[11px] text-slate-800">{c.email || "—"}</div>
+                                  {c.phone && <div className="text-[10px] text-slate-500 font-bold">{c.phone}</div>}
+                                </td>
+                                <td className="py-3 px-3">
+                                  <div className="text-slate-800 font-bold">{c.branch || "CSE"} {c.semester ? `(Sem ${c.semester})` : ""}</div>
+                                  <div className="text-[10px] text-slate-500 truncate max-w-[140px]">{c.college || "—"}</div>
+                                </td>
+                                <td className="py-3 px-3">
+                                  {isAssigned ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 border border-emerald-800 text-emerald-950 font-bold text-[11px] shadow-[1px_1px_0px_#111111]">
+                                      <span>🏛️</span>
+                                      <span>{labInfo.labName}</span>
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-100 border border-rose-800 text-rose-950 font-bold text-[11px] shadow-[1px_1px_0px_#111111]">
+                                      <span>⚠️</span>
+                                      <span>Unassigned (No Lab)</span>
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-3 text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <select
+                                      disabled={isMoving}
+                                      value={labInfo.labId || ""}
+                                      onChange={(e) => handleMoveCandidateLab(c.studentId, e.target.value)}
+                                      className="bg-[#F4F3F3] border border-[#111111] px-2 py-1 text-[11px] font-bold text-[#111111] shadow-[1px_1px_0px_#111111] focus:outline-none focus:bg-white cursor-pointer disabled:opacity-50"
+                                    >
+                                      <option value="" disabled>Move to Lab...</option>
+                                      {labs.map((l) => (
+                                        <option key={l.id} value={l.id}>
+                                          {l.name} ({l.students?.length || 0}/{l.capacity || 40})
+                                        </option>
+                                      ))}
+                                      {isAssigned && (
+                                        <option value="REMOVE">❌ Remove from Lab</option>
+                                      )}
+                                    </select>
+                                    {isMoving && (
+                                      <span className="w-3.5 h-3.5 border-2 border-[#111111] border-t-transparent rounded-full animate-spin" />
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-3 bg-[#F9F9F9] border border-[#111111] text-[11px] font-mono text-slate-600 flex flex-wrap items-center justify-between gap-2 shadow-[2px_2px_0px_#111111]">
+                <span>
+                  💡 Quick Student Lookup: Type any student's <strong>name</strong>, <strong>roll number</strong> (e.g. 2026BTCS227), or click a lab track below:
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {labs.map((l) => (
+                    <button
+                      key={l.id}
+                      onClick={() => setLabStudentFilter(l.id)}
+                      className="px-2 py-0.5 bg-white hover:bg-[#FFF0E5] border border-[#111111] text-[10px] font-bold text-[#111111] shadow-[1px_1px_0px_#111111] transition-all cursor-pointer"
+                    >
+                      {l.name}: {l.students?.length || 0}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* ══════════════════════════════════════════════════════════
               LABORATORY TRACKS & EDITABLE ROSTERS

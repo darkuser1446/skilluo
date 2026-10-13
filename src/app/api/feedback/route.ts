@@ -40,7 +40,19 @@ export async function GET(req: NextRequest) {
       return f;
     });
 
-    return successResponse({ feedbacks: sanitized });
+    let isMarkedPresent = false;
+    if (user.role === "STUDENT") {
+      const presentRec = await prisma.attendanceRecord.findFirst({
+        where: {
+          studentId: user.sub,
+          status: "PRESENT",
+          session: { workshopId },
+        },
+      });
+      isMarkedPresent = !!presentRec;
+    }
+
+    return successResponse({ feedbacks: sanitized, isMarkedPresent });
   } catch (err) {
     return handleApiError(err);
   }
@@ -65,6 +77,36 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const data = FeedbackSchema.parse(body);
+
+    // Strict mandate: Only students marked PRESENT in a lab session can give ratings
+    const attendanceRecord = await prisma.attendanceRecord.findFirst({
+      where: {
+        studentId: user.sub,
+        status: "PRESENT",
+        session: {
+          workshopId: data.workshopId,
+          ...(data.labId ? { labId: data.labId } : {}),
+        },
+      },
+    });
+
+    if (!attendanceRecord) {
+      const anyPresent = await prisma.attendanceRecord.findFirst({
+        where: {
+          studentId: user.sub,
+          status: "PRESENT",
+          session: { workshopId: data.workshopId },
+        },
+      });
+
+      if (!anyPresent) {
+        return errorResponse(
+          "Rating Locked: Only students who have been marked PRESENT by their mentor in a lab session are permitted to submit evaluations.",
+          "FORBIDDEN",
+          403
+        );
+      }
+    }
 
     const feedback = await prisma.feedback.upsert({
       where: {
