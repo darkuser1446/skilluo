@@ -1018,6 +1018,13 @@ export default function AdminDashboardPage() {
     exportToExcel(`skillup_users_roster.csv`, headers, rows);
   };
 
+  // Only students who are SELECTED or assigned to an active lab track
+  const selectedCandidates = useMemo(() => {
+    return candidates.filter(
+      (c) => c.status === "SELECTED" || (c.labId && c.labName !== "Unassigned")
+    );
+  }, [candidates]);
+
   // Cohort Attendance Register calculations across all sessions
   const studentAttendanceSummary = useMemo(() => {
     const summary: Record<
@@ -1032,7 +1039,7 @@ export default function AdminDashboardPage() {
       }
     > = {};
 
-    candidates.forEach((c) => {
+    selectedCandidates.forEach((c) => {
       summary[c.studentId] = {
         totalSessions: 0,
         attendedCount: 0,
@@ -1055,16 +1062,15 @@ export default function AdminDashboardPage() {
       });
 
       records.forEach((rec: any) => {
-        if (!summary[rec.studentId]) {
-          summary[rec.studentId] = {
-            totalSessions: 0,
-            attendedCount: 0,
-            lateCount: 0,
-            absentCount: 0,
-            recordsByDate: [],
-            percentage: 0,
-          };
+        if (!summary[rec.studentId]) return;
+
+        // Ensure session belongs to candidate's lab (or is a workshop-wide session)
+        const cand = selectedCandidates.find((c) => c.studentId === rec.studentId);
+        const labInfo = cand ? getCandidateLab(cand) : null;
+        if (sess.labId && labInfo?.labId && sess.labId !== labInfo.labId) {
+          return;
         }
+
         const s = summary[rec.studentId];
         s.totalSessions += 1;
         if (rec.status === "PRESENT") {
@@ -1091,7 +1097,7 @@ export default function AdminDashboardPage() {
     });
 
     return summary;
-  }, [candidates, attendanceSessions]);
+  }, [selectedCandidates, attendanceSessions]);
 
   const distinctSessionDates = useMemo(() => {
     const dateMap = new Map<string, { date: Date; title: string; labName?: string }>();
@@ -1114,7 +1120,7 @@ export default function AdminDashboardPage() {
   }, [attendanceSessions]);
 
   const filteredAttendanceCandidates = useMemo(() => {
-    return candidates.filter((c) => {
+    return selectedCandidates.filter((c) => {
       const labInfo = getCandidateLab(c);
 
       // Lab filter
@@ -1155,7 +1161,7 @@ export default function AdminDashboardPage() {
 
       return true;
     });
-  }, [candidates, attendanceLabFilter, attendanceSearch, attendanceStatusFilter, studentAttendanceSummary, labs]);
+  }, [selectedCandidates, attendanceLabFilter, attendanceSearch, attendanceStatusFilter, studentAttendanceSummary, labs]);
 
   const handleExportAttendanceRegister = () => {
     const headers = [
@@ -1206,7 +1212,7 @@ export default function AdminDashboardPage() {
     { id: "selection", label: "Candidate Selection Pipeline", icon: Trophy, count: counts.totalStudents },
     { id: "workshops", label: "Workshops Management", icon: Calendar, count: workshops.length },
     { id: "labs", label: "Labs & Allocation", icon: Layers, count: labs.length },
-    { id: "attendance", label: "Attendance Register", icon: CalendarCheck, count: candidates.length },
+    { id: "attendance", label: "Attendance Register", icon: CalendarCheck, count: selectedCandidates.length },
     { id: "users", label: "Platform Users", icon: Users, count: users.length },
     { id: "tests", label: "Tests & Quizzes", icon: ClipboardList, count: null },
     { id: "announcements", label: "Announcements", icon: Megaphone, count: announcements.length },
@@ -3151,7 +3157,7 @@ export default function AdminDashboardPage() {
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-2.5 py-1 bg-emerald-100 text-emerald-950 border-[2px] border-[#111111] font-mono text-xs font-bold shadow-[2px_2px_0px_#111111]">
-                  ✓ Day 1: 100% Present (180/180)
+                  ✓ Day 1: 100% Present ({selectedCandidates.length}/{selectedCandidates.length})
                 </span>
                 <span className="px-2.5 py-1 bg-[#FFF0E5] text-[#111111] border-[2px] border-[#111111] font-mono text-xs font-bold shadow-[2px_2px_0px_#111111]">
                   Rule: 1 Session / Day Max
@@ -3182,13 +3188,13 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-1">
               <div className="bg-[#FFF0E5] border-[2px] border-[#111111] p-3.5 shadow-[3px_3px_0px_#111111]">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-slate-600 font-bold">
-                  Total Enrolled Cohort
+                  Total Selected Cohort
                 </div>
                 <div className="font-display font-black text-2xl text-[#111111] mt-0.5">
-                  {candidates.length}
+                  {selectedCandidates.length}
                 </div>
                 <div className="text-[10px] font-mono text-slate-500 mt-0.5 font-bold">
-                  Across {labs.length} Laboratory Tracks
+                  Selected Across {labs.length} Laboratory Tracks
                 </div>
               </div>
 
@@ -3214,7 +3220,7 @@ export default function AdminDashboardPage() {
                   100%
                 </div>
                 <div className="text-[10px] font-mono text-emerald-700 mt-0.5 font-bold">
-                  All 180 Students Present
+                  All {selectedCandidates.length} Selected Students Present
                 </div>
               </div>
 
@@ -3262,14 +3268,14 @@ export default function AdminDashboardPage() {
                   onChange={(e) => setAttendanceLabFilter(e.target.value)}
                   className="bg-[#F4F3F3] border-[2px] border-[#111111] px-3 py-2 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none focus:bg-white cursor-pointer"
                 >
-                  <option value="ALL">Filter: All Laboratory Tracks ({candidates.length})</option>
+                  <option value="ALL">Filter: All Laboratory Tracks ({selectedCandidates.length})</option>
                   {labs.map((l) => (
                     <option key={l.id} value={l.id}>
                       🏛️ {l.name} ({l.students?.length || 0} students)
                     </option>
                   ))}
                   <option value="UNASSIGNED">
-                    ⚠️ Unassigned ({candidates.filter((c) => getCandidateLab(c).labId === null).length})
+                    ⚠️ Unassigned ({selectedCandidates.filter((c) => getCandidateLab(c).labId === null).length})
                   </option>
                 </select>
 
@@ -3304,7 +3310,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between text-xs font-mono text-slate-600 font-bold pt-1">
               <span>
                 Displaying <strong className="text-[#111111]">{filteredAttendanceCandidates.length}</strong> of{" "}
-                <strong className="text-[#111111]">{candidates.length}</strong> enrolled candidates
+                <strong className="text-[#111111]">{selectedCandidates.length}</strong> selected candidates
               </span>
               <span className="text-[11px] text-slate-500">
                 Sorted by Workshop Induction Score & Lab Allocation
@@ -3425,7 +3431,7 @@ export default function AdminDashboardPage() {
                           {/* Date Columns (e.g. Day 1: 12 Oct) */}
                           {distinctSessionDates.map(([dateStr]) => {
                             const foundRecord = sum?.recordsByDate.find((r) => r.sessionDate === dateStr);
-                            const status = foundRecord ? foundRecord.status : "PRESENT"; // Default Day 1 is PRESENT for all candidates
+                            const status = foundRecord ? foundRecord.status : "—";
 
                             return (
                               <td key={dateStr} className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
@@ -3466,7 +3472,7 @@ export default function AdminDashboardPage() {
             {/* Table Footer */}
             <div className="p-3 bg-[#F4F3F3] border-t-[2px] border-[#111111] flex items-center justify-between text-xs font-mono text-slate-700 font-bold">
               <span>
-                Showing {filteredAttendanceCandidates.length} of {candidates.length} candidates in cohort attendance register
+                Showing {filteredAttendanceCandidates.length} of {selectedCandidates.length} selected candidates in cohort attendance register
               </span>
               <button
                 type="button"

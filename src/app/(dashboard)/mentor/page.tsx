@@ -1850,7 +1850,7 @@ export default function MentorDashboardPage() {
                               {/* Date Columns (e.g. Day 1: 12 Oct) */}
                               {labDistinctDates.map(([dateStr]) => {
                                 const foundRecord = sum?.recordsByDate.find((r) => r.sessionDate === dateStr);
-                                const status = foundRecord ? foundRecord.status : "PRESENT"; // Day 1 is default PRESENT for all candidates
+                                const status = foundRecord ? foundRecord.status : "—";
 
                                 return (
                                   <td key={dateStr} className="py-3 px-3 text-center border-r border-[#111111]/20 bg-slate-50/50">
