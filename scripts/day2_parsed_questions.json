@@ -1,0 +1,282 @@
+[
+  {
+    "num": 1,
+    "title": "The Smart College Gate",
+    "prompt": "**The Smart College Gate**\n\nA college gate allows entry only if a student is 18 or older and has a valid ID. What happens when age = 19 and hasID = 0?",
+    "options": [
+      "Entry allowed",
+      "Bring your ID",
+      "Not eligible due to age",
+      "Program stops with an error"
+    ],
+    "correctAnswer": "Bring your ID",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 2,
+    "title": "The Pass-or-Fail Trap",
+    "prompt": "**The Pass-or-Fail Trap**\n\nA program checks marks >= 40 for passing. If a student scores exactly 40, what is the result?",
+    "options": [
+      "Fail",
+      "Invalid marks",
+      "Pass",
+      "Grade A"
+    ],
+    "correctAnswer": "Pass",
+    "correctLetter": "C",
+    "marks": 5
+  },
+  {
+    "num": 3,
+    "title": "Find the Hidden Bug",
+    "prompt": "**Find the Hidden Bug**\n\nWhat will this print?\nint x = 0;\nif (x = 5) cout << \"Unlocked\";\nelse cout << \"Locked\";",
+    "options": [
+      "Locked",
+      "Unlocked",
+      "0",
+      "Compilation error in every C++ compiler"
+    ],
+    "correctAnswer": "Unlocked",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 4,
+    "title": "The Number Detective",
+    "prompt": "**The Number Detective**\n\nA program classifies a number as positive, negative, or zero. What should it print for n = 0?",
+    "options": [
+      "Positive",
+      "Negative",
+      "Zero",
+      "Nothing"
+    ],
+    "correctAnswer": "Zero",
+    "correctLetter": "C",
+    "marks": 5
+  },
+  {
+    "num": 5,
+    "title": "Odd or Even Challenge",
+    "prompt": "**Odd or Even Challenge**\n\nWhat is printed when n = 27?\nif (n % 2 == 0) cout << \"Even\";\nelse cout << \"Odd\";",
+    "options": [
+      "Even",
+      "Odd",
+      "1",
+      "27"
+    ],
+    "correctAnswer": "Odd",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 6,
+    "title": "Shopping Festival",
+    "prompt": "**Shopping Festival**\n\nA store offers 10% off bills of ₹1,000 or more, and 5% off bills of ₹500 or more. What discount applies to a ₹1,200 bill?",
+    "options": [
+      "₹0",
+      "₹60",
+      "₹120",
+      "₹240"
+    ],
+    "correctAnswer": "₹120",
+    "correctLetter": "C",
+    "marks": 5
+  },
+  {
+    "num": 7,
+    "title": "True or False?",
+    "prompt": "**True or False?**\n\nWhat is the output?\nint a = 10, b = 5;\ncout << (a > b) << \" \" << (a == b);",
+    "options": [
+      "true false",
+      "1 0",
+      "0 1",
+      "10 5"
+    ],
+    "correctAnswer": "1 0",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 8,
+    "title": "The Weekend Detector",
+    "prompt": "**The Weekend Detector**\n\nWhat happens when day = 7?\nif (day == 6 || day == 7) cout << \"Weekend\";\nelse cout << \"Working day\";",
+    "options": [
+      "Working day",
+      "Weekend",
+      "Both messages print",
+      "No output"
+    ],
+    "correctAnswer": "Weekend",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 9,
+    "title": "Choose the Correct Operator",
+    "prompt": "**Choose the Correct Operator**\n\nWhich operator checks whether a number equals 100 without changing its value?",
+    "options": [
+      "=",
+      "==",
+      "!=",
+      ">="
+    ],
+    "correctAnswer": "==",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 10,
+    "title": "The Grade Calculator",
+    "prompt": "**The Grade Calculator**\n\nWhat is printed for marks = 82?\nif (marks >= 90) cout << \"A\";\nelse if (marks >= 75) cout << \"B\";\nelse if (marks >= 60) cout << \"C\";\nelse cout << \"D\";",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "correctAnswer": "B",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 11,
+    "title": "The Leap-Year Mystery",
+    "prompt": "**The Leap-Year Mystery**\n\nWhat should a correct leap-year checker print for the year 1900?",
+    "options": [
+      "Leap year",
+      "Not a leap year",
+      "Both",
+      "Cannot be determined"
+    ],
+    "correctAnswer": "Not a leap year",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 12,
+    "title": "Two if Statements, One Surprise",
+    "prompt": "**Two if Statements, One Surprise**\n\nPredict the output:\nint x = 7;\nif (x > 5) cout << \"A\";\nif (x > 3) cout << \"B\";\nelse cout << \"C\";",
+    "options": [
+      "A only",
+      "AB",
+      "AC",
+      "ABC"
+    ],
+    "correctAnswer": "AB",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 13,
+    "title": "The Calculator Safety Check",
+    "prompt": "**The Calculator Safety Check**\n\nA user enters 20 / 0. What should a properly designed calculator do?",
+    "options": [
+      "Print 0",
+      "Continue division normally",
+      "Display an error message instead of dividing",
+      "Automatically multiply the numbers"
+    ],
+    "correctAnswer": "Display an error message instead of dividing",
+    "correctLetter": "C",
+    "marks": 5
+  },
+  {
+    "num": 14,
+    "title": "The Missing break",
+    "prompt": "**The Missing break**\n\nWhat will this print?\nint n = 2;\nswitch (n) {\n case 1: cout << \"One \";\n case 2: cout << \"Two \";\n case 3: cout << \"Three \"; break;\n default: cout << \"Done\";\n}",
+    "options": [
+      "Two",
+      "Two Three",
+      "Two Three Done",
+      "One Two Three"
+    ],
+    "correctAnswer": "Two Three",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 15,
+    "title": "The Entry Rule",
+    "prompt": "**The Entry Rule**\n\nEntry requires age >= 18 AND a valid ID. Which condition is correct?",
+    "options": [
+      "age >= 18 || hasID == 1",
+      "age >= 18 && hasID == 1",
+      "age < 18 && hasID == 0",
+      "age == 18 || hasID == 0"
+    ],
+    "correctAnswer": "age >= 18 && hasID == 1",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 16,
+    "title": "Find the Largest Number",
+    "prompt": "**Find the Largest Number**\n\nWhat is printed?\nint a = 12, b = 45, c = 30;\nif (a >= b && a >= c) cout << a;\nelse if (b >= c) cout << b;\nelse cout << c;",
+    "options": [
+      "12",
+      "30",
+      "45",
+      "87"
+    ],
+    "correctAnswer": "45",
+    "correctLetter": "C",
+    "marks": 5
+  },
+  {
+    "num": 17,
+    "title": "The Incorrect Grade System",
+    "prompt": "**The Incorrect Grade System**\n\nA student scores 95. What does this incorrectly ordered code print?\nif (marks >= 60) cout << \"C\";\nelse if (marks >= 90) cout << \"A\";\nelse cout << \"D\";",
+    "options": [
+      "A",
+      "C",
+      "D",
+      "Compilation error"
+    ],
+    "correctAnswer": "C",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 18,
+    "title": "Reverse the Condition",
+    "prompt": "**Reverse the Condition**\n\nWhat is the output?\nint age = 17;\ncout << !(age >= 18);",
+    "options": [
+      "0",
+      "1",
+      "17",
+      "18"
+    ],
+    "correctAnswer": "1",
+    "correctLetter": "B",
+    "marks": 5
+  },
+  {
+    "num": 19,
+    "title": "Electricity Bill Challenge",
+    "prompt": "**Electricity Bill Challenge**\n\nFirst 100 units cost ₹5/unit, the next 100 cost ₹7/unit, and units above 200 cost ₹10/unit. What is the bill for 250 units?",
+    "options": [
+      "₹1,250",
+      "₹1,500",
+      "₹1,700",
+      "₹2,500"
+    ],
+    "correctAnswer": "₹1,700",
+    "correctLetter": "C",
+    "marks": 5
+  },
+  {
+    "num": 20,
+    "title": "The Menu-Driven Calculator",
+    "prompt": "**The Menu-Driven Calculator**\n\nA calculator accepts choices 1 Add, 2 Subtract, 3 Multiply, 4 Divide. User enters 7. What should the program do first?",
+    "options": [
+      "Ask for two numbers",
+      "Perform addition",
+      "Display Invalid choice and stop",
+      "Divide the numbers"
+    ],
+    "correctAnswer": "Display Invalid choice and stop",
+    "correctLetter": "C",
+    "marks": 5
+  }
+]
