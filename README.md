@@ -98,9 +98,11 @@ The database comes pre-seeded with sample role accounts for testing and evaluati
 
 | Role | Email | Password | Access Level |
 |---|---|---|---|
-| **Admin** | `admin@super60.edu` | `Admin@123` | Full administrative headquarters, selection pipeline, user management |
-| **Mentor** | `mentor@super60.edu` | `Mentor@123` | Assigned lab roster, grading queue, attendance roll call, test authoring |
-| **Student** | `student@super60.edu` | `Student@123` | Student learning dashboard, testbench simulator, progress trend, doubts |
+| **Admin** | `admin@super60.org` | `admin123` | Full administrative headquarters, selection pipeline, user management |
+| **Mentor** | `vikram@super60.org` | `mentor123` | Assigned lab roster, grading queue, attendance roll call, test authoring |
+| **Student** | `aditya@student.super60.org` | `student123` | Student learning dashboard, testbench simulator, progress trend, doubts |
+
+The seed (`prisma/seed.ts`) creates additional accounts with the same passwords: mentor `ananya@super60.org`, students `rohan@student.super60.org` and `sneha@student.super60.org`.
 
 ---
 
@@ -122,6 +124,8 @@ npm install
 Create a `.env` file in the root directory:
 ```env
 DATABASE_URL="postgresql://<user>:<password>@<neon-host>/skillup?sslmode=require"
+# Required by schema.prisma (directUrl) for migrations — Neon's non-pooled host.
+DIRECT_URL="postgresql://<user>:<password>@<neon-host>/skillup?sslmode=require"
 JWT_SECRET="super60_skillup_secret_key_jwt_2026_systems_platform_token"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```

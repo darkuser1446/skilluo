@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireRole, getSessionUser } from "@/lib/auth";
+import { requireAuth, requireRole } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
@@ -8,7 +8,9 @@ import { notifyMany, workshopStudentIds } from "@/lib/notify";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSessionUser();
+    // A valid session is mandatory: middleware only checks that a token cookie is
+    // present, so an invalid/expired token must NOT be treated as a privileged viewer.
+    const session = await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
 

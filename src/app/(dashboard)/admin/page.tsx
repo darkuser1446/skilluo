@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useWorkshopContext } from "@/components/WorkshopContext";
 import Link from "next/link";
 import {
   Trophy,
@@ -241,9 +242,19 @@ export default function AdminDashboardPage() {
   // Feedback state
   const [feedbackLabId, setFeedbackLabId] = useState("");
 
+  const { activeWorkshopId: ctxWorkshopId, setActiveWorkshopId: setCtxWorkshopId } = useWorkshopContext();
+
   useEffect(() => {
     init();
   }, []);
+
+  // Keep the shared header workshop switcher and this page's selector in sync.
+  useEffect(() => {
+    if (ctxWorkshopId && ctxWorkshopId !== selectedWorkshopId) {
+      handleWorkshopChange(ctxWorkshopId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctxWorkshopId]);
 
   async function init() {
     setLoading(true);
@@ -409,6 +420,7 @@ export default function AdminDashboardPage() {
 
   const handleWorkshopChange = async (id: string) => {
     setSelectedWorkshopId(id);
+    setCtxWorkshopId(id);
     const ws = workshops.find((w) => w.id === id);
     if (ws?.evaluationConfig) {
       const cfg = ws.evaluationConfig;
@@ -830,9 +842,15 @@ export default function AdminDashboardPage() {
           l.students?.some((ls: any) => ls.studentId === studentId || ls.student?.id === studentId)
         );
         if (currentLab) {
-          const res = await fetch(`/api/labs/${currentLab.id}/students/${studentId}`, { method: "DELETE" });
+          const res = await fetch(
+            `/api/labs/${currentLab.id}/students?studentId=${encodeURIComponent(studentId)}`,
+            { method: "DELETE" }
+          );
           if (res.ok) {
             await Promise.all([loadLabs(selectedWorkshopId), loadReports(selectedWorkshopId)]);
+          } else {
+            const d = await res.json().catch(() => ({}));
+            alert(d?.error?.message || "Failed to remove student from lab");
           }
         }
         return;
@@ -2375,7 +2393,7 @@ export default function AdminDashboardPage() {
                   </h3>
                 </div>
                 <p className="text-xs text-slate-600 font-mono mt-0.5">
-                  Lookup any candidate's details, credentials, and verify which laboratory track they are enrolled in.
+                  Lookup any candidate&apos;s details, credentials, and verify which laboratory track they are enrolled in.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -2457,7 +2475,7 @@ export default function AdminDashboardPage() {
                   <span>
                     Found <strong className="text-[#111111]">{searchedLabCandidates.length}</strong> matching candidate{searchedLabCandidates.length === 1 ? "" : "s"}
                   </span>
-                  {labStudentSearch && <span>Query: "{labStudentSearch}"</span>}
+                  {labStudentSearch && <span>Query: &quot;{labStudentSearch}&quot;</span>}
                 </div>
 
                 {searchedLabCandidates.length === 0 ? (
@@ -2564,7 +2582,7 @@ export default function AdminDashboardPage() {
             ) : (
               <div className="p-3 bg-[#F9F9F9] border border-[#111111] text-[11px] font-mono text-slate-600 flex flex-wrap items-center justify-between gap-2 shadow-[2px_2px_0px_#111111]">
                 <span>
-                  💡 Quick Student Lookup: Type any student's <strong>name</strong>, <strong>roll number</strong> (e.g. 2026BTCS227), or click a lab track below:
+                  💡 Quick Student Lookup: Type any student&apos;s <strong>name</strong>, <strong>roll number</strong> (e.g. 2026BTCS227), or click a lab track below:
                 </span>
                 <div className="flex items-center gap-1.5">
                   {labs.map((l) => (

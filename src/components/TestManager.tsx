@@ -868,7 +868,7 @@ export default function TestManager({
     }
   };
 
-  const useBankQuestion = (b: BankQuestion) => {
+  const applyBankQuestion = (b: BankQuestion) => {
     const opts = Array.isArray(b.options) ? (b.options as string[]) : [];
     setQuestions((prev) => [
       ...prev,
@@ -993,7 +993,7 @@ export default function TestManager({
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
                   <button
-                    onClick={() => useBankQuestion(b)}
+                    onClick={() => applyBankQuestion(b)}
                     className="px-2 py-1 border-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] text-[10px] font-mono font-bold hover:bg-[#F07C27] hover:text-white shadow-[1px_1px_0px_#111111] cursor-pointer"
                   >
                     Use

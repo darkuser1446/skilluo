@@ -869,7 +869,7 @@ export default function CurriculumPage() {
                 ) : (
                   <div className="bg-[#0A0A0A] text-emerald-400 border-[2px] border-[#111111] p-4 font-mono text-xs overflow-x-auto shadow-inner rounded-none max-h-[380px] leading-relaxed">
                     <div className="text-slate-500 mb-2 border-b border-white/10 pb-1 text-[10px]">
-                      // STDOUT STREAM SIMULATION
+                      {"// STDOUT STREAM SIMULATION"}
                     </div>
                     <pre>
                       <code>{selectedDay.consoleOutput}</code>

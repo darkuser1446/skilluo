@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { labMentorIds } from "@/lib/notify";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
@@ -34,7 +35,13 @@ export async function PATCH(
       if (status === "RESOLVED") {
         return errorResponse("Forbidden: Students cannot self-resolve doubts", "FORBIDDEN", 403);
       }
-    } else if (user.role !== "ADMIN" && user.role !== "MENTOR") {
+    } else if (user.role === "MENTOR") {
+      // Mentors may only change the status of doubts raised in their own lab
+      const assignedMentorIds = await labMentorIds(doubt.workshopId, doubt.labId);
+      if (!assignedMentorIds.includes(user.sub)) {
+        return errorResponse("Forbidden: You are not assigned to this lab", "FORBIDDEN", 403);
+      }
+    } else if (user.role !== "ADMIN") {
       return errorResponse("Forbidden", "FORBIDDEN", 403);
     }
 

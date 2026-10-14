@@ -101,9 +101,10 @@ export async function requireRole(allowedRoles: ("STUDENT" | "MENTOR" | "ADMIN")
 
 ### 4.2 API Response Envelope (`src/utils/apiResponse.ts`)
 ```typescript
-export function successResponse<T>(data: T, status?: number, meta?: Record<string, unknown>): NextResponse;
+export function successResponse<T>(data: T, meta?: ApiResponseMeta, status?: number): NextResponse;
 export function errorResponse(message: string, code?: string, status?: number, details?: unknown): NextResponse;
 ```
+*Note:* `successResponse` takes `(data, meta?, status?)` — callers pass `undefined` for `meta` when they only need a custom status, e.g. `successResponse({ x }, undefined, 201)`.
 *Contract Rules*:
 - Success responses return `{ success: true, data: T, meta?: ... }`.
 - Error responses return `{ success: false, error: { code: string, message: string, details?: ... } }`.
@@ -116,10 +117,11 @@ export interface EvaluationWeights {
   assessments: number; // default: 35
   attendance: number;  // default: 15
   exercises: number;   // default: 10
-  doubts: number;      // default: 10 (updated to ensure sum = 100)
+  doubts: number;      // default: 10
 }
 
-export function calculateOverallPerformance(studentId: string, workshopId: string, weights?: EvaluationWeights): Promise<OverallPerformance>;
+// Weights are read from Workshop.evaluationConfig; there is no weights argument.
+export function calculateOverallPerformance(studentId: string, workshopId: string): Promise<PerformanceBreakdown>;
 ```
 
 ---

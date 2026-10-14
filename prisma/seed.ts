@@ -213,6 +213,18 @@ async function main() {
     create: { labId: labB.id, studentId: student3.id },
   });
 
+  // Make re-seeding idempotent: users/workshops/labs above are upserts, but the
+  // sample content below (notes, assignments, sessions, assessments, feedback)
+  // has no natural unique key and would otherwise duplicate on every run.
+  const alreadySeeded = await prisma.assignment.findFirst({
+    where: { workshopId: workshop2026.id },
+    select: { id: true },
+  });
+  if (alreadySeeded) {
+    console.log("Cohort sample content already present — skipping content seed (no duplicates created).");
+    return;
+  }
+
   // 8. Create Learning Notes
   await prisma.note.create({
     data: {

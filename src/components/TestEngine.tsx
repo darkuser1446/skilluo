@@ -173,6 +173,7 @@ export default function TestEngine({
   const isTerminatingRef = useRef(false);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const autoSubmittedRef = useRef(false);
   const draftKey = `skillup-test-draft-${assessment.id}`;
 
   const currentQuestion = questions[currentIdx];
@@ -388,14 +389,21 @@ export default function TestEngine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizAnswers]);
 
-  // Countdown timer with auto-submit
+  // Countdown timer — a single interval lives for the whole component lifetime
+  // instead of being torn down and rebuilt on every tick.
   useEffect(() => {
-    if (timeLeft <= 0) {
-      formRef.current?.requestSubmit();
-      return;
-    }
-    const interval = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    const interval = setInterval(() => {
+      setTimeLeft((t) => (t > 0 ? t - 1 : 0));
+    }, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Auto-submit exactly once when the clock reaches zero.
+  useEffect(() => {
+    if (timeLeft <= 0 && !autoSubmittedRef.current) {
+      autoSubmittedRef.current = true;
+      formRef.current?.requestSubmit();
+    }
   }, [timeLeft]);
 
   // Auto-save heartbeat

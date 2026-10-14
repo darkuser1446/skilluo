@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useWorkshopContext } from "@/components/WorkshopContext";
 import Link from "next/link";
 import {
   Users,
@@ -126,6 +127,7 @@ export default function MentorDashboardPage() {
   const [annSuccess, setAnnSuccess] = useState(false);
 
   const [activeWsId, setActiveWsId] = useState<string>("");
+  const { activeWorkshopId: ctxWorkshopId } = useWorkshopContext();
 
   useEffect(() => {
     async function loadData() {
@@ -158,6 +160,15 @@ export default function MentorDashboardPage() {
     }
     loadData();
   }, []);
+
+  // Keep the shared header workshop switcher and this page in sync.
+  useEffect(() => {
+    if (ctxWorkshopId && ctxWorkshopId !== activeWsId) {
+      setActiveWsId(ctxWorkshopId);
+      fetchAllWorkshopData(ctxWorkshopId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctxWorkshopId]);
 
   const fetchAllWorkshopData = async (wsId: string) => {
     try {
@@ -1056,7 +1067,7 @@ export default function MentorDashboardPage() {
                   {activeLab?.students?.length > 0 && filteredRosterStudents.length === 0 && (
                     <tr>
                       <td colSpan={7} className="py-8 text-center text-slate-500 font-mono text-xs">
-                        No candidates match query: "{rosterSearch}"
+                        No candidates match query: &quot;{rosterSearch}&quot;
                       </td>
                     </tr>
                   )}
@@ -2181,7 +2192,7 @@ export default function MentorDashboardPage() {
                   )}
                   {activeLab?.students?.length > 0 && filteredAttendanceStudents.length === 0 && (
                     <div className="py-6 text-center text-slate-500 font-mono text-xs">
-                      No candidates match query: "{attendanceSearch}"
+                      No candidates match query: &quot;{attendanceSearch}&quot;
                     </div>
                   )}
                   {filteredAttendanceStudents.map((ls: any) => {

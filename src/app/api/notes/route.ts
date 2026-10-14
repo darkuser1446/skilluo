@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth";
+import { requireAuth, requireRole } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId");
 
@@ -14,8 +15,23 @@ export async function GET(req: NextRequest) {
       return errorResponse("workshopId query parameter is required", "BAD_REQUEST", 400);
     }
 
+    // Students only see general notes (no lab) plus notes for the lab(s) they
+    // belong to — never another lab's materials.
+    const where: Record<string, unknown> = { workshopId };
+    if (user.role === "STUDENT") {
+      const myLabs = await prisma.labStudent.findMany({
+        where: { studentId: user.sub, lab: { workshopId } },
+        select: { labId: true },
+      });
+      const labIds = myLabs.map((l) => l.labId);
+      where.OR = [
+        { labId: null },
+        ...(labIds.length > 0 ? [{ labId: { in: labIds } }] : []),
+      ];
+    }
+
     const notes = await prisma.note.findMany({
-      where: { workshopId },
+      where,
       include: { lab: true },
       orderBy: { createdAt: "desc" },
     });

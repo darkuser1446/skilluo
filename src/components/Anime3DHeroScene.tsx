@@ -253,7 +253,7 @@ export default function Anime3DHeroScene() {
                 <span className="text-white font-black underline decoration-[#F07C27]">main</span>() &#123;
               </div>
               <div className="pl-3 text-slate-400">
-                <span>// Zero-overhead systems programming</span>
+                <span>{"// Zero-overhead systems programming"}</span>
               </div>
               <div className="pl-3">
                 <span className="text-sky-300 font-bold">auto</span> student ={" "}

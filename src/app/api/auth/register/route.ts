@@ -6,6 +6,7 @@ import { signToken } from "@/lib/jwt";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { notifyMany } from "@/lib/notify";
+import { BCRYPT_ROUNDS, AUTH_COOKIE_MAX_AGE } from "@/lib/constants";
 
 const RegisterSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -81,9 +82,8 @@ export async function POST(req: NextRequest) {
       return errorResponse("User with this email already exists", "CONFLICT", 409);
     }
 
-    // Cost factor 8 gives 10x higher CPU throughput in serverless under burst load
     const [passwordHash, activeWorkshopId] = await Promise.all([
-      bcrypt.hash(data.password, 8),
+      bcrypt.hash(data.password, BCRYPT_ROUNDS),
       getActiveWorkshopId(),
     ]);
 
@@ -147,7 +147,9 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: AUTH_COOKIE_MAX_AGE,
+      // Explicit Date (as in /api/auth/login) so all browsers persist the cookie
+      expires: new Date(Date.now() + AUTH_COOKIE_MAX_AGE * 1000),
     });
 
     return response;

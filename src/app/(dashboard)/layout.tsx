@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import NotificationBell from "@/components/NotificationBell";
+import { WorkshopProvider, useWorkshopContext } from "@/components/WorkshopContext";
 import {
   LogOut,
   Calendar,
@@ -27,12 +28,12 @@ import {
   Terminal,
 } from "lucide-react";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
-  const [workshops, setWorkshops] = useState<any[]>([]);
-  const [activeWorkshopId, setActiveWorkshopId] = useState<string>("");
+  const { workshops, activeWorkshopId, setActiveWorkshopId } = useWorkshopContext();
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -66,20 +67,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         const meData = await meRes.json();
         setUser(meData.data.user);
-
-        try {
-          const wsRes = await fetch("/api/workshops");
-          if (wsRes.ok) {
-            const wsData = await wsRes.json();
-            const wsList = wsData.data.workshops || [];
-            setWorkshops(wsList);
-            if (wsList.length > 0) {
-              setActiveWorkshopId(wsList[0].id);
-            }
-          }
-        } catch {
-          // ignore
-        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -167,7 +154,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             {/* Workshop Dropdown Switcher */}
-            {workshops.length > 0 && (
+            {role !== "STUDENT" && workshops.length > 0 && (
               <div className="hidden md:flex items-center gap-2 pl-3 border-l-[2px] border-[#111111]">
                 <Calendar className="w-3.5 h-3.5 text-[#F07C27] flex-shrink-0" />
                 <div className="relative">
@@ -358,5 +345,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         SKILL UP // SUPER 60 INCUBATOR RUNTIME · ISO C++20/23 SPECIFICATION · NO COMPROMISE
       </footer>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <WorkshopProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </WorkshopProvider>
   );
 }

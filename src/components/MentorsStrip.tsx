@@ -65,7 +65,7 @@ export default function MentorsStrip() {
           EXPERT GUIDANCE
         </div>
         <h2 className="font-display font-black text-3xl sm:text-5xl text-white tracking-tight">
-          Guided by Mentors <span className="text-gradient-orange">Who've Built It</span>
+          Guided by Mentors <span className="text-gradient-orange">Who&apos;ve Built It</span>
         </h2>
         <p className="mt-3 text-base text-slate-300 max-w-xl mx-auto">
           Learn directly from senior practitioners and{" "}

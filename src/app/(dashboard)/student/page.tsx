@@ -1528,7 +1528,7 @@ export default function StudentDashboardPage() {
                 {selectedExercise.mySubmission && (
                   <div className="p-3 bg-[#e8f0fe] border-[2px] border-[#111111] text-xs font-mono shadow-[2px_2px_0px_#111111]">
                     <span className="text-blue-900 font-bold block mb-1">✓ Solution already submitted</span>
-                    <span className="text-slate-700 font-bold">Status: {selectedExercise.mySubmission.status} {selectedExercise.mySubmission.score !== undefined ? `| Score: ${selectedExercise.mySubmission.score}/${selectedExercise.maxScore}` : ""}</span>
+                    <span className="text-slate-700 font-bold">Status: {selectedExercise.mySubmission.status} {selectedExercise.mySubmission.score != null ? `| Score: ${selectedExercise.mySubmission.score}/${selectedExercise.maxScore}` : ""}</span>
                   </div>
                 )}
 
@@ -2563,7 +2563,7 @@ export default function StudentDashboardPage() {
                   </div>
 
                   <p className="text-[11px] text-slate-600 font-mono">
-                    Once your mentor clicks <span className="font-bold text-[#111111]">"Present"</span> next to your name, this evaluation terminal will unlock automatically.
+                    Once your mentor clicks <span className="font-bold text-[#111111]">&quot;Present&quot;</span> next to your name, this evaluation terminal will unlock automatically.
                   </p>
                 </div>
               );

@@ -34,7 +34,9 @@ export async function POST(req: NextRequest) {
         orderBy: [{ score: "desc" }, { submittedAt: "asc" }],
         take: data.count,
       });
-      targetIds = results.map((r) => r.studentId);
+      // Dedupe: a candidate with results in several assessments must not be
+      // counted more than once against the requested selection count.
+      targetIds = Array.from(new Set(results.map((r) => r.studentId)));
 
       // If fewer test results than count, fill up with enrollments
       if (targetIds.length < data.count) {

@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { BCRYPT_ROUNDS } from "@/lib/constants";
 
 export async function GET(req: NextRequest) {
   try {
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     const existing = await prisma.user.findUnique({ where: { email: data.email } });
     if (existing) return errorResponse("Email already registered", "CONFLICT", 409);
 
-    const passwordHash = await bcrypt.hash(data.password, 12);
+    const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
     const user = await prisma.user.create({
       data: {
         name: data.name,

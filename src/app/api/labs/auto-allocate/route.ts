@@ -50,7 +50,9 @@ export async function POST(req: NextRequest) {
         orderBy: [{ score: "desc" }, { submittedAt: "asc" }],
         take: quota,
       });
-      studentIds = results.map((r) => r.studentId);
+      // A student may hold results in multiple assessments — dedupe so nobody
+      // consumes two quota slots or ends up allocated to two labs.
+      studentIds = Array.from(new Set(results.map((r) => r.studentId)));
 
       if (studentIds.length < quota) {
         const topEnrollments = await prisma.workshopEnrollment.findMany({

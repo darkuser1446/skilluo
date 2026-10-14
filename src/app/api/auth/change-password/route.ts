@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { successResponse } from "@/utils/api-response";
 import { handleApiError, ApiError } from "@/utils/errors";
+import { BCRYPT_ROUNDS } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     const valid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!valid) throw new ApiError("Current password is incorrect", 401, "UNAUTHORIZED");
 
-    const newHash = await bcrypt.hash(newPassword, 12);
+    const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await prisma.user.update({ where: { id: user.id }, data: { passwordHash: newHash } });
 
     return successResponse({ message: "Password updated successfully" });

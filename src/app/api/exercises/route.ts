@@ -6,7 +6,7 @@ import { handleApiError, ApiError } from "@/utils/errors";
 
 export async function GET(req: NextRequest) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const workshopId = searchParams.get("workshopId") || undefined;
     const labId = searchParams.get("labId") || undefined;
@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
         id: true,
         title: true,
         description: true,
+        problemStatement: true,
         difficulty: true,
         topic: true,
         workshopId: true,
@@ -33,11 +34,28 @@ export async function GET(req: NextRequest) {
         dueDate: true,
         maxScore: true,
         createdAt: true,
+        examples: true,
+        inputFormat: true,
+        outputFormat: true,
+        constraints: true,
+        sampleInput: true,
+        sampleOutput: true,
         _count: { select: { submissions: true } },
       },
     });
 
-    return successResponse({ exercises });
+    // Attach the caller's own submission so the student workspace can render the
+    // problem statement, sample I/O, and "already submitted" state in one call.
+    const mySubmissions = await prisma.exerciseSubmission.findMany({
+      where: { studentId: user.sub, exerciseId: { in: exercises.map((e) => e.id) } },
+    });
+    const submissionByExercise = new Map(mySubmissions.map((s) => [s.exerciseId, s]));
+    const enriched = exercises.map((e) => ({
+      ...e,
+      mySubmission: submissionByExercise.get(e.id) ?? null,
+    }));
+
+    return successResponse({ exercises: enriched });
   } catch (err) {
     return handleApiError(err);
   }
