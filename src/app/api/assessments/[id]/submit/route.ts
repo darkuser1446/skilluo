@@ -233,6 +233,22 @@ export async function POST(
       violationReason: violationReason || null,
       message:
         "Assessment submitted successfully. Your score has been calculated.",
+      questions: assessment.questions.map((q) => {
+        const studentAnswer = (answers as any)?.[q.id] || null;
+        const isCorrect =
+          q.correctAnswer &&
+          studentAnswer &&
+          String(studentAnswer).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase();
+        return {
+          id: q.id,
+          prompt: q.prompt,
+          options: q.options,
+          marks: q.marks,
+          studentAnswer,
+          isCorrect: Boolean(isCorrect),
+          correctAnswer: q.correctAnswer,
+        };
+      }),
     });
   } catch (err) {
     return handleApiError(err);

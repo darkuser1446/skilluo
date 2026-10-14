@@ -81,11 +81,15 @@ export async function GET(
           : [],
         questions: myResult
           ? assessment.questions.map((q) => {
-              const studentAnswer = (myResult.answers as any)?.[q.id] || null;
+              const answersObj =
+                typeof myResult.answers === "string"
+                  ? JSON.parse(myResult.answers)
+                  : myResult.answers || {};
+              const studentAnswer = (answersObj as any)?.[q.id] || null;
               const isCorrect =
                 q.correctAnswer &&
                 studentAnswer &&
-                String(studentAnswer).trim() === String(q.correctAnswer).trim();
+                String(studentAnswer).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase();
               return {
                 id: q.id,
                 prompt: q.prompt,

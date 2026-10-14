@@ -39,6 +39,7 @@ import {
   ShieldAlert,
   Shield,
   Lock,
+  X,
 } from "lucide-react";
 import LeaderboardModal from "@/components/LeaderboardModal";
 import TestEngine from "@/components/TestEngine";
@@ -100,6 +101,8 @@ export default function StudentDashboardPage() {
   const [quizStartedAt, setQuizStartedAt] = useState<number>(0);
   const [quizError, setQuizError] = useState<string | null>(null);
   const [leaderboardAssessmentId, setLeaderboardAssessmentId] = useState<string | null>(null);
+  const [reviewFilter, setReviewFilter] = useState<"all" | "wrong" | "correct" | "unanswered">("all");
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
 
   // Feedback state
   const [rating, setRating] = useState(5);
@@ -181,6 +184,27 @@ export default function StudentDashboardPage() {
 
     init();
   }, []);
+
+  useEffect(() => {
+    if (
+      activeAssessment?.id &&
+      quizResult &&
+      (!quizResult.questions || quizResult.questions.length === 0) &&
+      !loadingQuestions &&
+      !quizResult.isLocked
+    ) {
+      setLoadingQuestions(true);
+      fetch(`/api/assessments/${activeAssessment.id}/results`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.data?.questions) {
+            setQuizResult((prev: any) => (prev ? { ...prev, questions: data.data.questions } : prev));
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingQuestions(false));
+    }
+  }, [activeAssessment?.id, quizResult?.assessmentId]);
 
   const handleAssignmentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -327,6 +351,7 @@ export default function StudentDashboardPage() {
   const handleViewStudentResult = async (as: any, res: any) => {
     const isLocked = Boolean(res?.isLocked || res?.status === "LOCKED");
     setActiveAssessment(as);
+    setReviewFilter("all");
     setQuizResult({
       submitted: true,
       assessmentId: as.id,
@@ -347,6 +372,7 @@ export default function StudentDashboardPage() {
       history: true,
       questions: [],
     });
+    setLoadingQuestions(true);
     try {
       const rRes = await fetch(`/api/assessments/${as.id}/results`);
       if (rRes.ok) {
@@ -355,7 +381,9 @@ export default function StudentDashboardPage() {
           setQuizResult((prev: any) => (prev ? { ...prev, questions: rData.data.questions } : prev));
         }
       }
-    } catch {}
+    } catch {} finally {
+      setLoadingQuestions(false);
+    }
   };
 
   const handleSubmitQuiz = async (
@@ -379,6 +407,7 @@ export default function StudentDashboardPage() {
 
       if (res.ok) {
         const data = await res.json();
+        setReviewFilter("all");
         setQuizResult(data.data);
         try {
           sessionStorage.removeItem(`skillup-test-draft-${activeAssessment.id}`);
@@ -403,23 +432,7 @@ export default function StudentDashboardPage() {
               setAssessments(list);
               const mine = list.find((a: any) => a.id === activeAssessment.id)?.results?.[0];
               if (mine) {
-                setQuizResult({
-                  submitted: true,
-                  assessmentId: activeAssessment.id,
-                  assessmentTitle: activeAssessment.title,
-                  score: mine.score,
-                  totalMarks: activeAssessment.totalMarks,
-                  correctCount: mine.correctCount,
-                  incorrectCount: mine.incorrectCount,
-                  unansweredCount: mine.unansweredCount,
-                  durationSec: mine.durationSec,
-                  answeredCount: activeAssessment.questions.length,
-                  totalQuestions: activeAssessment.questions.length,
-                  status: mine.status,
-                  isLocked: mine.isLocked,
-                  violationReason: mine.violationReason,
-                  submittedAt: mine.submittedAt,
-                });
+                await handleViewStudentResult(activeAssessment, mine);
                 return;
               }
             }
@@ -2121,7 +2134,7 @@ export default function StudentDashboardPage() {
 
       {/* ══ TEST RESULT & LOCKOUT SCREEN ══ */}
       {activeTab === "assessments" && activeAssessment && quizResult && (
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           {quizResult.isLocked || quizResult.status === "LOCKED" || quizResult.status === "DISQUALIFIED" || quizResult.disqualified ? (
             /* Dedicated Neo-Brutalist Locked Out Screen */
             <div className="p-7 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] space-y-6 text-left">
@@ -2205,113 +2218,446 @@ export default function StudentDashboardPage() {
                     setActiveAssessment(null);
                     setQuizResult(null);
                   }}
-                  className="neo-btn w-full py-3 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2"
-                >
-                  ← Return to Assessments List
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* Verified Official Test Scorecard & Receipt Screen */
-            <div className="p-7 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] text-center space-y-6">
-              {/* Submission Icon & Header */}
-              <div className="space-y-3">
-                <div className="w-16 h-16 bg-emerald-100 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center mx-auto text-emerald-800">
-                  <CheckCircle2 className="w-9 h-9 stroke-[2.5]" />
-                </div>
-                <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-900 border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase tracking-wider shadow-[2px_2px_0px_#111111]">
-                  [ ✓ TEST SUBMITTED & SCORED ]
-                </span>
-                <h3 className="font-display font-black text-2xl sm:text-3xl uppercase text-[#111111] tracking-tight">
-                  Assessment Completed!
-                </h3>
-                <p className="text-slate-600 font-mono text-xs max-w-lg mx-auto">
-                  Your answers have been automatically graded against predefined answer criteria.
-                </p>
-              </div>
-
-              {/* Official Score & Accuracy Grid */}
-              <div className="p-5 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[2px] border-[#111111] pb-3 gap-2">
-                  <div className="text-left">
-                    <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Total Score Achieved</span>
-                    <span className="font-display font-black text-3xl sm:text-4xl text-[#111111]">
-                      {quizResult.score ?? 0} <span className="text-lg text-slate-500 font-mono">/ {activeAssessment.totalMarks || quizResult.totalMarks || 100}</span>
-                    </span>
-                  </div>
-                  <div className="text-left sm:text-right">
-                    <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Score Percentage</span>
-                    <span className="font-display font-black text-2xl text-[#F07C27]">
-                      {Math.round(((quizResult.score ?? 0) / (activeAssessment.totalMarks || quizResult.totalMarks || 100)) * 100)}%
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 font-mono text-xs">
-                  <div className="p-3 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-                    <span className="text-[10px] text-emerald-800 uppercase font-black block">Correct</span>
-                    <span className="font-black text-xl text-emerald-700">✓ {quizResult.correctCount ?? 0}</span>
-                  </div>
-                  <div className="p-3 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-                    <span className="text-[10px] text-rose-800 uppercase font-black block">Incorrect</span>
-                    <span className="font-black text-xl text-rose-700">✕ {quizResult.incorrectCount ?? 0}</span>
-                  </div>
-                  <div className="p-3 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111]">
-                    <span className="text-[10px] text-slate-600 uppercase font-bold block">Unanswered</span>
-                    <span className="font-black text-xl text-slate-800">{quizResult.unansweredCount ?? 0}</span>
-                  </div>
-                </div>
-
-                {/* View Leaderboard Button */}
-                <button
-                  type="button"
-                  onClick={() => setLeaderboardAssessmentId(activeAssessment.id)}
-                  className="w-full py-3 bg-[#FFB703] hover:bg-[#ffa700] text-[#111111] font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center gap-2 cursor-pointer transition-all"
-                >
-                  <Trophy className="w-4 h-4 text-[#111111]" />
-                  <span>View Official Test Leaderboard & Cohort Rankings →</span>
-                </button>
-              </div>
-
-              {/* Candidate & Assessment Verification Dossier */}
-              <div className="p-4 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-left font-mono text-xs space-y-2.5">
-                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
-                  <span className="text-slate-600 font-bold uppercase">Assessment:</span>
-                  <span className="text-[#111111] font-black uppercase text-right ml-2">{activeAssessment.title}</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
-                  <span className="text-slate-600 font-bold uppercase">Candidate Name:</span>
-                  <span className="text-[#111111] font-black">{user?.name}</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
-                  <span className="text-slate-600 font-bold uppercase">Registration / Roll No:</span>
-                  <span className="text-[#111111] font-black">{user?.rollNumber || "N/A"}</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
-                  <span className="text-slate-600 font-bold uppercase">Submitted At:</span>
-                  <span className="text-[#111111] font-bold">
-                    {new Date(quizResult.submittedAt || Date.now()).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between pt-0.5">
-                  <span className="text-slate-600 font-bold uppercase">Attempt Policy:</span>
-                  <span className="text-[#111111] font-black">
-                    1 of 1 Attempts Completed (Submissions Locked)
-                  </span>
-                </div>
-              </div>
-
-              {/* Return Button */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
                   className="neo-btn w-full py-3 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[3px_3px_0px_#111111]"
                 >
                   ← Return to Assessments List
                 </button>
               </div>
             </div>
+          ) : (
+            <>
+              {/* Verified Official Test Scorecard & Receipt Screen */}
+              <div className="p-7 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] text-center space-y-6">
+                {/* Submission Icon & Header */}
+                <div className="space-y-3">
+                  <div className="w-16 h-16 bg-emerald-100 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center mx-auto text-emerald-800">
+                    <CheckCircle2 className="w-9 h-9 stroke-[2.5]" />
+                  </div>
+                  <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-900 border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase tracking-wider shadow-[2px_2px_0px_#111111]">
+                    [ ✓ TEST SUBMITTED & SCORED ]
+                  </span>
+                  <h3 className="font-display font-black text-2xl sm:text-3xl uppercase text-[#111111] tracking-tight">
+                    Assessment Completed!
+                  </h3>
+                  <p className="text-slate-600 font-mono text-xs max-w-lg mx-auto">
+                    Your answers have been automatically graded against predefined answer criteria.
+                  </p>
+                </div>
+
+                {/* Official Score & Accuracy Grid */}
+                <div className="p-5 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[2px] border-[#111111] pb-3 gap-2">
+                    <div className="text-left">
+                      <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Total Score Achieved</span>
+                      <span className="font-display font-black text-3xl sm:text-4xl text-[#111111]">
+                        {quizResult.score ?? 0} <span className="text-lg text-slate-500 font-mono">/ {activeAssessment.totalMarks || quizResult.totalMarks || 100}</span>
+                      </span>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Score Percentage</span>
+                      <span className="font-display font-black text-2xl text-[#F07C27]">
+                        {Math.round(((quizResult.score ?? 0) / (activeAssessment.totalMarks || quizResult.totalMarks || 100)) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Interactive Accuracy Buttons */}
+                  <div className="grid grid-cols-3 gap-3 font-mono text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter(reviewFilter === "correct" ? "all" : "correct")}
+                      className={`p-3 border-[2px] border-[#111111] text-left transition-all cursor-pointer ${
+                        reviewFilter === "correct"
+                          ? "bg-emerald-100 ring-2 ring-emerald-600 shadow-[3px_3px_0px_#111111]"
+                          : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-emerald-50"
+                      }`}
+                    >
+                      <span className="text-[10px] text-emerald-800 uppercase font-black block">Correct</span>
+                      <span className="font-black text-xl text-emerald-700">✓ {quizResult.correctCount ?? 0}</span>
+                      <span className="text-[9px] text-slate-500 font-normal block mt-0.5">Click to view</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter(reviewFilter === "wrong" ? "all" : "wrong")}
+                      className={`p-3 border-[2px] border-[#111111] text-left transition-all cursor-pointer ${
+                        reviewFilter === "wrong"
+                          ? "bg-rose-100 ring-2 ring-rose-600 shadow-[3px_3px_0px_#111111]"
+                          : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-rose-50"
+                      }`}
+                    >
+                      <span className="text-[10px] text-rose-800 uppercase font-black block">Incorrect</span>
+                      <span className="font-black text-xl text-rose-700">✕ {quizResult.incorrectCount ?? 0}</span>
+                      <span className="text-[9px] text-slate-500 font-normal block mt-0.5">Click to view</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter(reviewFilter === "unanswered" ? "all" : "unanswered")}
+                      className={`p-3 border-[2px] border-[#111111] text-left transition-all cursor-pointer ${
+                        reviewFilter === "unanswered"
+                          ? "bg-amber-100 ring-2 ring-amber-600 shadow-[3px_3px_0px_#111111]"
+                          : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-amber-50"
+                      }`}
+                    >
+                      <span className="text-[10px] text-slate-600 uppercase font-bold block">Unanswered</span>
+                      <span className="font-black text-xl text-slate-800">{quizResult.unansweredCount ?? 0}</span>
+                      <span className="text-[9px] text-slate-500 font-normal block mt-0.5">Click to view</span>
+                    </button>
+                  </div>
+
+                  {/* View Leaderboard Button */}
+                  <button
+                    type="button"
+                    onClick={() => setLeaderboardAssessmentId(activeAssessment.id)}
+                    className="w-full py-3 bg-[#FFB703] hover:bg-[#ffa700] text-[#111111] font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <Trophy className="w-4 h-4 text-[#111111]" />
+                    <span>View Official Test Leaderboard & Cohort Rankings →</span>
+                  </button>
+                </div>
+
+                {/* Candidate & Assessment Verification Dossier */}
+                <div className="p-4 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-left font-mono text-xs space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                    <span className="text-slate-600 font-bold uppercase">Assessment:</span>
+                    <span className="text-[#111111] font-black uppercase text-right ml-2">{activeAssessment.title}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                    <span className="text-slate-600 font-bold uppercase">Candidate Name:</span>
+                    <span className="text-[#111111] font-black">{user?.name}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                    <span className="text-slate-600 font-bold uppercase">Registration / Roll No:</span>
+                    <span className="text-[#111111] font-black">{user?.rollNumber || "N/A"}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                    <span className="text-slate-600 font-bold uppercase">Submitted At:</span>
+                    <span className="text-[#111111] font-bold">
+                      {new Date(quizResult.submittedAt || Date.now()).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-0.5">
+                    <span className="text-slate-600 font-bold uppercase">Attempt Policy:</span>
+                    <span className="text-[#111111] font-black">
+                      1 of 1 Attempts Completed (Submissions Locked)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Return & Jump to Solutions Buttons */}
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
+                    className="neo-btn flex-1 w-full py-3 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[3px_3px_0px_#111111]"
+                  >
+                    ← Return to Assessments List
+                  </button>
+                  <a
+                    href="#solutions-review"
+                    className="w-full sm:w-auto px-5 py-3 bg-[#FFF0E5] hover:bg-[#ffe2cd] text-[#F07C27] border-[2px] border-[#111111] font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[3px_3px_0px_#111111]"
+                  >
+                    ↓ View Question Solutions
+                  </a>
+                </div>
+              </div>
+
+              {/* ══ DETAILED QUESTION & ANSWER REVIEW ══ */}
+              <div id="solutions-review" className="p-6 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] text-left space-y-6">
+                {/* Header with Title and Filter Tabs */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b-[3px] border-[#111111] gap-4">
+                  <div>
+                    <span className="inline-block px-2.5 py-0.5 bg-[#FFF0E5] text-[#F07C27] border-[2px] border-[#111111] font-mono text-[10px] font-black uppercase tracking-wider shadow-[2px_2px_0px_#111111] mb-1.5">
+                      [ DETAILED SUBMISSION AUDIT ]
+                    </span>
+                    <h4 className="font-display font-black text-xl sm:text-2xl uppercase text-[#111111] tracking-tight">
+                      Question & Answer Solutions
+                    </h4>
+                    <p className="text-slate-600 font-mono text-xs mt-0.5">
+                      Inspect your answers against the official answer key and review mistakes.
+                    </p>
+                  </div>
+
+                  {/* Filter Tabs */}
+                  <div className="flex items-center gap-1.5 flex-wrap font-mono text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter("all")}
+                      className={`px-3 py-1.5 border-[2px] border-[#111111] font-black uppercase tracking-wider text-[11px] transition-all cursor-pointer ${
+                        reviewFilter === "all"
+                          ? "bg-[#111111] text-white shadow-[2px_2px_0px_#F07C27]"
+                          : "bg-white text-slate-800 hover:bg-[#FFF0E5] shadow-[2px_2px_0px_#111111]"
+                      }`}
+                    >
+                      All ({quizResult.questions?.length ?? quizResult.totalQuestions ?? 0})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter("wrong")}
+                      className={`px-3 py-1.5 border-[2px] border-[#111111] font-black uppercase tracking-wider text-[11px] transition-all cursor-pointer ${
+                        reviewFilter === "wrong"
+                          ? "bg-rose-600 text-white shadow-[2px_2px_0px_#111111]"
+                          : "bg-white text-rose-700 hover:bg-rose-50 shadow-[2px_2px_0px_#111111]"
+                      }`}
+                    >
+                      ✕ Wrong ({quizResult.incorrectCount ?? 0})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter("correct")}
+                      className={`px-3 py-1.5 border-[2px] border-[#111111] font-black uppercase tracking-wider text-[11px] transition-all cursor-pointer ${
+                        reviewFilter === "correct"
+                          ? "bg-emerald-600 text-white shadow-[2px_2px_0px_#111111]"
+                          : "bg-white text-emerald-700 hover:bg-emerald-50 shadow-[2px_2px_0px_#111111]"
+                      }`}
+                    >
+                      ✓ Correct ({quizResult.correctCount ?? 0})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReviewFilter("unanswered")}
+                      className={`px-3 py-1.5 border-[2px] border-[#111111] font-black uppercase tracking-wider text-[11px] transition-all cursor-pointer ${
+                        reviewFilter === "unanswered"
+                          ? "bg-amber-600 text-white shadow-[2px_2px_0px_#111111]"
+                          : "bg-white text-amber-800 hover:bg-amber-50 shadow-[2px_2px_0px_#111111]"
+                      }`}
+                    >
+                      ⚠️ Unanswered ({quizResult.unansweredCount ?? 0})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Questions Body */}
+                {loadingQuestions ? (
+                  <div className="p-10 text-center font-mono text-xs text-slate-500 space-y-3">
+                    <div className="w-8 h-8 border-4 border-[#F07C27] border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="font-bold uppercase tracking-wider">Loading detailed question solutions...</p>
+                  </div>
+                ) : !quizResult.questions || quizResult.questions.length === 0 ? (
+                  <div className="p-6 bg-amber-50 border-[2px] border-amber-600 text-amber-950 font-mono text-xs text-center space-y-3 shadow-[3px_3px_0px_#111111]">
+                    <p className="font-bold">No individual question breakdown was loaded for this submission.</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (activeAssessment?.id) {
+                          setLoadingQuestions(true);
+                          fetch(`/api/assessments/${activeAssessment.id}/results`)
+                            .then((res) => (res.ok ? res.json() : null))
+                            .then((data) => {
+                              if (data?.data?.questions) {
+                                setQuizResult((prev: any) => (prev ? { ...prev, questions: data.data.questions } : prev));
+                              }
+                            })
+                            .catch(() => {})
+                            .finally(() => setLoadingQuestions(false));
+                        }
+                      }}
+                      className="px-4 py-2 bg-[#111111] hover:bg-[#F07C27] text-white font-bold uppercase tracking-wider shadow-[2px_2px_0px_#111111] cursor-pointer"
+                    >
+                      🔄 Fetch Detailed Solutions
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {(() => {
+                      const allQs = quizResult.questions || [];
+                      const filtered = allQs.filter((q: any) => {
+                        if (reviewFilter === "wrong") return !q.isCorrect && q.studentAnswer;
+                        if (reviewFilter === "correct") return q.isCorrect;
+                        if (reviewFilter === "unanswered") return !q.studentAnswer;
+                        return true;
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="p-8 bg-[#F9F9F9] border-[2px] border-[#111111] text-center font-mono text-xs text-slate-600 space-y-3">
+                            <p>
+                              No questions match the filter <strong>"{reviewFilter.toUpperCase()}"</strong>.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setReviewFilter("all")}
+                              className="px-3 py-1.5 bg-[#111111] text-white font-bold uppercase text-[11px] shadow-[2px_2px_0px_#111111] cursor-pointer"
+                            >
+                              View All Questions
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return filtered.map((q: any, idx: number) => {
+                        const originalIndex = allQs.findIndex((orig: any) => orig.id === q.id);
+                        const qNumber = originalIndex >= 0 ? originalIndex + 1 : idx + 1;
+                        const isWrong = !q.isCorrect && Boolean(q.studentAnswer);
+                        const isCorrect = Boolean(q.isCorrect);
+                        const isUnanswered = !q.studentAnswer;
+
+                        const parsedOptions: string[] = Array.isArray(q.options)
+                          ? q.options
+                          : typeof q.options === "string"
+                          ? (() => {
+                              try {
+                                const p = JSON.parse(q.options);
+                                return Array.isArray(p) ? p : [];
+                              } catch {
+                                return [];
+                              }
+                            })()
+                          : [];
+
+                        return (
+                          <div
+                            key={q.id || idx}
+                            className={`p-5 sm:p-6 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-4 ${
+                              isCorrect
+                                ? "bg-white"
+                                : isWrong
+                                ? "bg-rose-50/40"
+                                : "bg-amber-50/40"
+                            }`}
+                          >
+                            {/* Question Header */}
+                            <div className="flex items-center justify-between flex-wrap gap-2 border-b-[2px] border-[#111111] pb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="px-2.5 py-1 bg-[#111111] text-white font-mono text-xs font-black uppercase tracking-wider">
+                                  Question {qNumber}
+                                </span>
+                                <span className="font-mono text-xs font-bold text-slate-600">
+                                  [{q.marks ?? 5} Marks]
+                                </span>
+                              </div>
+                              <div>
+                                {isCorrect && (
+                                  <span className="px-3 py-1 bg-emerald-100 text-emerald-900 border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase shadow-[2px_2px_0px_#111111] flex items-center gap-1">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" /> Correct (+{q.marks ?? 5} Marks)
+                                  </span>
+                                )}
+                                {isWrong && (
+                                  <span className="px-3 py-1 bg-rose-100 text-rose-900 border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase shadow-[2px_2px_0px_#111111] flex items-center gap-1">
+                                    <X className="w-3.5 h-3.5 text-rose-700" /> Incorrect (0 Marks)
+                                  </span>
+                                )}
+                                {isUnanswered && (
+                                  <span className="px-3 py-1 bg-amber-100 text-amber-900 border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase shadow-[2px_2px_0px_#111111] flex items-center gap-1">
+                                    <AlertTriangle className="w-3.5 h-3.5 text-amber-700" /> Unanswered (0 Marks)
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Question Prompt */}
+                            <div className="font-mono text-sm text-[#111111] whitespace-pre-wrap leading-relaxed font-semibold">
+                              {q.prompt}
+                            </div>
+
+                            {/* Options List */}
+                            {parsedOptions.length > 0 ? (
+                              <div className="space-y-2 pt-1">
+                                <span className="text-[10px] font-mono font-bold uppercase text-slate-500 tracking-wider block">
+                                  Options:
+                                </span>
+                                <div className="grid grid-cols-1 gap-2 font-mono text-xs">
+                                  {parsedOptions.map((option: string, optIdx: number) => {
+                                    const optLetter = String.fromCharCode(65 + optIdx);
+                                    const isStudentPick =
+                                      q.studentAnswer &&
+                                      String(option).trim().toLowerCase() === String(q.studentAnswer).trim().toLowerCase();
+                                    const isCorrectPick =
+                                      q.correctAnswer &&
+                                      String(option).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase();
+
+                                    let containerStyle = "bg-white border-[#111111]/30 text-slate-700";
+                                    let badge = null;
+
+                                    if (isStudentPick && isCorrectPick) {
+                                      containerStyle = "bg-emerald-100 border-[2px] border-emerald-700 text-emerald-950 font-bold shadow-[2px_2px_0px_#059669]";
+                                      badge = (
+                                        <span className="px-2 py-0.5 bg-emerald-700 text-white text-[10px] font-black uppercase tracking-wider">
+                                          ✓ Your Answer (Correct)
+                                        </span>
+                                      );
+                                    } else if (isStudentPick && !isCorrectPick) {
+                                      containerStyle = "bg-rose-100 border-[2px] border-rose-700 text-rose-950 font-bold shadow-[2px_2px_0px_#e11d48]";
+                                      badge = (
+                                        <span className="px-2 py-0.5 bg-rose-700 text-white text-[10px] font-black uppercase tracking-wider">
+                                          ✕ Your Answer (Incorrect)
+                                        </span>
+                                      );
+                                    } else if (isCorrectPick) {
+                                      containerStyle = "bg-emerald-50 border-[2px] border-dashed border-emerald-700 text-emerald-950 font-bold shadow-[2px_2px_0px_#111111]";
+                                      badge = (
+                                        <span className="px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider">
+                                          ✓ Correct Answer
+                                        </span>
+                                      );
+                                    }
+
+                                    return (
+                                      <div
+                                        key={optIdx}
+                                        className={`p-3 border flex items-center justify-between gap-3 transition-all ${containerStyle}`}
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <span className="w-6 h-6 flex items-center justify-center border border-[#111111] bg-white text-[#111111] font-black text-xs flex-shrink-0 shadow-[1px_1px_0px_#111111]">
+                                            {optLetter}
+                                          </span>
+                                          <span className="text-left font-medium">{option}</span>
+                                        </div>
+                                        {badge && <div className="flex-shrink-0">{badge}</div>}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {/* Summary Comparison Row */}
+                            <div className="p-3 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] font-mono text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div>
+                                <span className="text-[10px] text-slate-500 font-bold uppercase block">Your Submitted Answer:</span>
+                                <span className={`font-black text-sm ${isCorrect ? "text-emerald-700" : isWrong ? "text-rose-700" : "text-slate-400 italic"}`}>
+                                  {q.studentAnswer ? (
+                                    <>
+                                      {isCorrect ? "✓ " : "✕ "}
+                                      {q.studentAnswer}
+                                    </>
+                                  ) : (
+                                    "No answer submitted (Unanswered)"
+                                  )}
+                                </span>
+                              </div>
+                              <div className="text-left sm:text-right">
+                                <span className="text-[10px] text-slate-500 font-bold uppercase block">Official Correct Answer:</span>
+                                <span className="font-black text-sm text-emerald-900 bg-emerald-100 px-2 py-0.5 border border-emerald-600 inline-block shadow-[1px_1px_0px_#111111]">
+                                  ✓ {q.correctAnswer}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                )}
+
+                {/* Bottom Actions */}
+                <div className="pt-4 border-t-[3px] border-[#111111] flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
+                    className="neo-btn w-full sm:w-auto px-6 py-3 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[3px_3px_0px_#111111]"
+                  >
+                    ← Return to Assessments List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    className="w-full sm:w-auto px-5 py-3 bg-white hover:bg-slate-50 text-[#111111] border-[2px] border-[#111111] font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[2px_2px_0px_#111111]"
+                  >
+                    ↑ Back to Top of Scorecard
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
