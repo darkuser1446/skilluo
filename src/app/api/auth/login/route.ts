@@ -7,17 +7,22 @@ import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 
 const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
+  email: z.string().min(1, "Email or Roll Number is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, password } = LoginSchema.parse(body);
+    const { email: identifierInput, password } = LoginSchema.parse(body);
+    const identifier = identifierInput.trim();
+    const isEmail = identifier.includes("@");
 
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+    // Allow login by email OR roll number (case-insensitive)
+    const user = await prisma.user.findFirst({
+      where: isEmail
+        ? { email: { equals: identifier.toLowerCase(), mode: "insensitive" } }
+        : { rollNumber: { equals: identifier, mode: "insensitive" } },
       include: {
         mentorProfile: true,
       },

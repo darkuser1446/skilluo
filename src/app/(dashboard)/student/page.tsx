@@ -55,6 +55,8 @@ export default function StudentDashboardPage() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [myFeedbacks, setMyFeedbacks] = useState<any[]>([]);
   const [doubts, setDoubts] = useState<any[]>([]);
   const [assessments, setAssessments] = useState<any[]>([]);
   const [exercises, setExercises] = useState<any[]>([]);
@@ -157,7 +159,8 @@ export default function StudentDashboardPage() {
               fetch(`/api/attendance/sessions?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
               fetch(`/api/doubts?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
               fetch(`/api/announcements?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
-            ]).then(([exData, noteData, sessData, doubtData, annData]) => {
+              fetch(`/api/feedback/my-feedback?workshopId=${wsId}`).then((r) => r.ok ? r.json() : null),
+            ]).then(([exData, noteData, sessData, doubtData, annData, fbData]) => {
               if (exData?.data?.exercises) {
                 const exList = exData.data.exercises;
                 setExercises(exList);
@@ -171,10 +174,14 @@ export default function StudentDashboardPage() {
                 if (dList.length > 0) setSelectedDoubt(dList[0]);
               }
               if (annData?.data?.announcements) setAnnouncements(annData.data.announcements);
-            }).catch(console.error);
+              if (fbData?.data?.feedbacks) setMyFeedbacks(fbData.data.feedbacks);
+            }).catch(console.error).finally(() => {
+              setSessionsLoading(false);
+            });
           }
         } else {
           setLoading(false);
+          setSessionsLoading(false);
         }
       } catch (err) {
         console.error(err);
@@ -449,7 +456,11 @@ export default function StudentDashboardPage() {
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!workshopId || !user?.labStudents?.[0]?.labId) return;
+    if (feedbackComment.trim().length < 5) {
+      alert("Please write at least 5 characters in your feedback review.");
+      return;
+    }
+
     setSubmittingFeedback(true);
     setFeedbackSuccess(false);
 
@@ -473,7 +484,7 @@ export default function StudentDashboardPage() {
           labId,
           mentorId,
           rating,
-          comment: feedbackComment,
+          comment: feedbackComment.trim(),
           category: feedbackCategory,
           isAnonymous,
         }),
@@ -483,8 +494,15 @@ export default function StudentDashboardPage() {
       if (res.ok) {
         setFeedbackSuccess(true);
         setFeedbackComment("");
+        if (d?.data?.feedback) {
+          setMyFeedbacks((prev) => [d.data.feedback, ...prev]);
+        }
       } else {
-        alert(d?.error?.message || "Failed to submit feedback.");
+        const specificError =
+          d?.error?.details?.fieldErrors?.comment?.[0] ||
+          d?.error?.message ||
+          "Failed to submit feedback.";
+        alert(specificError);
       }
     } catch (err) {
       alert("Error submitting feedback. Please try again.");
@@ -2861,13 +2879,74 @@ export default function StudentDashboardPage() {
           </div>
 
           {(() => {
-            const isMarkedPresent = Boolean(
-              sessions?.some((s: any) =>
-                s.attendanceRecords?.some((r: any) => r.status === "PRESENT")
-              )
+            if (sessionsLoading) {
+              return (
+                <div className="p-8 bg-[#F4F3F3] border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] text-center space-y-3">
+                  <div className="w-8 h-8 border-4 border-[#111111] border-t-[#F07C27] rounded-full animate-spin mx-auto" />
+                  <p className="font-mono text-xs font-bold text-[#111111] uppercase tracking-wider">
+                    Verifying Laboratory Attendance Records...
+                  </p>
+                </div>
+              );
+            }
+
+            const todayIST = new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            }).format(new Date());
+
+            // Check if already reviewed today
+            const alreadySubmittedToday = Boolean(
+              myFeedbacks?.some((fb: any) => {
+                const fbDate = new Intl.DateTimeFormat("en-CA", {
+                  timeZone: "Asia/Kolkata",
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                }).format(new Date(fb.createdAt));
+                return fbDate === todayIST;
+              })
             );
 
-            if (!isMarkedPresent) {
+            if (alreadySubmittedToday) {
+              return (
+                <div className="p-8 bg-[#E6F4EA] border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] text-center space-y-4">
+                  <div className="w-16 h-16 bg-white border-[3px] border-[#111111] flex items-center justify-center mx-auto shadow-[3px_3px_0px_#111111]">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono font-black uppercase text-emerald-800 bg-emerald-100 border border-[#111111] px-2.5 py-0.5 inline-block shadow-[1px_1px_0px_#111111]">
+                      [ REVIEW RECORDED FOR TODAY // COMPLETED ]
+                    </span>
+                    <h4 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
+                      Appraisal Submitted For Today
+                    </h4>
+                    <p className="text-xs text-slate-700 font-mono max-w-lg mx-auto">
+                      You have already submitted your mentor appraisal for today ({todayIST}). Thank you for your feedback! You will be able to submit another evaluation tomorrow after your lab attendance.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
+            // Check if student was marked PRESENT in TODAY's session
+            const todaySession = sessions?.find((s: any) => {
+              const sDate = new Intl.DateTimeFormat("en-CA", {
+                timeZone: "Asia/Kolkata",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              }).format(new Date(s.date));
+              return sDate === todayIST;
+            });
+
+            const isMarkedPresentToday = Boolean(
+              todaySession?.attendanceRecords?.some((r: any) => r.status === "PRESENT")
+            );
+
+            if (!isMarkedPresentToday) {
               return (
                 <div className="p-8 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] text-center space-y-4">
                   <div className="w-16 h-16 bg-white border-[3px] border-[#111111] flex items-center justify-center mx-auto shadow-[3px_3px_0px_#111111]">
@@ -2875,23 +2954,27 @@ export default function StudentDashboardPage() {
                   </div>
                   <div className="space-y-1.5">
                     <span className="text-[10px] font-mono font-black uppercase text-rose-700 bg-rose-100 border border-[#111111] px-2.5 py-0.5 inline-block shadow-[1px_1px_0px_#111111]">
-                      [ RATING TERMINAL LOCKED // ATTENDANCE REQUIRED ]
+                      [ RATING TERMINAL LOCKED // TODAY&apos;S ATTENDANCE REQUIRED ]
                     </span>
                     <h4 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
-                      Lab Attendance Verification Required
+                      Today&apos;s Lab Attendance Required
                     </h4>
                     <p className="text-xs text-slate-700 font-mono max-w-lg mx-auto">
                       Per Super 60 examination & evaluation protocols, only students who have been verified as{" "}
-                      <strong className="text-[#111111] underline">PRESENT</strong> in a laboratory session by their lead mentor are permitted to evaluate faculty and submit ratings.
+                      <strong className="text-[#111111] underline">PRESENT</strong> in today&apos;s laboratory session by their lead mentor are permitted to evaluate faculty and submit ratings.
                     </p>
                   </div>
 
                   <div className="p-4 bg-white border-[2px] border-[#111111] max-w-md mx-auto font-mono text-xs text-left shadow-[3px_3px_0px_#111111] space-y-2">
                     <div className="flex justify-between items-center text-slate-600 font-bold border-b border-[#111111]/20 pb-1.5">
+                      <span>Session Date:</span>
+                      <span className="text-[#111111] font-black">{todayIST}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600 font-bold border-b border-[#111111]/20 pb-1.5">
                       <span>Verification Status:</span>
                       <span className="text-rose-600 font-black flex items-center gap-1 bg-rose-50 px-2 py-0.5 border border-rose-300">
                         <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                        NOT MARKED PRESENT
+                        NOT MARKED PRESENT TODAY
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-slate-600 font-bold border-b border-[#111111]/20 pb-1.5">
@@ -2903,13 +2986,13 @@ export default function StudentDashboardPage() {
                     <div className="flex justify-between items-center text-slate-600 font-bold">
                       <span>Action Required:</span>
                       <span className="text-slate-800 font-bold">
-                        Attend lab & request mentor check-in
+                        Attend today&apos;s lab & request mentor check-in
                       </span>
                     </div>
                   </div>
 
                   <p className="text-[11px] text-slate-600 font-mono">
-                    Once your mentor clicks <span className="font-bold text-[#111111]">&quot;Present&quot;</span> next to your name, this evaluation terminal will unlock automatically.
+                    Once your mentor marks you <span className="font-bold text-[#111111]">&quot;Present&quot;</span> in today&apos;s session, this evaluation terminal will unlock automatically.
                   </p>
                 </div>
               );
@@ -2921,10 +3004,10 @@ export default function StudentDashboardPage() {
                 <div className="p-3 bg-[#e6f4ea] border-[2px] border-[#111111] text-emerald-900 font-mono text-xs flex items-center justify-between shadow-[2px_2px_0px_#111111]">
                   <span className="flex items-center gap-2 font-bold">
                     <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                    <span>Lab Attendance Verified: You are cleared to rate your lead mentor.</span>
+                    <span>Lab Attendance Verified: You are cleared to rate your lead mentor today.</span>
                   </span>
                   <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 font-mono font-black uppercase border border-[#111111]">
-                    ✓ PRESENT
+                    ✓ PRESENT TODAY
                   </span>
                 </div>
 
@@ -2981,11 +3064,19 @@ export default function StudentDashboardPage() {
 
                 {/* Comment Area */}
                 <div>
-                  <label className="block text-xs font-mono text-slate-700 uppercase font-bold mb-1">
-                    Written Feedback
-                  </label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-mono text-slate-700 uppercase font-bold">
+                      Written Feedback
+                    </label>
+                    <span className={`text-[10px] font-mono font-bold ${
+                      feedbackComment.trim().length >= 5 ? "text-emerald-700" : "text-amber-700"
+                    }`}>
+                      {feedbackComment.trim().length}/5 characters min
+                    </span>
+                  </div>
                   <textarea
                     required
+                    minLength={5}
                     rows={4}
                     value={feedbackComment}
                     onChange={(e) => setFeedbackComment(e.target.value)}

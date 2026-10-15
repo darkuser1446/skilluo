@@ -394,7 +394,9 @@ model Feedback {
   isAnonymous Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  @@unique([workshopId, studentId, mentorId])
+  @@index([workshopId, studentId])
+  @@index([workshopId, labId])
+  @@index([workshopId, mentorId])
 }
 
 model AuditLog {

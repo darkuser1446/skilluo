@@ -221,10 +221,25 @@ const FeedbackSchema = z.object({
   labId: z.string(),
   mentorId: z.string(),
   rating: z.number().int().min(1).max(5),
-  comment: z.string().min(5),
+  comment: z.string().trim().min(5, "Written feedback must be at least 5 characters long"),
   category: z.string().default("GENERAL"),
   isAnonymous: z.boolean().default(false),
 });
+
+function getTodayISTBounds() {
+  const now = new Date();
+  const istDateStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+
+  const [year, month, day] = istDateStr.split("-").map(Number);
+  const start = new Date(Date.UTC(year, month - 1, day, 0, 0, 0) - (5 * 60 + 30) * 60 * 1000);
+  const end = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999) - (5 * 60 + 30) * 60 * 1000);
+  return { start, end, dateStr: istDateStr };
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -235,58 +250,53 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const data = FeedbackSchema.parse(body);
+    const { start, end, dateStr } = getTodayISTBounds();
 
-    // Strict mandate: Only students marked PRESENT in a lab session can give ratings
-    const attendanceRecord = await prisma.attendanceRecord.findFirst({
+    // Rule 1: Only the attendance marked student can give review on that day only
+    const todayAttendance = await prisma.attendanceRecord.findFirst({
       where: {
         studentId: user.sub,
         status: "PRESENT",
         session: {
           workshopId: data.workshopId,
-          ...(data.labId ? { labId: data.labId } : {}),
+          date: { gte: start, lte: end },
         },
       },
     });
 
-    if (!attendanceRecord) {
-      const anyPresent = await prisma.attendanceRecord.findFirst({
-        where: {
-          studentId: user.sub,
-          status: "PRESENT",
-          session: { workshopId: data.workshopId },
-        },
-      });
-
-      if (!anyPresent) {
-        return errorResponse(
-          "Rating Locked: Only students who have been marked PRESENT by their mentor in a lab session are permitted to submit evaluations.",
-          "FORBIDDEN",
-          403
-        );
-      }
+    if (!todayAttendance) {
+      return errorResponse(
+        `Lab Attendance Verification Required: Only students verified as PRESENT in today's lab session (${dateStr}) are permitted to submit an appraisal.`,
+        "FORBIDDEN",
+        403
+      );
     }
 
-    const feedback = await prisma.feedback.upsert({
+    // Rule 2: Only once a day
+    const existingFeedbackToday = await prisma.feedback.findFirst({
       where: {
-        workshopId_studentId_mentorId: {
-          workshopId: data.workshopId,
-          studentId: user.sub,
-          mentorId: data.mentorId,
-        },
+        workshopId: data.workshopId,
+        studentId: user.sub,
+        createdAt: { gte: start, lte: end },
       },
-      update: {
-        rating: data.rating,
-        comment: data.comment,
-        category: data.category,
-        isAnonymous: data.isAnonymous !== undefined ? data.isAnonymous : true,
-      },
-      create: {
+    });
+
+    if (existingFeedbackToday) {
+      return errorResponse(
+        "You have already submitted your mentor appraisal for today. Reviews can only be submitted once per day.",
+        "BAD_REQUEST",
+        400
+      );
+    }
+
+    const feedback = await prisma.feedback.create({
+      data: {
         workshopId: data.workshopId,
         labId: data.labId,
         studentId: user.sub,
         mentorId: data.mentorId,
         rating: data.rating,
-        comment: data.comment,
+        comment: data.comment.trim(),
         category: data.category,
         isAnonymous: data.isAnonymous !== undefined ? data.isAnonymous : true,
       },
