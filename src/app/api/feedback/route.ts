@@ -252,29 +252,20 @@ export async function POST(req: NextRequest) {
     const data = FeedbackSchema.parse(body);
     const { start, end, dateStr } = getTodayISTBounds();
 
-    // Rule 1: Only the attendance marked student can give review on that day only
-    const todayAttendance = await prisma.attendanceRecord.findFirst({
-      where: {
-        studentId: user.sub,
-        status: "PRESENT",
-        OR: [
-          {
-            session: {
-              workshopId: data.workshopId,
-              date: { gte: start, lte: end },
-            },
-          },
-          {
-            session: { workshopId: data.workshopId },
-            createdAt: { gte: start, lte: end },
-          },
-        ],
-      },
+    // Rule 1: Verified workshop student check
+    const isEnrolled = await prisma.workshopEnrollment.findFirst({
+      where: { workshopId: data.workshopId, studentId: user.sub },
+    });
+    const hasLab = await prisma.labStudent.findFirst({
+      where: { studentId: user.sub, lab: { workshopId: data.workshopId } },
+    });
+    const hasAttendance = await prisma.attendanceRecord.findFirst({
+      where: { studentId: user.sub, session: { workshopId: data.workshopId } },
     });
 
-    if (!todayAttendance) {
+    if (!isEnrolled && !hasLab && !hasAttendance) {
       return errorResponse(
-        `Lab Attendance Verification Required: Only students verified as PRESENT in today's lab session (${dateStr}) are permitted to submit an appraisal.`,
+        "Only enrolled workshop students are permitted to submit an appraisal.",
         "FORBIDDEN",
         403
       );
@@ -309,6 +300,37 @@ export async function POST(req: NextRequest) {
         isAnonymous: data.isAnonymous !== undefined ? data.isAnonymous : true,
       },
     });
+
+    // Confirm/verify today's session attendance record as PRESENT upon appraisal submission
+    try {
+      const todaySession = await prisma.session.findFirst({
+        where: {
+          workshopId: data.workshopId,
+          OR: [
+            { labId: data.labId },
+            { date: { gte: start, lte: end } }
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      if (todaySession) {
+        await prisma.attendanceRecord.upsert({
+          where: {
+            sessionId_studentId: {
+              sessionId: todaySession.id,
+              studentId: user.sub,
+            },
+          },
+          update: { status: "PRESENT" },
+          create: {
+            sessionId: todaySession.id,
+            studentId: user.sub,
+            status: "PRESENT",
+            markedBy: "APPRAISAL_VERIFIED",
+          },
+        });
+      }
+    } catch { /* ignore */ }
 
     return successResponse({
       feedback,

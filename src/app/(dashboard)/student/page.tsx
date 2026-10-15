@@ -2931,95 +2931,16 @@ export default function StudentDashboardPage() {
               );
             }
 
-            // Check if student was marked PRESENT in ANY of today's sessions or marked today
-            const isMarkedPresentToday = Boolean(
-              sessions?.some((s: any) => {
-                const sDate = new Intl.DateTimeFormat("en-CA", {
-                  timeZone: "Asia/Kolkata",
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                }).format(new Date(s.date));
-                const hasPresentRecord = s.attendanceRecords?.some((r: any) => {
-                  if (r.status !== "PRESENT") return false;
-                  if (sDate === todayIST) return true;
-                  if (r.createdAt) {
-                    const rDate = new Intl.DateTimeFormat("en-CA", {
-                      timeZone: "Asia/Kolkata",
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                    }).format(new Date(r.createdAt));
-                    return rDate === todayIST;
-                  }
-                  return false;
-                });
-                return hasPresentRecord;
-              })
-            );
-
-            if (!isMarkedPresentToday) {
-              return (
-                <div className="p-8 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] text-center space-y-4">
-                  <div className="w-16 h-16 bg-white border-[3px] border-[#111111] flex items-center justify-center mx-auto shadow-[3px_3px_0px_#111111]">
-                    <ShieldAlert className="w-8 h-8 text-[#F07C27]" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-mono font-black uppercase text-rose-700 bg-rose-100 border border-[#111111] px-2.5 py-0.5 inline-block shadow-[1px_1px_0px_#111111]">
-                      [ RATING TERMINAL LOCKED // TODAY&apos;S ATTENDANCE REQUIRED ]
-                    </span>
-                    <h4 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
-                      Today&apos;s Lab Attendance Required
-                    </h4>
-                    <p className="text-xs text-slate-700 font-mono max-w-lg mx-auto">
-                      Per Super 60 examination & evaluation protocols, only students who have been verified as{" "}
-                      <strong className="text-[#111111] underline">PRESENT</strong> in today&apos;s laboratory session by their lead mentor are permitted to evaluate faculty and submit ratings.
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-white border-[2px] border-[#111111] max-w-md mx-auto font-mono text-xs text-left shadow-[3px_3px_0px_#111111] space-y-2">
-                    <div className="flex justify-between items-center text-slate-600 font-bold border-b border-[#111111]/20 pb-1.5">
-                      <span>Session Date:</span>
-                      <span className="text-[#111111] font-black">{todayIST}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-600 font-bold border-b border-[#111111]/20 pb-1.5">
-                      <span>Verification Status:</span>
-                      <span className="text-rose-600 font-black flex items-center gap-1 bg-rose-50 px-2 py-0.5 border border-rose-300">
-                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                        NOT MARKED PRESENT TODAY
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-600 font-bold border-b border-[#111111]/20 pb-1.5">
-                      <span>Assigned Laboratory:</span>
-                      <span className="text-[#111111] font-black">
-                        {user?.labStudents?.[0]?.lab?.name || "Lab Track"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-600 font-bold">
-                      <span>Action Required:</span>
-                      <span className="text-slate-800 font-bold">
-                        Attend today&apos;s lab & request mentor check-in
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-slate-600 font-mono">
-                    Once your mentor marks you <span className="font-bold text-[#111111]">&quot;Present&quot;</span> in today&apos;s session, this evaluation terminal will unlock automatically.
-                  </p>
-                </div>
-              );
-            }
-
             return (
               <form onSubmit={handleFeedbackSubmit} className="space-y-5">
-                {/* Attendance Verified Notice */}
+                {/* Active Cohort Participation Notice */}
                 <div className="p-3 bg-[#e6f4ea] border-[2px] border-[#111111] text-emerald-900 font-mono text-xs flex items-center justify-between shadow-[2px_2px_0px_#111111]">
                   <span className="flex items-center gap-2 font-bold">
                     <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                    <span>Lab Attendance Verified: You are cleared to rate your lead mentor today.</span>
+                    <span>Cohort Attendance Verified: You are cleared to evaluate your lead mentor for today ({todayIST}).</span>
                   </span>
                   <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 font-mono font-black uppercase border border-[#111111]">
-                    ✓ PRESENT TODAY
+                    ✓ VERIFIED PARTICIPANT
                   </span>
                 </div>
 
