@@ -301,37 +301,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Confirm/verify today's session attendance record as PRESENT upon appraisal submission
-    try {
-      const todaySession = await prisma.session.findFirst({
-        where: {
-          workshopId: data.workshopId,
-          OR: [
-            { labId: data.labId },
-            { date: { gte: start, lte: end } }
-          ],
-        },
-        orderBy: { createdAt: "desc" },
-      });
-      if (todaySession) {
-        await prisma.attendanceRecord.upsert({
-          where: {
-            sessionId_studentId: {
-              sessionId: todaySession.id,
-              studentId: user.sub,
-            },
-          },
-          update: { status: "PRESENT" },
-          create: {
-            sessionId: todaySession.id,
-            studentId: user.sub,
-            status: "PRESENT",
-            markedBy: "APPRAISAL_VERIFIED",
-          },
-        });
-      }
-    } catch { /* ignore */ }
-
     return successResponse({
       feedback,
       message: "Feedback submitted successfully. Your feedback is anonymous to mentors.",
