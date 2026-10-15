@@ -558,6 +558,18 @@ export default function MentorDashboardPage() {
         if (res.ok) {
           setAttendanceFeedbackMsg({ text: "✓ Attendance records successfully saved!", type: "success" });
           setTimeout(() => setAttendanceFeedbackMsg(null), 3000);
+          try {
+            const sessRes = await fetch(`/api/attendance/sessions?workshopId=${activeWsId}&labId=${currentLab.id}`);
+            if (sessRes.ok) {
+              const sessData = await sessRes.json();
+              if (sessData.data?.sessions) {
+                setSessions((prev) => {
+                  const otherLabSessions = prev.filter((s) => s.labId !== currentLab.id);
+                  return [...sessData.data.sessions, ...otherLabSessions];
+                });
+              }
+            }
+          } catch { /* ignore */ }
         } else {
           setAttendanceFeedbackMsg({ text: "Failed to save attendance records", type: "error" });
         }
@@ -1830,7 +1842,18 @@ export default function MentorDashboardPage() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setSelectedDayFilter("ALL")}
+                    onClick={() => {
+                      setSelectedDayFilter("ALL");
+                      if (activeLabSessions.length > 0) {
+                        const latest = activeLabSessions[0];
+                        setActiveSession(latest);
+                        const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
+                        latest.attendanceRecords?.forEach((r: any) => {
+                          map[r.studentId] = r.status;
+                        });
+                        setAttendanceMap(map);
+                      }
+                    }}
                     className={`px-3 py-1.5 font-mono text-xs font-black uppercase border-[2px] border-[#111111] transition-all cursor-pointer shadow-[2px_2px_0px_#111111] ${
                       selectedDayFilter === "ALL"
                         ? "bg-[#111111] text-white"
@@ -1843,7 +1866,24 @@ export default function MentorDashboardPage() {
                     <button
                       key={dStr}
                       type="button"
-                      onClick={() => setSelectedDayFilter(dStr)}
+                      onClick={() => {
+                        setSelectedDayFilter(dStr);
+                        const matchSess = activeLabSessions.find((s) => {
+                          const sDateStr = new Date(s.date).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                          });
+                          return sDateStr === dStr;
+                        });
+                        if (matchSess) {
+                          setActiveSession(matchSess);
+                          const map: Record<string, "PRESENT" | "ABSENT" | "LATE"> = {};
+                          matchSess.attendanceRecords?.forEach((r: any) => {
+                            map[r.studentId] = r.status;
+                          });
+                          setAttendanceMap(map);
+                        }
+                      }}
                       className={`px-3 py-1.5 font-mono text-xs font-black uppercase border-[2px] border-[#111111] transition-all cursor-pointer shadow-[2px_2px_0px_#111111] ${
                         selectedDayFilter === dStr
                           ? "bg-[#F07C27] text-white"

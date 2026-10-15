@@ -123,11 +123,28 @@ export async function POST(req: NextRequest) {
         )
       );
 
+      const freshSessionAll = await prisma.session.findUnique({
+        where: { id: sessionId },
+        include: {
+          lab: true,
+          attendanceRecords: {
+            include: {
+              student: {
+                select: { id: true, name: true, email: true, rollNumber: true, branch: true },
+              },
+            },
+          },
+          _count: {
+            select: { attendanceRecords: true },
+          },
+        },
+      });
+
       return successResponse({
         message: `Successfully marked all ${updatedRecords.length} students as ${status}`,
         count: updatedRecords.length,
         sessionId,
-        session,
+        session: freshSessionAll,
         records: updatedRecords,
       });
     }
@@ -156,11 +173,28 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const freshSession = await prisma.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        lab: true,
+        attendanceRecords: {
+          include: {
+            student: {
+              select: { id: true, name: true, email: true, rollNumber: true, branch: true },
+            },
+          },
+        },
+        _count: {
+          select: { attendanceRecords: true },
+        },
+      },
+    });
+
     return successResponse({
       message: `Successfully marked student as ${status}`,
       count: 1,
       sessionId,
-      session,
+      session: freshSession,
       record,
     });
   } catch (err) {

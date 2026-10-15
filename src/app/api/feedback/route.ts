@@ -257,10 +257,18 @@ export async function POST(req: NextRequest) {
       where: {
         studentId: user.sub,
         status: "PRESENT",
-        session: {
-          workshopId: data.workshopId,
-          date: { gte: start, lte: end },
-        },
+        OR: [
+          {
+            session: {
+              workshopId: data.workshopId,
+              date: { gte: start, lte: end },
+            },
+          },
+          {
+            session: { workshopId: data.workshopId },
+            createdAt: { gte: start, lte: end },
+          },
+        ],
       },
     });
 

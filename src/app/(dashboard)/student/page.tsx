@@ -2931,19 +2931,31 @@ export default function StudentDashboardPage() {
               );
             }
 
-            // Check if student was marked PRESENT in TODAY's session
-            const todaySession = sessions?.find((s: any) => {
-              const sDate = new Intl.DateTimeFormat("en-CA", {
-                timeZone: "Asia/Kolkata",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              }).format(new Date(s.date));
-              return sDate === todayIST;
-            });
-
+            // Check if student was marked PRESENT in ANY of today's sessions or marked today
             const isMarkedPresentToday = Boolean(
-              todaySession?.attendanceRecords?.some((r: any) => r.status === "PRESENT")
+              sessions?.some((s: any) => {
+                const sDate = new Intl.DateTimeFormat("en-CA", {
+                  timeZone: "Asia/Kolkata",
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                }).format(new Date(s.date));
+                const hasPresentRecord = s.attendanceRecords?.some((r: any) => {
+                  if (r.status !== "PRESENT") return false;
+                  if (sDate === todayIST) return true;
+                  if (r.createdAt) {
+                    const rDate = new Intl.DateTimeFormat("en-CA", {
+                      timeZone: "Asia/Kolkata",
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    }).format(new Date(r.createdAt));
+                    return rDate === todayIST;
+                  }
+                  return false;
+                });
+                return hasPresentRecord;
+              })
             );
 
             if (!isMarkedPresentToday) {
