@@ -39,6 +39,10 @@ import {
   ClipboardList,
   ShieldCheck,
   Download,
+  Star,
+  X,
+  Filter,
+  TrendingUp,
 } from "lucide-react";
 import TestManager from "@/components/TestManager";
 import { SkeletonCard, SkeletonMetric, SkeletonProfile } from "@/components/Skeleton";
@@ -57,6 +61,140 @@ export default function MentorDashboardPage() {
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const [exercises, setExercises] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+
+  // Mentor Feedback Filters & Analytics
+  const [feedbackLabFilter, setFeedbackLabFilter] = useState<string>("");
+  const [feedbackDateFilter, setFeedbackDateFilter] = useState<string>("");
+  const [feedbackRatingFilter, setFeedbackRatingFilter] = useState<string>("");
+  const [feedbackCategoryFilter, setFeedbackCategoryFilter] = useState<string>("");
+  const [feedbackSearch, setFeedbackSearch] = useState<string>("");
+
+  const mentorFeedbackAnalytics = useMemo(() => {
+    if (!feedbacks || feedbacks.length === 0) {
+      return {
+        overall: { averageRating: 0, totalReviews: 0, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } },
+        labWise: labs.map((l) => ({ labId: l.id, labName: l.name, totalReviews: 0, averageRating: 0, sumRating: 0, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } })),
+        dateWise: [],
+      };
+    }
+
+    let overallSum = 0;
+    const overallDist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    const labMap = new Map<string, any>();
+    const dateMap = new Map<string, any>();
+
+    labs.forEach((l) => {
+      labMap.set(l.id, {
+        labId: l.id,
+        labName: l.name,
+        totalReviews: 0,
+        sumRating: 0,
+        averageRating: 0,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      });
+    });
+
+    feedbacks.forEach((f) => {
+      const r = Math.min(5, Math.max(1, Math.round(f.rating || 5)));
+      overallDist[r] = (overallDist[r] || 0) + 1;
+      overallSum += r;
+
+      const lId = f.labId || f.lab?.id || "unassigned";
+      const lName = f.lab?.name || (lId === "unassigned" ? "General / Unassigned" : "Lab");
+
+      if (!labMap.has(lId)) {
+        labMap.set(lId, {
+          labId: lId,
+          labName: lName,
+          totalReviews: 0,
+          sumRating: 0,
+          averageRating: 0,
+          distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        });
+      }
+      const lEntry = labMap.get(lId)!;
+      lEntry.totalReviews += 1;
+      lEntry.sumRating += r;
+      lEntry.distribution[r] = (lEntry.distribution[r] || 0) + 1;
+
+      const createdAt = new Date(f.createdAt);
+      const istTime = new Date(createdAt.getTime() + 5.5 * 3600 * 1000);
+      const dateKey = istTime.toISOString().slice(0, 10);
+      const displayDate = createdAt.toLocaleDateString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+
+      if (!dateMap.has(dateKey)) {
+        dateMap.set(dateKey, {
+          dateKey,
+          displayDate,
+          totalReviews: 0,
+          sumRating: 0,
+          averageRating: 0,
+          distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        });
+      }
+      const dEntry = dateMap.get(dateKey)!;
+      dEntry.totalReviews += 1;
+      dEntry.sumRating += r;
+      dEntry.distribution[r] = (dEntry.distribution[r] || 0) + 1;
+    });
+
+    const labWise = Array.from(labMap.values())
+      .map((l) => ({
+        ...l,
+        averageRating: l.totalReviews > 0 ? parseFloat((l.sumRating / l.totalReviews).toFixed(2)) : 0,
+      }))
+      .sort((a, b) => b.totalReviews - a.totalReviews || b.averageRating - a.averageRating);
+
+    const dateWise = Array.from(dateMap.values())
+      .map((d) => ({
+        ...d,
+        averageRating: d.totalReviews > 0 ? parseFloat((d.sumRating / d.totalReviews).toFixed(2)) : 0,
+      }))
+      .sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+
+    return {
+      overall: {
+        averageRating: parseFloat((overallSum / feedbacks.length).toFixed(2)),
+        totalReviews: feedbacks.length,
+        distribution: overallDist,
+      },
+      labWise,
+      dateWise,
+    };
+  }, [feedbacks, labs]);
+
+  const filteredMentorFeedbacks = useMemo(() => {
+    return feedbacks.filter((f) => {
+      if (feedbackLabFilter && (f.labId || f.lab?.id) !== feedbackLabFilter) return false;
+      if (feedbackDateFilter) {
+        const createdAt = new Date(f.createdAt);
+        const istTime = new Date(createdAt.getTime() + 5.5 * 3600 * 1000);
+        const dateKey = istTime.toISOString().slice(0, 10);
+        if (dateKey !== feedbackDateFilter) return false;
+      }
+      if (feedbackRatingFilter) {
+        if (feedbackRatingFilter === "5" && f.rating !== 5) return false;
+        if (feedbackRatingFilter === "4" && f.rating !== 4) return false;
+        if (feedbackRatingFilter === "3" && f.rating > 3) return false;
+      }
+      if (feedbackCategoryFilter && f.category !== feedbackCategoryFilter) return false;
+      if (feedbackSearch.trim()) {
+        const q = feedbackSearch.toLowerCase();
+        const comment = f.comment?.toLowerCase() || "";
+        const category = f.category?.toLowerCase() || "";
+        const labName = f.lab?.name?.toLowerCase() || "";
+        if (!comment.includes(q) && !category.includes(q) && !labName.includes(q)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [feedbacks, feedbackLabFilter, feedbackDateFilter, feedbackRatingFilter, feedbackCategoryFilter, feedbackSearch]);
   const [activeTab, setActiveTab] = useState<
     "roster" | "review" | "assignments" | "exercises" | "notes" | "attendance" | "doubts" | "feedback" | "announcements" | "tests"
   >("roster");
@@ -2510,50 +2648,424 @@ export default function MentorDashboardPage() {
 
       {/* ══ TAB: FEEDBACK ══ */}
       {activeTab === "feedback" && (
-        <div className="space-y-4">
-          <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
-            Student Appraisals ({feedbacks.length})
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {feedbacks.length === 0 && (
-              <div className="col-span-full">
-                <EmptyState
-                  icon={MessageSquareHeart}
-                  title="No Student Appraisals"
-                  description="Feedback submitted by workshop participants will appear here."
-                />
+        <div className="space-y-6">
+          {/* Header & Title */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b-2 border-[#111111]">
+            <div>
+              <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight flex items-center gap-2">
+                <span className="w-3 h-3 bg-[#F07C27] border border-[#111111]"></span>
+                Student Appraisals & Feedback Ratings
+              </h3>
+              <p className="text-xs font-mono text-slate-600 mt-0.5">
+                Lab-wise & date-wise student satisfaction metrics, rating averages, and anonymous reviews.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 font-mono text-xs font-bold">
+              <span className="px-3 py-1 bg-white border-2 border-[#111111] shadow-[2px_2px_0px_#111111]">
+                Total Reviews: <strong className="text-[#F07C27]">{feedbacks.length}</strong>
+              </span>
+              <span className="px-3 py-1 bg-[#FFF0E5] text-[#111111] border-2 border-[#111111] shadow-[2px_2px_0px_#111111]">
+                Your Rating: <strong className="text-[#F07C27]">★ {mentorFeedbackAnalytics.overall.averageRating} / 5.0</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* KPI Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="p-4 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-700 tracking-wider">OVERALL AVERAGE</span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-black font-mono text-[#111111]">★ {mentorFeedbackAnalytics.overall.averageRating}</span>
+                <span className="text-xs font-mono font-bold text-slate-600">/ 5.0</span>
+              </div>
+              <div className="flex items-center gap-0.5 mt-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3.5 h-3.5 ${
+                      i < Math.round(mentorFeedbackAnalytics.overall.averageRating)
+                        ? "text-[#F07C27] fill-[#F07C27]"
+                        : "text-slate-300"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-700 tracking-wider">TOTAL APPRAISALS</span>
+              <div className="text-2xl font-black font-mono text-[#111111] mt-1">{feedbacks.length}</div>
+              <p className="text-[10px] font-mono font-bold text-emerald-700 mt-2">
+                Verified candidate feedback
+              </p>
+            </div>
+
+            <div className="p-4 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-700 tracking-wider">5-STAR REVIEWS</span>
+              <div className="text-2xl font-black font-mono text-emerald-700 mt-1">
+                {mentorFeedbackAnalytics.overall.distribution[5] || 0}
+              </div>
+              <p className="text-[10px] font-mono font-bold text-slate-600 mt-2">
+                {feedbacks.length > 0 ? Math.round(((mentorFeedbackAnalytics.overall.distribution[5] || 0) / feedbacks.length) * 100) : 0}% perfect 5★ ratings
+              </p>
+            </div>
+
+            <div className="p-4 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111]">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-700 tracking-wider">SATISFACTION RATE</span>
+              <div className="text-2xl font-black font-mono text-[#F07C27] mt-1">
+                {feedbacks.length > 0
+                  ? Math.round((((mentorFeedbackAnalytics.overall.distribution[4] || 0) + (mentorFeedbackAnalytics.overall.distribution[5] || 0)) / feedbacks.length) * 100)
+                  : 100}%
+              </div>
+              <p className="text-[10px] font-mono font-bold text-slate-600 mt-2">
+                4★ & 5★ positive reviews
+              </p>
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════
+              LAB-WISE AVERAGE RATINGS
+          ══════════════════════════════════════════════════════════ */}
+          <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#111111]/20">
+              <div>
+                <h4 className="font-mono font-black text-sm uppercase text-[#111111] flex items-center gap-2">
+                  <span>🏛️</span> Laboratory-Wise Average Ratings
+                </h4>
+                <p className="text-xs font-mono text-slate-600">
+                  Student ratings and appraisal averages for each laboratory track. Click any lab card to filter.
+                </p>
+              </div>
+              {feedbackLabFilter && (
+                <button
+                  onClick={() => setFeedbackLabFilter("")}
+                  className="px-2.5 py-1 text-[11px] font-mono font-bold bg-[#F4F3F3] hover:bg-slate-200 border border-[#111111] text-[#111111] flex items-center gap-1 self-start"
+                >
+                  <X className="w-3 h-3" /> Show All Labs
+                </button>
+              )}
+            </div>
+
+            {mentorFeedbackAnalytics.labWise.length === 0 ? (
+              <p className="text-xs font-mono text-slate-500 italic py-2">No laboratory tracks found.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                {mentorFeedbackAnalytics.labWise.map((lab) => {
+                  const isSelected = feedbackLabFilter === lab.labId;
+                  const pct = Math.min(100, Math.round((lab.averageRating / 5) * 100));
+                  return (
+                    <div
+                      key={lab.labId}
+                      onClick={() => setFeedbackLabFilter(isSelected ? "" : lab.labId)}
+                      className={`p-3.5 border-[2px] border-[#111111] cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-[#FFF0E5] shadow-[4px_4px_0px_#F07C27] translate-x-0.5"
+                          : "bg-[#F9F9F9] hover:bg-white shadow-[2px_2px_0px_#111111]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-xs font-mono font-black text-[#111111] truncate mb-1">
+                        <span className="truncate">{lab.labName}</span>
+                        {isSelected && (
+                          <span className="text-[9px] px-1.5 py-0.2 bg-[#F07C27] text-white uppercase font-bold">
+                            ACTIVE
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-baseline gap-1 my-1.5">
+                        <span className="text-xl font-black font-mono text-[#F07C27]">★ {lab.averageRating}</span>
+                        <span className="text-[10px] font-mono font-bold text-slate-500">/ 5.0</span>
+                      </div>
+
+                      {/* Progress Track */}
+                      <div className="w-full bg-slate-200 h-2 border border-[#111111] overflow-hidden my-1.5">
+                        <div
+                          className="bg-[#F07C27] h-full"
+                          style={{ width: `${pct}%` }}
+                        ></div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 font-bold mt-2">
+                        <span>{lab.totalReviews} Reviews</span>
+                        <span className="text-[#111111] underline">
+                          {isSelected ? "Clear" : "Filter →"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-            {feedbacks.map((f) => (
-              <div key={f.id} className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <svg
-                        key={i}
-                        className={`w-4 h-4 ${i < f.rating ? "text-[#F07C27] fill-[#F07C27]" : "text-slate-300"}`}
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                    ))}
-                  </div>
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 border-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] uppercase shadow-[1px_1px_0px_#111111]">
-                    {f.category}
-                  </span>
-                </div>
-                <p className="text-sm text-slate-800 font-mono italic">&quot;{f.comment}&quot;</p>
-                <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 pt-2 border-t border-[#111111]/15 font-bold">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[#111111]">From: Anonymous Student</span>
-                    <span className="px-1.5 py-0.2 bg-slate-100 text-slate-700 border border-slate-300 text-[9px] uppercase font-bold">
-                      🛡️ Confidential Appraisal
-                    </span>
-                  </div>
-                  <span>{new Date(f.createdAt).toLocaleDateString()}</span>
-                </div>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════
+              DATE-WISE AVERAGE RATINGS
+          ══════════════════════════════════════════════════════════ */}
+          <div className="p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#111111]/20">
+              <div>
+                <h4 className="font-mono font-black text-sm uppercase text-[#111111] flex items-center gap-2">
+                  <span>📅</span> Date-Wise Average Ratings (Daily Timeline)
+                </h4>
+                <p className="text-xs font-mono text-slate-600">
+                  Daily satisfaction trends across session dates. Click any date card to filter.
+                </p>
               </div>
-            ))}
+              {feedbackDateFilter && (
+                <button
+                  onClick={() => setFeedbackDateFilter("")}
+                  className="px-2.5 py-1 text-[11px] font-mono font-bold bg-[#F4F3F3] hover:bg-slate-200 border border-[#111111] text-[#111111] flex items-center gap-1 self-start"
+                >
+                  <X className="w-3 h-3" /> Show All Dates
+                </button>
+              )}
+            </div>
+
+            {mentorFeedbackAnalytics.dateWise.length === 0 ? (
+              <p className="text-xs font-mono text-slate-500 italic py-2">No dated feedback submissions found.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {mentorFeedbackAnalytics.dateWise.map((d) => {
+                  const isSelected = feedbackDateFilter === d.dateKey;
+                  return (
+                    <div
+                      key={d.dateKey}
+                      onClick={() => setFeedbackDateFilter(isSelected ? "" : d.dateKey)}
+                      className={`p-3.5 border-[2px] border-[#111111] cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-[#FFF0E5] shadow-[4px_4px_0px_#F07C27] translate-x-0.5"
+                          : "bg-[#F9F9F9] hover:bg-white shadow-[2px_2px_0px_#111111]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-xs font-mono font-bold text-[#111111] mb-1">
+                        <span>🗓️ {d.displayDate}</span>
+                        {isSelected && (
+                          <span className="text-[9px] px-1.5 py-0.2 bg-[#F07C27] text-white uppercase font-bold">
+                            ACTIVE
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-baseline gap-1 my-1">
+                        <span className="text-xl font-black font-mono text-[#F07C27]">★ {d.averageRating}</span>
+                        <span className="text-[10px] font-mono font-bold text-slate-500">/ 5.0</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 font-bold mt-2 pt-1 border-t border-[#111111]/10">
+                        <span>{d.totalReviews} Submissions</span>
+                        <span className="text-[#111111] underline">
+                          {isSelected ? "Clear" : "Filter →"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════
+              INTERACTIVE FILTERS & SEARCH
+          ══════════════════════════════════════════════════════════ */}
+          <div className="p-4 bg-[#F4F3F3] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] space-y-3">
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Lab Filter */}
+                <select
+                  value={feedbackLabFilter}
+                  onChange={(e) => setFeedbackLabFilter(e.target.value)}
+                  className="bg-white border-[2px] border-[#111111] px-3 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] cursor-pointer"
+                >
+                  <option value="">All Labs ({labs.length})</option>
+                  {labs.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      🏛️ {l.name}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Date Filter */}
+                <select
+                  value={feedbackDateFilter}
+                  onChange={(e) => setFeedbackDateFilter(e.target.value)}
+                  className="bg-white border-[2px] border-[#111111] px-3 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] cursor-pointer"
+                >
+                  <option value="">All Session Dates ({mentorFeedbackAnalytics.dateWise.length})</option>
+                  {mentorFeedbackAnalytics.dateWise.map((d) => (
+                    <option key={d.dateKey} value={d.dateKey}>
+                      📅 {d.displayDate} ({d.totalReviews})
+                    </option>
+                  ))}
+                </select>
+
+                {/* Rating Filter */}
+                <select
+                  value={feedbackRatingFilter}
+                  onChange={(e) => setFeedbackRatingFilter(e.target.value)}
+                  className="bg-white border-[2px] border-[#111111] px-3 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] cursor-pointer"
+                >
+                  <option value="">All Ratings</option>
+                  <option value="5">★★★★★ 5 Stars Only</option>
+                  <option value="4">★★★★☆ 4 Stars Only</option>
+                  <option value="3">★★★☆☆ 3 Stars or Below</option>
+                </select>
+
+                {/* Category Filter */}
+                <select
+                  value={feedbackCategoryFilter}
+                  onChange={(e) => setFeedbackCategoryFilter(e.target.value)}
+                  className="bg-white border-[2px] border-[#111111] px-3 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] cursor-pointer"
+                >
+                  <option value="">All Categories</option>
+                  <option value="MENTORSHIP">Mentorship</option>
+                  <option value="COMMUNICATION">Communication</option>
+                  <option value="TECHNICAL">Technical</option>
+                  <option value="GENERAL">General</option>
+                </select>
+              </div>
+
+              {/* Search Box */}
+              <div className="relative flex-1 max-w-sm">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search reviews by comment text or category..."
+                  value={feedbackSearch}
+                  onChange={(e) => setFeedbackSearch(e.target.value)}
+                  className="w-full bg-white border-[2px] border-[#111111] pl-8 pr-3 py-1.5 text-xs font-mono font-bold text-[#111111] shadow-[2px_2px_0px_#111111] focus:outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            {/* Filter Active Pill Bar */}
+            {(feedbackLabFilter || feedbackDateFilter || feedbackRatingFilter || feedbackCategoryFilter || feedbackSearch) && (
+              <div className="flex items-center justify-between text-xs font-mono font-bold pt-2 border-t border-[#111111]/15">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-slate-600">Active Filters:</span>
+                  {feedbackLabFilter && (
+                    <span className="px-2 py-0.5 bg-white border border-[#111111] text-[11px] flex items-center gap-1">
+                      Lab: {labs.find((l) => l.id === feedbackLabFilter)?.name || feedbackLabFilter}
+                      <button onClick={() => setFeedbackLabFilter("")} className="hover:text-rose-600 font-bold ml-1">×</button>
+                    </span>
+                  )}
+                  {feedbackDateFilter && (
+                    <span className="px-2 py-0.5 bg-white border border-[#111111] text-[11px] flex items-center gap-1">
+                      Date: {mentorFeedbackAnalytics.dateWise.find((d) => d.dateKey === feedbackDateFilter)?.displayDate || feedbackDateFilter}
+                      <button onClick={() => setFeedbackDateFilter("")} className="hover:text-rose-600 font-bold ml-1">×</button>
+                    </span>
+                  )}
+                  {feedbackRatingFilter && (
+                    <span className="px-2 py-0.5 bg-white border border-[#111111] text-[11px] flex items-center gap-1">
+                      Rating: {feedbackRatingFilter}★
+                      <button onClick={() => setFeedbackRatingFilter("")} className="hover:text-rose-600 font-bold ml-1">×</button>
+                    </span>
+                  )}
+                  {feedbackCategoryFilter && (
+                    <span className="px-2 py-0.5 bg-white border border-[#111111] text-[11px] flex items-center gap-1">
+                      Category: {feedbackCategoryFilter}
+                      <button onClick={() => setFeedbackCategoryFilter("")} className="hover:text-rose-600 font-bold ml-1">×</button>
+                    </span>
+                  )}
+                  {feedbackSearch && (
+                    <span className="px-2 py-0.5 bg-white border border-[#111111] text-[11px] flex items-center gap-1">
+                      Query: &quot;{feedbackSearch}&quot;
+                      <button onClick={() => setFeedbackSearch("")} className="hover:text-rose-600 font-bold ml-1">×</button>
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setFeedbackLabFilter("");
+                    setFeedbackDateFilter("");
+                    setFeedbackRatingFilter("");
+                    setFeedbackCategoryFilter("");
+                    setFeedbackSearch("");
+                  }}
+                  className="px-2 py-0.5 text-xs text-rose-700 hover:underline font-bold"
+                >
+                  Reset All Filters
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════
+              FEEDBACK REVIEWS LIST
+          ══════════════════════════════════════════════════════════ */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-700">
+              <span>Showing {filteredMentorFeedbacks.length} of {feedbacks.length} Student Appraisals</span>
+              {filteredMentorFeedbacks.length > 0 && (
+                <span>
+                  Filtered Average:{" "}
+                  <strong className="text-[#F07C27]">
+                    ★ {(filteredMentorFeedbacks.reduce((sum, f) => sum + f.rating, 0) / filteredMentorFeedbacks.length).toFixed(2)} / 5.0
+                  </strong>
+                </span>
+              )}
+            </div>
+
+            {filteredMentorFeedbacks.length === 0 ? (
+              <EmptyState
+                icon={MessageSquareHeart}
+                title="No Reviews Matching Filters"
+                description="Try clearing your lab, date, rating, or search filter to view candidate feedback."
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredMentorFeedbacks.map((f) => (
+                  <div
+                    key={f.id}
+                    className="p-5 bg-white border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-2.5 flex flex-col justify-between"
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-0.5">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3.5 h-3.5 ${
+                                  i < f.rating
+                                    ? "text-[#F07C27] fill-[#F07C27]"
+                                    : "text-slate-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="font-mono font-black text-xs text-[#111111]">
+                            {f.rating}.0 / 5.0
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {f.lab?.name && (
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 border border-[#111111] bg-[#F4F3F3] text-[#111111]">
+                              🏛️ {f.lab.name}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 border-[2px] border-[#111111] bg-[#FFF0E5] text-[#111111] uppercase shadow-[1px_1px_0px_#111111]">
+                            {f.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-slate-800 font-mono italic leading-relaxed">&quot;{f.comment}&quot;</p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 pt-2.5 border-t border-[#111111]/15 font-bold mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[#111111]">From: Anonymous Student</span>
+                        <span className="px-1.5 py-0.2 bg-slate-100 text-slate-700 border border-slate-300 text-[9px] uppercase font-bold">
+                          🛡️ Confidential Appraisal
+                        </span>
+                      </div>
+                      <span>📅 {new Date(f.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short", year: "numeric" })}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

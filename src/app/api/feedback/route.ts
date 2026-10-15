@@ -30,10 +30,18 @@ export async function GET(req: NextRequest) {
         select: { labId: true },
       })) || [];
       const labIds = mentorLabs.map((l: any) => l.labId);
-      where.OR = [
-        { mentorId: user.sub },
-        ...(labIds.length > 0 ? [{ labId: { in: labIds } }] : []),
-      ];
+      if (labId && labIds.includes(labId)) {
+        where.labId = labId;
+        where.OR = [
+          { mentorId: user.sub },
+          { labId },
+        ];
+      } else {
+        where.OR = [
+          { mentorId: user.sub },
+          ...(labIds.length > 0 ? [{ labId: { in: labIds } }] : []),
+        ];
+      }
     }
 
     if (user.role === "ADMIN") {
@@ -67,6 +75,15 @@ export async function GET(req: NextRequest) {
       return f;
     });
 
+    // Workshop labs to ensure full lab-wise listing
+    const workshopLabs = await prisma.lab.findMany({
+      where: { workshopId },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+
+    const analytics = computeFeedbackAnalytics(feedbacks, workshopLabs);
+
     let isMarkedPresent = false;
     if (user.role === "STUDENT") {
       const presentRec = await prisma.attendanceRecord.findFirst({
@@ -79,10 +96,124 @@ export async function GET(req: NextRequest) {
       isMarkedPresent = !!presentRec;
     }
 
-    return successResponse({ feedbacks: sanitized, isMarkedPresent });
+    return successResponse({ feedbacks: sanitized, analytics, isMarkedPresent });
   } catch (err) {
     return handleApiError(err);
   }
+}
+
+function computeFeedbackAnalytics(feedbacks: any[], labs: { id: string; name: string }[] = []) {
+  if (!feedbacks || feedbacks.length === 0) {
+    return {
+      overall: {
+        averageRating: 0,
+        totalReviews: 0,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      },
+      labWise: labs.map((l) => ({
+        labId: l.id,
+        labName: l.name,
+        totalReviews: 0,
+        sumRating: 0,
+        averageRating: 0,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      })),
+      dateWise: [],
+    };
+  }
+
+  const overallDist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  let overallSum = 0;
+
+  const labMap = new Map<string, any>();
+  const dateMap = new Map<string, any>();
+
+  labs.forEach((l) => {
+    labMap.set(l.id, {
+      labId: l.id,
+      labName: l.name,
+      totalReviews: 0,
+      sumRating: 0,
+      averageRating: 0,
+      distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    });
+  });
+
+  feedbacks.forEach((f) => {
+    const rating = Math.min(5, Math.max(1, Math.round(f.rating || 5)));
+    overallDist[rating] = (overallDist[rating] || 0) + 1;
+    overallSum += rating;
+
+    const labId = f.labId || f.lab?.id || "unassigned";
+    const labName = f.lab?.name || (labId === "unassigned" ? "General / Unassigned" : "Lab");
+
+    if (!labMap.has(labId)) {
+      labMap.set(labId, {
+        labId,
+        labName,
+        totalReviews: 0,
+        sumRating: 0,
+        averageRating: 0,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      });
+    }
+
+    const labEntry = labMap.get(labId)!;
+    labEntry.totalReviews += 1;
+    labEntry.sumRating += rating;
+    labEntry.distribution[rating] = (labEntry.distribution[rating] || 0) + 1;
+
+    const createdAt = new Date(f.createdAt);
+    // Indian Standard Time (UTC+5:30)
+    const istTime = new Date(createdAt.getTime() + 5.5 * 3600 * 1000);
+    const dateKey = istTime.toISOString().slice(0, 10);
+    const displayDate = createdAt.toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    if (!dateMap.has(dateKey)) {
+      dateMap.set(dateKey, {
+        dateKey,
+        displayDate,
+        totalReviews: 0,
+        sumRating: 0,
+        averageRating: 0,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      });
+    }
+
+    const dateEntry = dateMap.get(dateKey)!;
+    dateEntry.totalReviews += 1;
+    dateEntry.sumRating += rating;
+    dateEntry.distribution[rating] = (dateEntry.distribution[rating] || 0) + 1;
+  });
+
+  const labWise = Array.from(labMap.values())
+    .map((l) => ({
+      ...l,
+      averageRating: l.totalReviews > 0 ? parseFloat((l.sumRating / l.totalReviews).toFixed(2)) : 0,
+    }))
+    .sort((a, b) => b.totalReviews - a.totalReviews || b.averageRating - a.averageRating);
+
+  const dateWise = Array.from(dateMap.values())
+    .map((d) => ({
+      ...d,
+      averageRating: d.totalReviews > 0 ? parseFloat((d.sumRating / d.totalReviews).toFixed(2)) : 0,
+    }))
+    .sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+
+  return {
+    overall: {
+      averageRating: parseFloat((overallSum / feedbacks.length).toFixed(2)),
+      totalReviews: feedbacks.length,
+      distribution: overallDist,
+    },
+    labWise,
+    dateWise,
+  };
 }
 
 const FeedbackSchema = z.object({
