@@ -2471,7 +2471,7 @@ export default function StudentDashboardPage() {
                         return (
                           <div className="p-8 bg-[#F9F9F9] border-[2px] border-[#111111] text-center font-mono text-xs text-slate-600 space-y-3">
                             <p>
-                              No questions match the filter <strong>"{reviewFilter.toUpperCase()}"</strong>.
+                              No questions match the filter <strong>&quot;{reviewFilter.toUpperCase()}&quot;</strong>.
                             </p>
                             <button
                               type="button"
