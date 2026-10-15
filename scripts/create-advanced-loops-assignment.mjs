@@ -398,16 +398,16 @@ async function main() {
   const endsAt = new Date(Date.now() + 14 * 24 * 3600 * 1000);
 
   let assessment = await prisma.assessment.findFirst({
-    where: { workshopId, title: 'Advanced Loops' },
+    where: { workshopId, title: { in: ['Day 4: Advanced Loops', 'Advanced Loops'] } },
     include: { questions: true }
   });
 
   if (!assessment) {
-    console.log('Creating live Assessment: Advanced Loops...');
+    console.log('Creating live Assessment: Day 4: Advanced Loops...');
     assessment = await prisma.assessment.create({
       data: {
         workshopId,
-        title: 'Advanced Loops',
+        title: 'Day 4: Advanced Loops',
         description: 'Super 60 C++ Assignment: Advanced Loops, Pattern Printing & Basic Programming. 20 MCQs covering while vs do-while loops, break, continue, nested loops, and pattern printing algorithms.',
         type: 'ASSIGNMENT',
         targetAudience: 'LABS',
@@ -434,21 +434,25 @@ async function main() {
     });
     console.log(`✔ Assessment created successfully! ID: ${assessment.id}`);
   } else {
-    console.log(`✔ Found existing Assessment: ID: ${assessment.id} (${assessment.questions.length} questions)`);
+    await prisma.assessment.update({
+      where: { id: assessment.id },
+      data: { title: 'Day 4: Advanced Loops' }
+    });
+    console.log(`✔ Found existing Assessment: ID: ${assessment.id} (${assessment.questions.length} questions), updated title to Day 4: Advanced Loops`);
   }
 
 
   // Create Assignment record for dashboard & grading consistency
   const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
   let assign = await prisma.assignment.findFirst({
-    where: { workshopId, title: 'Advanced Loops' }
+    where: { workshopId, title: { in: ['Day 4: Advanced Loops', 'Advanced Loops'] } }
   });
 
   if (!assign) {
     assign = await prisma.assignment.create({
       data: {
         workshopId,
-        title: 'Advanced Loops',
+        title: 'Day 4: Advanced Loops',
         description: 'Super 60 C++ Assignment: Advanced Loops, Pattern Printing & Basic Programming. Complete the interactive 20 MCQ assessment under the Assignments and Tests tab.',
         maxScore: 100,
         dueDate: endsAt,
@@ -457,7 +461,11 @@ async function main() {
     });
     console.log(`✔ Assignment record created: ID: ${assign.id} (${assign.title})`);
   } else {
-    console.log(`✔ Found existing Assignment record: ID: ${assign.id} (${assign.title})`);
+    await prisma.assignment.update({
+      where: { id: assign.id },
+      data: { title: 'Day 4: Advanced Loops' }
+    });
+    console.log(`✔ Found existing Assignment record: ID: ${assign.id}, updated title to Day 4: Advanced Loops`);
   }
 }
 
