@@ -1,0 +1,2242 @@
+%PDF-1.3
+%ºß¬à
+3 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 10526
+>>
+stream
+0.5670000000000001 w
+0 G
+0.07 g
+0. 841.8899999999999864 595.2799999999999727 -62.3622047244094517 re
+f
+0.94 0.49 0.15 rg
+0. 779.5277952755905062 595.2799999999999727 -5.6692913385826778 re
+f
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+1. g
+39.6850393700787407 813.5435433070865656 Td
+(SUPER 60 // SKILL UP 2026) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.824 g
+39.6850393700787407 793.7010236220472734 Td
+(DAY 5 : ADVANCED CLI & PROJECT • 20 ADVANCED C++ MCQS) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.824 g
+410.2349606299211473 793.7010236220472734 Td
+(Max Marks: 100 • Due Date: 30 Oct 2026) Tj
+ET
+0.97 0.98 0.98 rg
+0.82 G
+0.8503937007874016 w
+43.9370078740157552 756.8506299212598378 m
+551.3429921259842104 756.8506299212598378 l
+553.6912894874694757 756.8506299212598378 555.5949606299211609 754.9469587788081526 555.5949606299211609 752.5986614173227736 c
+555.5949606299211609 732.7561417322834814 l
+555.5949606299211609 730.4078443707981023 553.2466632684358956 728.5041732283464171 551.3429921259842104 728.5041732283464171 c
+43.9370078740157552 728.5041732283464171 l
+41.5887105125304899 728.5041732283464171 39.6850393700787407 730.8524705898317961 39.6850393700787407 732.7561417322834814 c
+39.6850393700787407 752.5986614173227736 l
+39.6850393700787407 754.9469587788081526 42.0333367315640061 756.8506299212598378 43.9370078740157552 756.8506299212598378 c
+h
+B
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.067 g
+51.0236220472441033 739.8427559055118081 Td
+(INSTRUCTIONS: Choose the single correct answer from the four options for each question.) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 711.4962992125983874 Td
+(Q1. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 711.4962992125983874 Td
+(In C++, which statement about a `switch` statement is correct?) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 693.9214960629921052 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 693.9214960629921052 Td
+(A `switch` statement can directly use any data type, including `float` and `string`.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 679.748267716535338 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 679.748267716535338 Td
+(If `break` is missing, execution can continue into the next case.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 665.5750393700786844 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 665.5750393700786844 Td
+(The `default` case must always be written first.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 651.4018110236220309 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 651.4018110236220309 Td
+(A `switch` statement can contain only two cases.) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 627.3073228346456744 Td
+(Q2. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 627.3073228346456744 Td
+(What is the main difference between a `while` loop and a `do-while` loop in C++?) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 609.7325196850392786 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 609.7325196850392786 Td
+(A `while` loop always runs at least once.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 595.559291338582625 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 595.559291338582625 Td
+(A `do-while` loop checks its condition before running.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 581.3860629921259715 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 581.3860629921259715 Td
+(A `do-while` loop runs at least once before checking its condition.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 567.212834645669318 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 567.212834645669318 Td
+(Both loops always run the same number of times.) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 543.1183464566928478 Td
+(Q3. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 543.1183464566928478 Td
+(A voting program allows a person to vote only if their age is at least 18 and their voter ID is valid. Which condition is) Tj
+T* (correct?) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 513.6380314960629221 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 513.6380314960629221 Td
+(if \(age >= 18 || validID\)) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 499.4648031496062117 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 499.4648031496062117 Td
+(if \(age > 18 && !validID\)) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 485.2915748031495013 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 485.2915748031495013 Td
+(if \(age >= 18 && validID\)) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 471.1183464566928478 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 471.1183464566928478 Td
+(if \(age < 18 && validID\)) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 447.0238582677164345 Td
+(Q4. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 447.0238582677164345 Td
+(In a supermarket billing program, what is the correct way to calculate the total bill when each item has a different price) Tj
+T* (and quantity?) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 417.5435433070865088 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 417.5435433070865088 Td
+(Add each item's quantity to the total bill.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 403.3703149606297984 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 403.3703149606297984 Td
+(Add each item's price to the total bill only once.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 389.1970866141731449 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 389.1970866141731449 Td
+(Multiply each item's price by its quantity and add the result to the total bill.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 375.0238582677164345 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 375.0238582677164345 Td
+(Multiply the total bill by the number of items after every purchase.) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 350.9293700787400212 Td
+(Q5. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 350.9293700787400212 Td
+(Which statement about `break` and `continue` is correct in a loop?) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 333.3545669291337958 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 333.3545669291337958 Td
+(`break` skips only the current iteration, while `continue` ends the loop.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 319.1813385826770855 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 319.1813385826770855 Td
+(`break` ends the loop, while `continue` skips the remaining statements in the current iteration.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 305.0081102362204319 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 305.0081102362204319 Td
+(Both statements always end the loop.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 290.8348818897636647 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 290.8348818897636647 Td
+(Both statements restart the program.) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 266.7403937007873083 Td
+(Q6. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 266.7403937007873083 Td
+(A toll plaza accepts vehicle types 1, 2 and 3. If the user enters another number, the program must show an error and) Tj
+T* (must not change the total toll. Which approach is correct?) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 237.2600787401573825 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 237.2600787401573825 Td
+(Add the toll first and check the vehicle type afterward.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 223.086850393700729 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 223.086850393700729 Td
+(Count every input as a valid vehicle.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 208.9136220472439618 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 208.9136220472439618 Td
+(Use a `default` case to report invalid input without changing the toll or vehicle count.) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 194.7403937007873083 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 194.7403937007873083 Td
+(Ignore the vehicle type and add a fixed toll for every input.) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 170.6459055118109518 Td
+(Q7. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 170.6459055118109518 Td
+(Consider the following code:) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int i = 1, sum = 0;) Tj
+T* () Tj
+T* (while \(i <= 6\) {) Tj
+T* (    if \(i % 2 == 0\) {) Tj
+T* (        i++;) Tj
+T* (        continue;) Tj
+T* (    }) Tj
+T* () Tj
+T* (    sum += i;) Tj
+T* (    i++;) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << sum;) Tj
+T* (```) Tj
+T* () Tj
+T* (What is the output?) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+39.6850393700787407 17.0078740157480297 Td
+(Super 60 Systems & Engineering Excellence • Skill Up 2026) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+517.4949606299212519 17.0078740157480297 Td
+(Page 1 of 7) Tj
+ET
+0.86 G
+0.5669291338582678 w
+39.6850393700787407 25.5118110236220517 m
+555.5949606299211609 25.5118110236220517 l
+S
+endstream
+endobj
+5 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 6 0 R
+>>
+endobj
+6 0 obj
+<<
+/Length 5114
+>>
+stream
+0.8503937007874016 w
+0.82 G
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 790.8663779527558972 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 790.8663779527558972 Td
+(12) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 776.69314960629913 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 776.69314960629913 Td
+(9) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 762.5199212598424765 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 762.5199212598424765 Td
+(16) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 748.346692913385823 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 748.346692913385823 Td
+(21) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 724.2522047244094665 Td
+(Q8. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 724.2522047244094665 Td
+(What will be the output of the following C++ code?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int x = 3, total = 0;) Tj
+T* () Tj
+T* (for \(int i = 1; i <= 4; i++\) {) Tj
+T* (    switch \(i\) {) Tj
+T* (        case 1:) Tj
+T* (            total += x;) Tj
+T* (            break;) Tj
+T* (        case 2:) Tj
+T* (            total *= 2;) Tj
+T* (            break;) Tj
+T* (        case 3:) Tj
+T* (            total += i * x;) Tj
+T* (        case 4:) Tj
+T* (            total -= 2;) Tj
+T* (            break;) Tj
+T* (    }) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << total;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 444.7561417322833677 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 444.7561417322833677 Td
+(10) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 430.5829133858266573 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 430.5829133858266573 Td
+(13) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 416.4096850393699469 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 416.4096850393699469 Td
+(16) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 402.2364566929132366 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 402.2364566929132366 Td
+(19) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 378.1419685039368801 Td
+(Q9. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 378.1419685039368801 Td
+(A cricket scoring program stores the runs scored on each ball. What will the following code print?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int runs[] = {1, 4, 0, 2, 6, 0, 3};) Tj
+T* (int total = 0, scoringBalls = 0, dotBalls = 0;) Tj
+T* () Tj
+T* (for \(int i = 0; i < 7; i++\) {) Tj
+T* (    total += runs[i];) Tj
+T* () Tj
+T* (    if \(runs[i] == 0\)) Tj
+T* (        dotBalls++;) Tj
+T* (    else) Tj
+T* (        scoringBalls++;) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << total << " " << scoringBalls << " " << dotBalls;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 170.0789763779525856 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 170.0789763779525856 Td
+(16 5 2) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 155.9057480314959321 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 155.9057480314959321 Td
+(16 7 2) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 141.7325196850391649 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 141.7325196850391649 Td
+(13 5 2) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 127.5592913385825113 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 127.5592913385825113 Td
+(16 2 5) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 103.4648031496061549 Td
+(Q10. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 103.4648031496061549 Td
+(A shop has 25 items in stock. It receives requests to sell 8, 12, 9 and 5 items. A request is accepted only when enough) Tj
+T* (stock is available. What will be the final stock and total number of items sold?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int stock = 25, sold = 0;) Tj
+T* (int request[] = {8, 12, 9, 5};) Tj
+T* () Tj
+T* (for \(int i = 0; i < 4; i++\) {) Tj
+T* (    if \(request[i] <= stock\) {) Tj
+T* (        stock -= request[i];) Tj
+T* (        sold += request[i];) Tj
+T* (    }) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << stock << " " << sold;) Tj
+T* (```) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+39.6850393700787407 17.0078740157480297 Td
+(Super 60 Systems & Engineering Excellence • Skill Up 2026) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+517.4949606299212519 17.0078740157480297 Td
+(Page 2 of 7) Tj
+ET
+0.86 G
+0.5669291338582678 w
+39.6850393700787407 25.5118110236220517 m
+555.5949606299211609 25.5118110236220517 l
+S
+endstream
+endobj
+7 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 8 0 R
+>>
+endobj
+8 0 obj
+<<
+/Length 4771
+>>
+stream
+0.8503937007874016 w
+0.82 G
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 790.8663779527558972 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 790.8663779527558972 Td
+(0 25) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 776.69314960629913 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 776.69314960629913 Td
+(5 20) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 762.5199212598424765 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 762.5199212598424765 Td
+(5 25) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 748.346692913385823 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 748.346692913385823 Td
+(0 30) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 724.2522047244094665 Td
+(Q11. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 724.2522047244094665 Td
+(What is the output of this toll plaza program?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int toll = 0, count = 0;) Tj
+T* (int vehicle[] = {1, 3, 2, 4, 1, 2};) Tj
+T* () Tj
+T* (for \(int i = 0; i < 6; i++\) {) Tj
+T* (    switch \(vehicle[i]\) {) Tj
+T* (        case 1:) Tj
+T* (            toll += 50;) Tj
+T* (            count++;) Tj
+T* (            break;) Tj
+T* (        case 2:) Tj
+T* (            toll += 100;) Tj
+T* (            count++;) Tj
+T* (            break;) Tj
+T* (        case 3:) Tj
+T* (            toll += 200;) Tj
+T* (            count++;) Tj
+T* (            break;) Tj
+T* (        default:) Tj
+T* (            continue;) Tj
+T* (    }) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << toll << " " << count;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 397.1340944881889072 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 397.1340944881889072 Td
+(500 5) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 382.9608661417321969 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 382.9608661417321969 Td
+(550 6) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 368.7876377952754865 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 368.7876377952754865 Td
+(450 5) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 354.614409448818833 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 354.614409448818833 Td
+(500 6) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 330.5199212598424197 Td
+(Q12. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 330.5199212598424197 Td
+( A   s u p e r m a r k e t   g i v e s   a   1 2 %   d i s c o u n t   w h e n   t h e   s u b t o t a l   i s   a t   l e a s t   ¹ 8 , 0 0 0 .   A f t e r   t h e   d i s c o u n t ,   i t   c h a r g e s   5 %   t a x   i f   t h e) Tj
+T* ( r e m a i n i n g   a m o u n t   i s   a t   l e a s t   ¹ 5 , 0 0 0 ;   o t h e r w i s e ,   i t   c h a r g e s   2 %   t a x .   W h a t   i s   t h e   f i n a l   b i l l   f o r   a   s u b t o t a l   o f   ¹ 1 0 , 0 0 0 ?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (double subtotal = 10000;) Tj
+T* (double discount = 0;) Tj
+T* () Tj
+T* (if \(subtotal >= 8000\)) Tj
+T* (    discount = subtotal * 0.12;) Tj
+T* () Tj
+T* (double amount = subtotal - discount;) Tj
+T* (double tax;) Tj
+T* () Tj
+T* (if \(amount >= 5000\)) Tj
+T* (    tax = amount * 0.05;) Tj
+T* (else) Tj
+T* (    tax = amount * 0.02;) Tj
+T* () Tj
+T* (cout << amount + tax;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 86.7403937007874219 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 86.7403937007874219 Td
+( ¹ 1 0 , 0 0 0) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 72.5671653543306547 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 72.5671653543306547 Td
+( ¹ 9 , 2 4 0) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 58.3939370078740012 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 58.3939370078740012 Td
+( ¹ 9 , 2 4 0   e x a c t l y   a f t e r   d i s c o u n t   a n d   t a x) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+39.6850393700787407 17.0078740157480297 Td
+(Super 60 Systems & Engineering Excellence • Skill Up 2026) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+517.4949606299212519 17.0078740157480297 Td
+(Page 3 of 7) Tj
+ET
+0.86 G
+0.5669291338582678 w
+39.6850393700787407 25.5118110236220517 m
+555.5949606299211609 25.5118110236220517 l
+S
+endstream
+endobj
+9 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 10 0 R
+>>
+endobj
+10 0 obj
+<<
+/Length 4875
+>>
+stream
+0.8503937007874016 w
+0.82 G
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 790.8663779527558972 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 790.8663779527558972 Td
+( ¹ 9 , 2 4 0   i s   t h e   d i s c o u n t e d   a m o u n t   b e f o r e   t a x) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 766.7718897637795408 Td
+(Q13. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 766.7718897637795408 Td
+(What will this nested-loop program print?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int total = 0;) Tj
+T* () Tj
+T* (for \(int i = 1; i <= 5; i++\) {) Tj
+T* (    for \(int j = 1; j <= 5; j++\) {) Tj
+T* (        if \(i + j > 6\)) Tj
+T* (            break;) Tj
+T* () Tj
+T* (        total += i * j;) Tj
+T* (    }) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << total;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 570.614409448818833 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 570.614409448818833 Td
+(70) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 556.4411811023621794 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 556.4411811023621794 Td
+(85) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 542.2679527559055259 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 542.2679527559055259 Td
+(95) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 528.0947244094487587 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 528.0947244094487587 Td
+(105) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 504.0002362204724022 Td
+(Q14. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 504.0002362204724022 Td
+(An inventory system processes sales and restocking operations. What are the final values of `stock` and `sold`?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int stock = 12, sold = 0;) Tj
+T* () Tj
+T* (int action[] = {1, 2, 1, 1, 2, 1};) Tj
+T* (int qty[] = {5, 7, 10, 4, 6, 3};) Tj
+T* () Tj
+T* (for \(int i = 0; i < 6; i++\) {) Tj
+T* (    switch \(action[i]\) {) Tj
+T* (        case 1:) Tj
+T* (            if \(qty[i] <= stock\) {) Tj
+T* (                stock -= qty[i];) Tj
+T* (                sold += qty[i];) Tj
+T* (            }) Tj
+T* (            break;) Tj
+T* () Tj
+T* (        case 2:) Tj
+T* (            stock += qty[i];) Tj
+T* (            break;) Tj
+T* (    }) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << stock << " " << sold;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 200.69314960629913 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 200.69314960629913 Td
+(3 12) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 186.5199212598424765 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 186.5199212598424765 Td
+(7 12) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 172.346692913385823 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 172.346692913385823 Td
+(3 15) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 158.1734645669290558 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 158.1734645669290558 Td
+(9 12) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 134.0789763779526993 Td
+(Q15. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 134.0789763779526993 Td
+(A voting machine has three candidates. Option 1 adds a vote to Candidate A, option 2 adds a vote to Candidate B, option) Tj
+T* (3 resets both candidates' votes, and every other input increases the invalid vote count. What is the final output?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int A = 0, B = 0, invalid = 0;) Tj
+T* (int choice[] = {1, 2, 1, 4, 2, 3, 1, 5, 2, 4};) Tj
+T* () Tj
+T* (for \(int i = 0; i < 10; i++\) {) Tj
+T* (    switch \(choice[i]\) {) Tj
+T* (        case 1:) Tj
+T* (            A++;) Tj
+T* (            break;) Tj
+T* (        case 2:) Tj
+T* (            B++;) Tj
+T* (            break;) Tj
+T* (        case 3:) Tj
+T* (            A = 0;) Tj
+T* (            B = 0;) Tj
+T* (            break;) Tj
+T* (        default:) Tj
+T* (            invalid++;) Tj
+T* (    }) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << A << " " << B << " " << invalid;) Tj
+T* (```) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+39.6850393700787407 17.0078740157480297 Td
+(Super 60 Systems & Engineering Excellence • Skill Up 2026) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+517.4949606299212519 17.0078740157480297 Td
+(Page 4 of 7) Tj
+ET
+0.86 G
+0.5669291338582678 w
+39.6850393700787407 25.5118110236220517 m
+555.5949606299211609 25.5118110236220517 l
+S
+endstream
+endobj
+11 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 12 0 R
+>>
+endobj
+12 0 obj
+<<
+/Length 4803
+>>
+stream
+0.8503937007874016 w
+0.82 G
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 790.8663779527558972 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 790.8663779527558972 Td
+(1 2 3) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 776.69314960629913 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 776.69314960629913 Td
+(2 2 2) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 762.5199212598424765 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 762.5199212598424765 Td
+(1 2 2) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 748.346692913385823 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 748.346692913385823 Td
+(3 2 3) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 724.2522047244094665 Td
+(Q16. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 724.2522047244094665 Td
+(A cricket program uses the following rules: a wide adds one extra run but does not count as a legal ball, a wicket counts) Tj
+T* (as a legal ball but adds no runs, and every other value is the number of runs scored from the bat. What is the output?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int total = 0, legalBalls = 0, wickets = 0;) Tj
+T* (int event[] = {4, -1, 2, -2, 6, 1, -1, 3};) Tj
+T* () Tj
+T* (for \(int i = 0; i < 8; i++\) {) Tj
+T* (    if \(event[i] == -1\) {) Tj
+T* (        total++;) Tj
+T* (    }) Tj
+T* (    else if \(event[i] == -2\) {) Tj
+T* (        wickets++;) Tj
+T* (        legalBalls++;) Tj
+T* (    }) Tj
+T* (    else {) Tj
+T* (        total += event[i];) Tj
+T* (        legalBalls++;) Tj
+T* (    }) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << total << " " << legalBalls << " " << wickets;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 444.7561417322833677 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 444.7561417322833677 Td
+(18 6 1) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 430.5829133858266573 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 430.5829133858266573 Td
+(18 7 1) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 416.4096850393699469 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 416.4096850393699469 Td
+(17 7 1) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 402.2364566929132366 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 402.2364566929132366 Td
+(18 8 2) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 378.1419685039368801 Td
+(Q17. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 378.1419685039368801 Td
+(An inventory program starts with 20 items. A sale is accepted only if enough stock is available. Restocking adds items) Tj
+T* ( b u t   d o e s   n o t   c o u n t   a s   a   s a l e .   E a c h   i t e m   s o l d   e a r n s   ¹ 3 5 .   W h a t   a r e   t h e   f i n a l   s t o c k   a n d   r e v e n u e ?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int stock = 20, revenue = 0;) Tj
+T* (int price = 35;) Tj
+T* () Tj
+T* (int action[] = {1, 2, 1, 1, 2, 1, 1};) Tj
+T* (int qty[] = {8, 6, 10, 5, 12, 7, 4};) Tj
+T* () Tj
+T* (for \(int i = 0; i < 7; i++\) {) Tj
+T* (    if \(action[i] == 1\) {) Tj
+T* (        if \(qty[i] <= stock\) {) Tj
+T* (            stock -= qty[i];) Tj
+T* (            revenue += qty[i] * price;) Tj
+T* (        }) Tj
+T* (    }) Tj
+T* (    else if \(action[i] == 2\) {) Tj
+T* (        stock += qty[i];) Tj
+T* (    }) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << stock << " " << revenue;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 86.7403937007871946 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 86.7403937007871946 Td
+(4 840) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 72.567165354330541 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 72.567165354330541 Td
+(4 805) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 58.3939370078737738 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 58.3939370078737738 Td
+(7 840) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+39.6850393700787407 17.0078740157480297 Td
+(Super 60 Systems & Engineering Excellence • Skill Up 2026) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+517.4949606299212519 17.0078740157480297 Td
+(Page 5 of 7) Tj
+ET
+0.86 G
+0.5669291338582678 w
+39.6850393700787407 25.5118110236220517 m
+555.5949606299211609 25.5118110236220517 l
+S
+endstream
+endobj
+13 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 14 0 R
+>>
+endobj
+14 0 obj
+<<
+/Length 4407
+>>
+stream
+0.8503937007874016 w
+0.82 G
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 790.8663779527558972 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 790.8663779527558972 Td
+(8 840) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 766.7718897637795408 Td
+(Q18. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 766.7718897637795408 Td
+( A   t o l l   p l a z a   h a s   a   c o l l e c t i o n   l i m i t   o f   ¹ 5 0 0 .   A   v e h i c l e   i s   a c c e p t e d   o n l y   i f   a d d i n g   i t s   t o l l   d o e s   n o t   e x c e e d   t h i s   l i m i t .   V e h i c l e) Tj
+T* ( t y p e s   1 ,   2   a n d   3   p a y   ¹ 5 0 ,   ¹ 1 0 0   a n d   ¹ 2 0 0 .   W h a t   i s   t h e   f i n a l   c o l l e c t i o n   a n d   n u m b e r   o f   a c c e p t e d   v e h i c l e s ?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int toll = 0, count = 0;) Tj
+T* (int vehicles[] = {3, 2, 1, 3, 2, 1};) Tj
+T* () Tj
+T* (for \(int i = 0; i < 6; i++\) {) Tj
+T* (    int fee = 0;) Tj
+T* () Tj
+T* (    switch \(vehicles[i]\) {) Tj
+T* (        case 1: fee = 50; break;) Tj
+T* (        case 2: fee = 100; break;) Tj
+T* (        case 3: fee = 200; break;) Tj
+T* (    }) Tj
+T* () Tj
+T* (    if \(fee > 0 && toll + fee <= 500\) {) Tj
+T* (        toll += fee;) Tj
+T* (        count++;) Tj
+T* (    }) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << toll << " " << count;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 475.3703149606298552 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 475.3703149606298552 Td
+(500 4) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 461.1970866141731449 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 461.1970866141731449 Td
+(450 4) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 447.0238582677164345 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 447.0238582677164345 Td
+(500 5) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 432.850629921259781 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 432.850629921259781 Td
+(550 5) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 408.7561417322833677 Td
+(Q19. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 408.7561417322833677 Td
+( A   s u p e r m a r k e t   a p p l i e s   a   1 5 %   d i s c o u n t   f o r   b i l l s   o f   ¹ 1 0 , 0 0 0   o r   m o r e .   M e m b e r s   r e c e i v e   a n   e x t r a   ¹ 5 0 0   d i s c o u n t   a f t e r   t h e) Tj
+T* (percentage discount. Tax is 5% of the amount after all discounts. What is the final bill?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (double subtotal = 15000;) Tj
+T* (bool member = true;) Tj
+T* () Tj
+T* (double discount = 0;) Tj
+T* () Tj
+T* (if \(subtotal >= 10000\)) Tj
+T* (    discount = subtotal * 0.15;) Tj
+T* (else if \(subtotal >= 5000\)) Tj
+T* (    discount = subtotal * 0.10;) Tj
+T* () Tj
+T* (if \(member\)) Tj
+T* (    discount += 500;) Tj
+T* () Tj
+T* (double amount = subtotal - discount;) Tj
+T* () Tj
+T* (if \(amount < 0\)) Tj
+T* (    amount = 0;) Tj
+T* () Tj
+T* (double tax = amount * 0.05;) Tj
+T* () Tj
+T* (cout << amount + tax;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 93.5435433070865656 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 93.5435433070865656 Td
+( ¹ 1 2 , 0 7 5) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 79.3703149606297984 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 79.3703149606297984 Td
+( ¹ 1 2 , 6 0 0) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 65.1970866141731449 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 65.1970866141731449 Td
+( ¹ 1 2 , 3 3 7 . 5 0) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+39.6850393700787407 17.0078740157480297 Td
+(Super 60 Systems & Engineering Excellence • Skill Up 2026) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+517.4949606299212519 17.0078740157480297 Td
+(Page 6 of 7) Tj
+ET
+0.86 G
+0.5669291338582678 w
+39.6850393700787407 25.5118110236220517 m
+555.5949606299211609 25.5118110236220517 l
+S
+endstream
+endobj
+15 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 16 0 R
+>>
+endobj
+16 0 obj
+<<
+/Length 2824
+>>
+stream
+0.8503937007874016 w
+0.82 G
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 790.8663779527558972 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 790.8663779527558972 Td
+( ¹ 1 3 , 1 2 5) Tj
+ET
+BT
+/F2 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+39.6850393700787407 766.7718897637795408 Td
+(Q20. ) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.067 g
+59.5275590551181182 766.7718897637795408 Td
+(A menu-driven inventory program uses option 1 to sell items, option 2 to restock items, option 3 to display stock and) Tj
+T* (total items sold, and option 0 to stop. A sale is accepted only when enough stock is available. What is the complete) Tj
+T* (output?) Tj
+T* () Tj
+T* (```cpp) Tj
+T* (int stock = 15, sold = 0;) Tj
+T* () Tj
+T* (int choice[] = {1, 2, 1, 3, 1, 2, 3, 0};) Tj
+T* (int qty[] = {7, 5, 8, 0, 4, 3, 0, 0};) Tj
+T* () Tj
+T* (int i = 0;) Tj
+T* () Tj
+T* (while \(i < 8\) {) Tj
+T* (    switch \(choice[i]\) {) Tj
+T* (        case 1:) Tj
+T* (            if \(qty[i] <= stock\) {) Tj
+T* (                stock -= qty[i];) Tj
+T* (                sold += qty[i];) Tj
+T* (            }) Tj
+T* (            break;) Tj
+T* () Tj
+T* (        case 2:) Tj
+T* (            stock += qty[i];) Tj
+T* (            break;) Tj
+T* () Tj
+T* (        case 3:) Tj
+T* (            cout << stock << ":" << sold << " ";) Tj
+T* (            break;) Tj
+T* () Tj
+T* (        case 0:) Tj
+T* (            i = 8;) Tj
+T* (            break;) Tj
+T* (    }) Tj
+T* () Tj
+T* (    i++;) Tj
+T* (}) Tj
+T* () Tj
+T* (cout << stock << " " << sold;) Tj
+T* (```) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 296.7876377952754865 Td
+(A.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 296.7876377952754865 Td
+(13:7 16:7 16 7) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 282.614409448818833 Td
+(B.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 282.614409448818833 Td
+(13:7 16:7 16 10) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 268.4411811023620658 Td
+(C.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 268.4411811023620658 Td
+(8:7 11:7 11 7) Tj
+ET
+BT
+/F2 8 Tf
+9.1999999999999993 TL
+0.941 0.486 0.153 rg
+53.8582677165354369 254.2679527559054122 Td
+(D.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.157 g
+70.8661417322834666 254.2679527559054122 Td
+(13:7 16:10 16 10) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+39.6850393700787407 17.0078740157480297 Td
+(Super 60 Systems & Engineering Excellence • Skill Up 2026) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.392 0.455 0.545 rg
+517.4949606299212519 17.0078740157480297 Td
+(Page 7 of 7) Tj
+ET
+0.86 G
+0.5669291338582678 w
+39.6850393700787407 25.5118110236220517 m
+555.5949606299211609 25.5118110236220517 l
+S
+endstream
+endobj
+1 0 obj
+<</Type /Pages
+/Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R ]
+/Count 7
+>>
+endobj
+17 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+18 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+19 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+20 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+21 0 obj
+<<
+/Type /Font
+/BaseFont /Courier
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+22 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+23 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+24 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+25 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Roman
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+26 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+27 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Italic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+28 0 obj
+<<
+/Type /Font
+/BaseFont /Times-BoldItalic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+29 0 obj
+<<
+/Type /Font
+/BaseFont /ZapfDingbats
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+30 0 obj
+<<
+/Type /Font
+/BaseFont /Symbol
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+2 0 obj
+<<
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font <<
+/F1 17 0 R
+/F2 18 0 R
+/F3 19 0 R
+/F4 20 0 R
+/F5 21 0 R
+/F6 22 0 R
+/F7 23 0 R
+/F8 24 0 R
+/F9 25 0 R
+/F10 26 0 R
+/F11 27 0 R
+/F12 28 0 R
+/F13 29 0 R
+/F14 30 0 R
+>>
+/XObject <<
+>>
+>>
+endobj
+31 0 obj
+<<
+/Producer (jsPDF 4.2.1)
+/CreationDate (D:20261016185032+05'30')
+>>
+endobj
+32 0 obj
+<<
+/Type /Catalog
+/Pages 1 0 R
+/OpenAction [3 0 R /FitH null]
+/PageLayout /OneColumn
+>>
+endobj
+xref
+0 33
+0000000000 65535 f 
+0000038670 00000 n 
+0000040531 00000 n 
+0000000015 00000 n 
+0000000152 00000 n 
+0000010731 00000 n 
+0000010868 00000 n 
+0000016034 00000 n 
+0000016171 00000 n 
+0000020994 00000 n 
+0000021132 00000 n 
+0000026060 00000 n 
+0000026199 00000 n 
+0000031055 00000 n 
+0000031194 00000 n 
+0000035654 00000 n 
+0000035793 00000 n 
+0000038766 00000 n 
+0000038892 00000 n 
+0000039023 00000 n 
+0000039157 00000 n 
+0000039295 00000 n 
+0000039419 00000 n 
+0000039548 00000 n 
+0000039680 00000 n 
+0000039816 00000 n 
+0000039944 00000 n 
+0000040071 00000 n 
+0000040200 00000 n 
+0000040333 00000 n 
+0000040435 00000 n 
+0000040784 00000 n 
+0000040870 00000 n 
+trailer
+<<
+/Size 33
+/Root 32 0 R
+/Info 31 0 R
+/ID [ <4E8F5C0CB47B5E43617CD53FB8B561F5> <4E8F5C0CB47B5E43617CD53FB8B561F5> ]
+>>
+startxref
+40974
+%%EOF
