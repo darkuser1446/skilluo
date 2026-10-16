@@ -45,6 +45,7 @@ import CohortQuotaMatrix from "@/components/CohortQuotaMatrix";
 import { SkeletonMetric, SkeletonTableRow } from "@/components/Skeleton";
 import EmptyState from "@/components/EmptyState";
 import { exportToExcel } from "@/utils/export";
+import { exportFeedbackToPdf } from "@/utils/feedback-pdf";
 
 interface Workshop {
   id: string;
@@ -1174,6 +1175,23 @@ export default function AdminDashboardPage() {
     ]);
 
     exportToExcel(`skillup_users_roster.csv`, headers, rows);
+  };
+
+  const handleDownloadFeedbackPdf = () => {
+    const selectedLabObj = labs.find((l) => l.id === feedbackLabId);
+    const selectedDateObj = computedFeedbackAnalytics.dateWise.find((d: any) => d.dateKey === feedbackDateFilter);
+    const currentWorkshop = workshops.find((w) => w.id === selectedWorkshopId);
+
+    exportFeedbackToPdf(filteredFeedbacks, {
+      labName: selectedLabObj?.name || (feedbackLabId ? "Selected Lab" : "All Laboratory Tracks"),
+      dateStr: selectedDateObj?.displayDate || (feedbackDateFilter ? feedbackDateFilter : "All Session Dates"),
+      ratingFilter: feedbackRatingFilter || undefined,
+      categoryFilter: feedbackCategoryFilter || undefined,
+      searchTerm: feedbackSearch || undefined,
+      workshopTitle: currentWorkshop?.name || "Skill Up 2026",
+      userRole: "ADMIN",
+      userName: "Administrator",
+    });
   };
 
   // Only students who are SELECTED or assigned to an active lab track
@@ -4243,6 +4261,15 @@ export default function AdminDashboardPage() {
               <span className="px-3 py-1 bg-[#FFF0E5] text-[#111111] border-2 border-[#111111] shadow-[2px_2px_0px_#111111]">
                 Workshop Avg: <strong className="text-[#F07C27]">★ {computedFeedbackAnalytics.overall.averageRating} / 5.0</strong>
               </span>
+              <button
+                type="button"
+                onClick={handleDownloadFeedbackPdf}
+                className="flex items-center gap-1.5 px-3 py-1 bg-[#111111] hover:bg-slate-800 text-white border-2 border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer font-bold"
+                title="Download filtered feedback audit report as PDF"
+              >
+                <Download className="w-3.5 h-3.5 text-[#F07C27]" />
+                <span>Export PDF</span>
+              </button>
             </div>
           </div>
 
@@ -4564,16 +4591,29 @@ export default function AdminDashboardPage() {
               FEEDBACK REVIEWS LIST
           ══════════════════════════════════════════════════════════ */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-700">
-              <span>Showing {filteredFeedbacks.length} of {feedbacks.length} Review Submissions</span>
-              {filteredFeedbacks.length > 0 && (
-                <span>
-                  Filtered Average:{" "}
-                  <strong className="text-[#F07C27]">
-                    ★ {(filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / filteredFeedbacks.length).toFixed(2)} / 5.0
-                  </strong>
-                </span>
-              )}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono font-bold text-slate-700">
+              <div className="flex items-center gap-3">
+                <span>Showing {filteredFeedbacks.length} of {feedbacks.length} Review Submissions</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {filteredFeedbacks.length > 0 && (
+                  <span className="px-2.5 py-1 bg-white border border-[#111111]">
+                    Filtered Average:{" "}
+                    <strong className="text-[#F07C27]">
+                      ★ {(filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / filteredFeedbacks.length).toFixed(2)} / 5.0
+                    </strong>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleDownloadFeedbackPdf}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F07C27] hover:bg-[#d96614] text-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer whitespace-nowrap"
+                  title="Download filter-wise feedback audit report as PDF"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Filtered PDF ({filteredFeedbacks.length})</span>
+                </button>
+              </div>
             </div>
 
             {filteredFeedbacks.length === 0 ? (

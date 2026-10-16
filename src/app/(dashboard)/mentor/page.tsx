@@ -48,6 +48,7 @@ import TestManager from "@/components/TestManager";
 import { SkeletonCard, SkeletonMetric, SkeletonProfile } from "@/components/Skeleton";
 import EmptyState from "@/components/EmptyState";
 import { exportToExcel } from "@/utils/export";
+import { exportFeedbackToPdf } from "@/utils/feedback-pdf";
 
 export default function MentorDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -919,6 +920,22 @@ export default function MentorDashboardPage() {
       headers,
       rows
     );
+  };
+
+  const handleDownloadFeedbackPdf = () => {
+    const selectedLabObj = labs.find((l) => l.id === feedbackLabFilter);
+    const selectedDateObj = mentorFeedbackAnalytics.dateWise.find((d) => d.dateKey === feedbackDateFilter);
+
+    exportFeedbackToPdf(filteredMentorFeedbacks, {
+      labName: selectedLabObj?.name || (feedbackLabFilter ? "Selected Lab" : "All Laboratory Tracks"),
+      dateStr: selectedDateObj?.displayDate || (feedbackDateFilter ? feedbackDateFilter : "All Session Dates"),
+      ratingFilter: feedbackRatingFilter || undefined,
+      categoryFilter: feedbackCategoryFilter || undefined,
+      searchTerm: feedbackSearch || undefined,
+      workshopTitle: "Skill Up 2026",
+      userRole: "MENTOR",
+      userName: user?.name || "Lead Mentor",
+    });
   };
 
   const TABS = [
@@ -2700,13 +2717,22 @@ export default function MentorDashboardPage() {
                 Lab-wise & date-wise student satisfaction metrics, rating averages, and anonymous reviews.
               </p>
             </div>
-            <div className="flex items-center gap-2 font-mono text-xs font-bold">
+            <div className="flex items-center gap-2 font-mono text-xs font-bold flex-wrap">
               <span className="px-3 py-1 bg-white border-2 border-[#111111] shadow-[2px_2px_0px_#111111]">
                 Total Reviews: <strong className="text-[#F07C27]">{feedbacks.length}</strong>
               </span>
               <span className="px-3 py-1 bg-[#FFF0E5] text-[#111111] border-2 border-[#111111] shadow-[2px_2px_0px_#111111]">
                 Your Rating: <strong className="text-[#F07C27]">★ {mentorFeedbackAnalytics.overall.averageRating} / 5.0</strong>
               </span>
+              <button
+                type="button"
+                onClick={handleDownloadFeedbackPdf}
+                className="flex items-center gap-1.5 px-3 py-1 bg-[#111111] hover:bg-slate-800 text-white border-2 border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer font-bold"
+                title="Download filtered feedback audit report as PDF"
+              >
+                <Download className="w-3.5 h-3.5 text-[#F07C27]" />
+                <span>Export PDF</span>
+              </button>
             </div>
           </div>
 
@@ -3034,16 +3060,27 @@ export default function MentorDashboardPage() {
               FEEDBACK REVIEWS LIST
           ══════════════════════════════════════════════════════════ */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-700">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono font-bold text-slate-700">
               <span>Showing {filteredMentorFeedbacks.length} of {feedbacks.length} Student Appraisals</span>
-              {filteredMentorFeedbacks.length > 0 && (
-                <span>
-                  Filtered Average:{" "}
-                  <strong className="text-[#F07C27]">
-                    ★ {(filteredMentorFeedbacks.reduce((sum, f) => sum + f.rating, 0) / filteredMentorFeedbacks.length).toFixed(2)} / 5.0
-                  </strong>
-                </span>
-              )}
+              <div className="flex items-center gap-3">
+                {filteredMentorFeedbacks.length > 0 && (
+                  <span>
+                    Filtered Average:{" "}
+                    <strong className="text-[#F07C27]">
+                      ★ {(filteredMentorFeedbacks.reduce((sum, f) => sum + f.rating, 0) / filteredMentorFeedbacks.length).toFixed(2)} / 5.0
+                    </strong>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleDownloadFeedbackPdf}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F07C27] hover:bg-[#d96614] text-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer whitespace-nowrap"
+                  title="Download filter-wise feedback audit report as PDF"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Filtered PDF ({filteredMentorFeedbacks.length})</span>
+                </button>
+              </div>
             </div>
 
             {filteredMentorFeedbacks.length === 0 ? (
