@@ -19,7 +19,7 @@ export async function POST(
 ) {
   try {
     const user = await requireAuth();
-    if (user.role !== "STUDENT") {
+    if (user.role !== "STUDENT" && user.role !== "ADMIN") {
       return errorResponse("Only students can submit test answers", "FORBIDDEN", 403);
     }
     const { id: assessmentId } = await params;

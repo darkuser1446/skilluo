@@ -437,7 +437,8 @@ export default function StudentDashboardPage() {
               const asData = await assessRes.json();
               const list = asData.data.assessments || [];
               setAssessments(list);
-              const mine = list.find((a: any) => a.id === activeAssessment.id)?.results?.[0];
+              const matchedAssessment = list.find((a: any) => a.id === activeAssessment.id);
+              const mine = matchedAssessment?.results?.find((r: any) => r.studentId === user?.id) || matchedAssessment?.results?.[0];
               if (mine) {
                 await handleViewStudentResult(activeAssessment, mine);
                 return;
@@ -1984,7 +1985,7 @@ export default function StudentDashboardPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {assessments.map((as) => {
-              const res = as.results?.[0];
+              const res = as.results?.find((r: any) => r.studentId === user?.id) || (user?.role === "STUDENT" ? as.results?.[0] : null);
               const isLocked = Boolean(res?.isLocked || res?.status === "LOCKED");
               const now = new Date();
               const starts = new Date(as.startsAt);
