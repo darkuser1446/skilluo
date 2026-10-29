@@ -41,6 +41,43 @@ function isCodeLine(line: string): boolean {
   return false;
 }
 
+function formatSingleLineCode(code: string): string {
+  let indentLevel = 0;
+  let parenDepth = 0;
+  let result = "";
+  const tokens = code.trim();
+
+  for (let i = 0; i < tokens.length; i++) {
+    const ch = tokens[i];
+    if (ch === "(") {
+      parenDepth++;
+      result += ch;
+    } else if (ch === ")") {
+      if (parenDepth > 0) parenDepth--;
+      result += ch;
+    } else if (ch === "{") {
+      indentLevel++;
+      result += " {\n" + "    ".repeat(indentLevel);
+      while (i + 1 < tokens.length && tokens[i + 1] === " ") i++;
+    } else if (ch === "}") {
+      indentLevel = Math.max(0, indentLevel - 1);
+      result += "\n" + "    ".repeat(indentLevel) + "}";
+      while (i + 1 < tokens.length && tokens[i + 1] === " ") i++;
+      if (i + 1 < tokens.length && tokens[i + 1] !== "}" && tokens[i + 1] !== ";") {
+        result += "\n" + "    ".repeat(indentLevel);
+      }
+    } else if (ch === ";" && parenDepth === 0) {
+      result += ";\n" + "    ".repeat(indentLevel);
+      while (i + 1 < tokens.length && tokens[i + 1] === " ") i++;
+    } else {
+      result += ch;
+    }
+  }
+  return result
+    .replace(/\n\s*\n/g, "\n")
+    .trim();
+}
+
 /**
  * Parses a question prompt into structured parts:
  * 1. Badge / Section tag (e.g. "[Section A: Multiple Choice Questions - Q19]")
@@ -150,12 +187,7 @@ export function parsePrompt(rawPrompt: string): ParsedPrompt {
 
     // Format single-line code if it has multiple braces/semicolons
     if (!codePart.includes("\n") && (codePart.includes(";") || codePart.includes("{"))) {
-      codePart = codePart
-        .replace(/\{\s*/g, "{\n    ")
-        .replace(/;\s*(?!\})/g, ";\n    ")
-        .replace(/\s*\}\s*/g, "\n}\n")
-        .replace(/\n\s*\n/g, "\n")
-        .trim();
+      codePart = formatSingleLineCode(codePart);
     }
 
     return {

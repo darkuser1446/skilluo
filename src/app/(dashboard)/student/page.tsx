@@ -359,21 +359,27 @@ export default function StudentDashboardPage() {
 
   const handleViewStudentResult = async (as: any, res: any) => {
     const isLocked = Boolean(res?.isLocked || res?.status === "LOCKED");
+    const isPendingReview = Boolean(
+      res?.status === "PENDING_REVIEW" ||
+      as.title?.includes("SUPER60 SKILLUP (Pen-Paper Test)") ||
+      as.id === "cmvtedytl0001upw4pnqn794h"
+    );
     setActiveAssessment(as);
     setReviewFilter("all");
     setQuizResult({
       submitted: true,
       assessmentId: as.id,
       assessmentTitle: as.title,
-      score: res.score,
+      score: isPendingReview ? null : res.score,
       totalMarks: as.totalMarks,
-      correctCount: res.correctCount,
-      incorrectCount: res.incorrectCount,
+      correctCount: isPendingReview ? null : res.correctCount,
+      incorrectCount: isPendingReview ? null : res.incorrectCount,
       unansweredCount: res.unansweredCount,
       durationSec: res.durationSec,
       answeredCount: as.questions?.length || 0,
       totalQuestions: as.questions?.length || 0,
       status: res.status,
+      isPendingReview,
       isLocked: isLocked,
       violationCount: res.violationCount,
       violationReason: res.violationReason,
@@ -381,17 +387,19 @@ export default function StudentDashboardPage() {
       history: true,
       questions: [],
     });
-    setLoadingQuestions(true);
-    try {
-      const rRes = await fetch(`/api/assessments/${as.id}/results`);
-      if (rRes.ok) {
-        const rData = await rRes.json();
-        if (rData.data?.questions) {
-          setQuizResult((prev: any) => (prev ? { ...prev, questions: rData.data.questions } : prev));
+    if (!isPendingReview) {
+      setLoadingQuestions(true);
+      try {
+        const rRes = await fetch(`/api/assessments/${as.id}/results`);
+        if (rRes.ok) {
+          const rData = await rRes.json();
+          if (rData.data?.questions) {
+            setQuizResult((prev: any) => (prev ? { ...prev, questions: rData.data.questions } : prev));
+          }
         }
+      } catch {} finally {
+        setLoadingQuestions(false);
       }
-    } catch {} finally {
-      setLoadingQuestions(false);
     }
   };
 
@@ -1996,6 +2004,8 @@ export default function StudentDashboardPage() {
               const isUpcoming = now < starts;
               const isExpired = now > ends;
               const totalQs = as.questions?.length || 0;
+              const isPenPaper = as.title?.includes("SUPER60 SKILLUP (Pen-Paper Test)") || as.id === "cmvtedytl0001upw4pnqn794h";
+              const isPendingEval = isPenPaper && Boolean(res && (res.status === "PENDING_REVIEW" || res.score === null || res.score === undefined));
 
               return (
                 <div key={as.id} className={`p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] flex flex-col justify-between space-y-4 transition-all ${
@@ -2015,6 +2025,8 @@ export default function StudentDashboardPage() {
                         <span className={`flex-shrink-0 px-2.5 py-0.5 border border-[#111111] text-[10px] font-mono font-black shadow-[2px_2px_0px_#111111] uppercase ${
                           isLocked
                             ? "bg-rose-600 text-white"
+                            : isPendingEval
+                            ? "bg-amber-100 text-amber-900 border-amber-600"
                             : res.status === "SELECTED" || res.status === "SELECTED_ROUND2"
                             ? "bg-emerald-500 text-white animate-pulse"
                             : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2"
@@ -2023,6 +2035,8 @@ export default function StudentDashboardPage() {
                         }`}>
                           {isLocked
                             ? "🔒 LOCKED OUT"
+                            : isPendingEval
+                            ? "⏳ UNDER EVALUATION"
                             : res.status === "SELECTED" || res.status === "SELECTED_ROUND2"
                             ? "🎉 OFFICIALLY SELECTED"
                             : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2"
@@ -2063,29 +2077,45 @@ export default function StudentDashboardPage() {
 
                     {/* Submission score & accuracy notice */}
                     {res && !isLocked && (
-                      <div className="p-3 bg-[#e6f4ea] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] font-mono text-xs space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-emerald-950 flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" /> Completed (One Attempt Submitted)
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-600">
-                            {new Date(res.submittedAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between border-t border-emerald-800/20 pt-1.5 flex-wrap gap-2">
-                          <div>
-                            <span className="text-[10px] text-slate-600 font-bold uppercase block">Your Score:</span>
-                            <span className="font-display font-black text-base text-[#111111]">
-                              {res.score} / {as.totalMarks} <span className="text-xs text-slate-500 font-mono">({Math.round((res.score / (as.totalMarks || 100)) * 100)}%)</span>
+                      isPendingEval ? (
+                        <div className="p-3 bg-amber-50 border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] font-mono text-xs space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-amber-900 flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-amber-700" /> Test Submitted (Pending Evaluation)
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-600">
+                              {new Date(res.submittedAt).toLocaleDateString()}
                             </span>
                           </div>
-                          <div className="text-right text-[11px] font-bold">
-                            <span className="text-emerald-700">✓ {res.correctCount ?? 0} Correct</span>
-                            <span className="text-slate-400 mx-1">·</span>
-                            <span className="text-rose-700">✕ {res.incorrectCount ?? 0} Incorrect</span>
+                          <p className="text-[11px] text-slate-700 leading-snug">
+                            Your answers are recorded and being manually reviewed by the mentor. Marks and leaderboard rankings will be released once evaluation is completed.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-[#e6f4ea] border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] font-mono text-xs space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-emerald-950 flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" /> Completed (One Attempt Submitted)
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-600">
+                              {new Date(res.submittedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between border-t border-emerald-800/20 pt-1.5 flex-wrap gap-2">
+                            <div>
+                              <span className="text-[10px] text-slate-600 font-bold uppercase block">Your Score:</span>
+                              <span className="font-display font-black text-base text-[#111111]">
+                                {res.score} / {as.totalMarks} <span className="text-xs text-slate-500 font-mono">({Math.round((res.score / (as.totalMarks || 100)) * 100)}%)</span>
+                              </span>
+                            </div>
+                            <div className="text-right text-[11px] font-bold">
+                              <span className="text-emerald-700">✓ {res.correctCount ?? 0} Correct</span>
+                              <span className="text-slate-400 mx-1">·</span>
+                              <span className="text-rose-700">✕ {res.incorrectCount ?? 0} Incorrect</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )
                     )}
                   </div>
 
@@ -2094,14 +2124,16 @@ export default function StudentDashboardPage() {
                       {isLocked ? "Session Locked" : res ? `Submitted ${new Date(res.submittedAt).toLocaleDateString()}` : `Opens ${new Date(as.startsAt).toLocaleDateString()}`}
                     </span>
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setLeaderboardAssessmentId(as.id)}
-                        className="px-3 py-1.5 border-[2px] border-[#111111] bg-[#FFB703] hover:bg-[#ffa700] text-[#111111] text-xs font-mono font-black uppercase tracking-wider transition-all shadow-[2px_2px_0px_#111111] flex items-center gap-1 cursor-pointer"
-                        title="View Official Test Leaderboard"
-                      >
-                        <Trophy className="w-3.5 h-3.5 text-[#111111]" /> Leaderboard
-                      </button>
+                      {!isPendingEval && (
+                        <button
+                          type="button"
+                          onClick={() => setLeaderboardAssessmentId(as.id)}
+                          className="px-3 py-1.5 border-[2px] border-[#111111] bg-[#FFB703] hover:bg-[#ffa700] text-[#111111] text-xs font-mono font-black uppercase tracking-wider transition-all shadow-[2px_2px_0px_#111111] flex items-center gap-1 cursor-pointer"
+                          title="View Official Test Leaderboard"
+                        >
+                          <Trophy className="w-3.5 h-3.5 text-[#111111]" /> Leaderboard
+                        </button>
+                      )}
                       <button
                         disabled={!isLocked && (isUpcoming || (isExpired && !res))}
                         onClick={() => {
@@ -2117,12 +2149,12 @@ export default function StudentDashboardPage() {
                         }}
                         className={`px-4 py-1.5 border-[2px] border-[#111111] text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-[2px_2px_0px_#111111] ${
                           isLocked ? "bg-rose-600 hover:bg-rose-700 text-white cursor-pointer" :
-                          res ? "bg-white text-[#111111] hover:bg-[#f4f3f3] cursor-pointer" :
+                          res ? (isPendingEval ? "bg-amber-100 hover:bg-amber-200 text-amber-950 cursor-pointer" : "bg-white text-[#111111] hover:bg-[#f4f3f3] cursor-pointer") :
                           isLive ? "bg-[#F07C27] text-white hover:brightness-110 cursor-pointer" :
                           "bg-[#f4f3f3] text-slate-400 cursor-not-allowed opacity-50"
                         }`}
                       >
-                        {isLocked ? "🔒 Locked Out Notice" : res ? "📋 View Scorecard" : isLive ? (as.type === "ASSIGNMENT" ? "🚀 Start Assignment" : "🚀 Start Test") : isUpcoming ? "⏳ Not Started" : "Expired"}
+                        {isLocked ? "🔒 Locked Out Notice" : res ? (isPendingEval ? "⏳ Under Evaluation" : "📋 View Scorecard") : isLive ? (as.type === "ASSIGNMENT" ? "🚀 Start Assignment" : "🚀 Start Test") : isUpcoming ? "⏳ Not Started" : "Expired"}
                       </button>
                     </div>
                   </div>
@@ -2246,144 +2278,202 @@ export default function StudentDashboardPage() {
               </div>
             </div>
           ) : (
-            <>
-              {/* Verified Official Test Scorecard & Receipt Screen */}
-              <div className="p-7 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] text-center space-y-6">
-                {/* Submission Icon & Header */}
-                <div className="space-y-3">
-                  <div className="w-16 h-16 bg-emerald-100 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center mx-auto text-emerald-800">
-                    <CheckCircle2 className="w-9 h-9 stroke-[2.5]" />
-                  </div>
-                  <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-900 border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase tracking-wider shadow-[2px_2px_0px_#111111]">
-                    [ ✓ TEST SUBMITTED & SCORED ]
-                  </span>
-                  <h3 className="font-display font-black text-2xl sm:text-3xl uppercase text-[#111111] tracking-tight">
-                    Assessment Completed!
-                  </h3>
-                  <p className="text-slate-600 font-mono text-xs max-w-lg mx-auto">
-                    Your answers have been automatically graded against predefined answer criteria.
-                  </p>
-                </div>
+            (() => {
+              const isPenPaper =
+                activeAssessment?.title?.includes("SUPER60 SKILLUP (Pen-Paper Test)") ||
+                activeAssessment?.id === "cmvtedytl0001upw4pnqn794h" ||
+                quizResult.assessmentTitle?.includes("SUPER60 SKILLUP (Pen-Paper Test)");
+              const isPendingEval = Boolean(
+                quizResult.isPendingReview ||
+                quizResult.status === "PENDING_REVIEW" ||
+                (isPenPaper && (quizResult.score === null || quizResult.score === undefined))
+              );
 
-                {/* Official Score & Accuracy Grid */}
-                <div className="p-5 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[2px] border-[#111111] pb-3 gap-2">
-                    <div className="text-left">
-                      <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Total Score Achieved</span>
-                      <span className="font-display font-black text-3xl sm:text-4xl text-[#111111]">
-                        {quizResult.score ?? 0} <span className="text-lg text-slate-500 font-mono">/ {activeAssessment.totalMarks || quizResult.totalMarks || 100}</span>
+              return (
+                <>
+                  {/* Verified Official Test Scorecard & Receipt Screen */}
+                  <div className="p-7 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] text-center space-y-6">
+                    {/* Submission Icon & Header */}
+                    <div className="space-y-3">
+                      <div className="w-16 h-16 bg-emerald-100 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center mx-auto text-emerald-800">
+                        <CheckCircle2 className="w-9 h-9 stroke-[2.5]" />
+                      </div>
+                      <span className={`inline-block px-3 py-1 border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase tracking-wider shadow-[2px_2px_0px_#111111] ${
+                        isPendingEval ? "bg-amber-100 text-amber-950 border-amber-600" : "bg-emerald-100 text-emerald-900"
+                      }`}>
+                        {isPendingEval ? "[ ✓ TEST SUBMITTED SUCCESSFULLY ]" : "[ ✓ TEST SUBMITTED & SCORED ]"}
                       </span>
+                      <h3 className="font-display font-black text-2xl sm:text-3xl uppercase text-[#111111] tracking-tight">
+                        {activeAssessment?.type === "ASSIGNMENT" ? "Assignment Completed!" : "Test Completed!"}
+                      </h3>
+                      <p className="text-slate-600 font-mono text-xs max-w-lg mx-auto">
+                        {isPendingEval
+                          ? "Your test has been successfully submitted and recorded. Manual mentor evaluation is in progress."
+                          : "Your answers have been automatically graded against predefined answer criteria."}
+                      </p>
                     </div>
-                    <div className="text-left sm:text-right">
-                      <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Score Percentage</span>
-                      <span className="font-display font-black text-2xl text-[#F07C27]">
-                        {Math.round(((quizResult.score ?? 0) / (activeAssessment.totalMarks || quizResult.totalMarks || 100)) * 100)}%
-                      </span>
+
+                    {/* Official Score & Accuracy Grid OR Pending Evaluation Notice */}
+                    {isPendingEval ? (
+                      <div className="p-5 sm:p-6 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-4 text-left font-mono">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-[#FFB703] border-[2px] border-[#111111] flex items-center justify-center flex-shrink-0 shadow-[2px_2px_0px_#111111]">
+                            <Clock className="w-5 h-5 text-[#111111]" />
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="font-display font-black text-base uppercase text-[#111111] tracking-tight">
+                              Manual Evaluation In Progress
+                            </h4>
+                            <p className="text-xs text-slate-700 leading-relaxed">
+                              This test contains subjective error-finding, debugging, dry runs, and C++ code implementations that require manual verification by the mentor.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="p-3.5 bg-white border-[2px] border-[#111111] shadow-[2px_2px_0px_#111111] space-y-2 text-xs">
+                          <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                            <span className="text-slate-600 font-bold uppercase">Evaluation Status:</span>
+                            <span className="px-2 py-0.5 bg-amber-100 border border-amber-600 text-amber-900 font-black text-[11px] uppercase">
+                              ⏳ Pending Mentor Review
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                            <span className="text-slate-600 font-bold uppercase">Total Test Marks:</span>
+                            <span className="font-black text-[#111111]">{activeAssessment.totalMarks || quizResult.totalMarks || 60} Marks</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-600 font-bold uppercase">Official Results & Leaderboard:</span>
+                            <span className="font-bold text-slate-800 text-[11px]">Will be published once mentor evaluation completes</span>
+                          </div>
+                        </div>
+
+                        <p className="text-[11px] text-slate-600 italic">
+                          📌 Your responses have been safely saved. Once the mentor finishes grading all sections, your scorecard and cohort rankings will be available here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-5 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[2px] border-[#111111] pb-3 gap-2">
+                          <div className="text-left">
+                            <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Total Score Achieved</span>
+                            <span className="font-display font-black text-3xl sm:text-4xl text-[#111111]">
+                              {quizResult.score ?? 0} <span className="text-lg text-slate-500 font-mono">/ {activeAssessment.totalMarks || quizResult.totalMarks || 100}</span>
+                            </span>
+                          </div>
+                          <div className="text-left sm:text-right">
+                            <span className="text-[10px] font-mono font-bold text-slate-600 uppercase block">Score Percentage</span>
+                            <span className="font-display font-black text-2xl text-[#F07C27]">
+                              {Math.round(((quizResult.score ?? 0) / (activeAssessment.totalMarks || quizResult.totalMarks || 100)) * 100)}%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Interactive Accuracy Buttons */}
+                        <div className="grid grid-cols-3 gap-3 font-mono text-xs">
+                          <button
+                            type="button"
+                            onClick={() => setReviewFilter(reviewFilter === "correct" ? "all" : "correct")}
+                            className={`p-3 border-[2px] border-[#111111] text-left transition-all cursor-pointer ${
+                              reviewFilter === "correct"
+                                ? "bg-emerald-100 ring-2 ring-emerald-600 shadow-[3px_3px_0px_#111111]"
+                                : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-emerald-50"
+                            }`}
+                          >
+                            <span className="text-[10px] text-emerald-800 uppercase font-black block">Correct</span>
+                            <span className="font-black text-xl text-emerald-700">✓ {quizResult.correctCount ?? 0}</span>
+                            <span className="text-[9px] text-slate-500 font-normal block mt-0.5">Click to view</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setReviewFilter(reviewFilter === "wrong" ? "all" : "wrong")}
+                            className={`p-3 border-[2px] border-[#111111] text-left transition-all cursor-pointer ${
+                              reviewFilter === "wrong"
+                                ? "bg-rose-100 ring-2 ring-rose-600 shadow-[3px_3px_0px_#111111]"
+                                : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-rose-50"
+                            }`}
+                          >
+                            <span className="text-[10px] text-rose-800 uppercase font-black block">Incorrect</span>
+                            <span className="font-black text-xl text-rose-700">✕ {quizResult.incorrectCount ?? 0}</span>
+                            <span className="text-[9px] text-slate-500 font-normal block mt-0.5">Click to view</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setReviewFilter(reviewFilter === "unanswered" ? "all" : "unanswered")}
+                            className={`p-3 border-[2px] border-[#111111] text-left transition-all cursor-pointer ${
+                              reviewFilter === "unanswered"
+                                ? "bg-amber-100 ring-2 ring-amber-600 shadow-[3px_3px_0px_#111111]"
+                                : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-amber-50"
+                            }`}
+                          >
+                            <span className="text-[10px] text-slate-600 uppercase font-bold block">Unanswered</span>
+                            <span className="font-black text-xl text-slate-800">{quizResult.unansweredCount ?? 0}</span>
+                            <span className="text-[9px] text-slate-500 font-normal block mt-0.5">Click to view</span>
+                          </button>
+                        </div>
+
+                        {/* View Leaderboard Button */}
+                        <button
+                          type="button"
+                          onClick={() => setLeaderboardAssessmentId(activeAssessment.id)}
+                          className="w-full py-3 bg-[#FFB703] hover:bg-[#ffa700] text-[#111111] font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center gap-2 cursor-pointer transition-all"
+                        >
+                          <Trophy className="w-4 h-4 text-[#111111]" />
+                          <span>View Official Test Leaderboard & Cohort Rankings →</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Candidate & Assessment Verification Dossier */}
+                    <div className="p-4 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-left font-mono text-xs space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                        <span className="text-slate-600 font-bold uppercase">Assessment:</span>
+                        <span className="text-[#111111] font-black uppercase text-right ml-2">{activeAssessment.title}</span>
+                      </div>
+                      <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                        <span className="text-slate-600 font-bold uppercase">Candidate Name:</span>
+                        <span className="text-[#111111] font-black">{user?.name}</span>
+                      </div>
+                      <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                        <span className="text-slate-600 font-bold uppercase">Registration / Roll No:</span>
+                        <span className="text-[#111111] font-black">{user?.rollNumber || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
+                        <span className="text-slate-600 font-bold uppercase">Submitted At:</span>
+                        <span className="text-[#111111] font-bold">
+                          {new Date(quizResult.submittedAt || Date.now()).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between pt-0.5">
+                        <span className="text-slate-600 font-bold uppercase">Attempt Policy:</span>
+                        <span className="text-[#111111] font-black">
+                          1 of 1 Attempts Completed (Submissions Locked)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Return & Jump to Solutions Buttons */}
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
+                        className="neo-btn flex-1 w-full py-3 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[3px_3px_0px_#111111]"
+                      >
+                        ← Return to Assessments List
+                      </button>
+                      {!isPendingEval && (
+                        <a
+                          href="#solutions-review"
+                          className="w-full sm:w-auto px-5 py-3 bg-[#FFF0E5] hover:bg-[#ffe2cd] text-[#F07C27] border-[2px] border-[#111111] font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[3px_3px_0px_#111111]"
+                        >
+                          ↓ View Question Solutions
+                        </a>
+                      )}
                     </div>
                   </div>
 
-                  {/* Interactive Accuracy Buttons */}
-                  <div className="grid grid-cols-3 gap-3 font-mono text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setReviewFilter(reviewFilter === "correct" ? "all" : "correct")}
-                      className={`p-3 border-[2px] border-[#111111] text-left transition-all cursor-pointer ${
-                        reviewFilter === "correct"
-                          ? "bg-emerald-100 ring-2 ring-emerald-600 shadow-[3px_3px_0px_#111111]"
-                          : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-emerald-50"
-                      }`}
-                    >
-                      <span className="text-[10px] text-emerald-800 uppercase font-black block">Correct</span>
-                      <span className="font-black text-xl text-emerald-700">✓ {quizResult.correctCount ?? 0}</span>
-                      <span className="text-[9px] text-slate-500 font-normal block mt-0.5">Click to view</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setReviewFilter(reviewFilter === "wrong" ? "all" : "wrong")}
-                      className={`p-3 border-[2px] border-[#111111] text-left transition-all cursor-pointer ${
-                        reviewFilter === "wrong"
-                          ? "bg-rose-100 ring-2 ring-rose-600 shadow-[3px_3px_0px_#111111]"
-                          : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-rose-50"
-                      }`}
-                    >
-                      <span className="text-[10px] text-rose-800 uppercase font-black block">Incorrect</span>
-                      <span className="font-black text-xl text-rose-700">✕ {quizResult.incorrectCount ?? 0}</span>
-                      <span className="text-[9px] text-slate-500 font-normal block mt-0.5">Click to view</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setReviewFilter(reviewFilter === "unanswered" ? "all" : "unanswered")}
-                      className={`p-3 border-[2px] border-[#111111] text-left transition-all cursor-pointer ${
-                        reviewFilter === "unanswered"
-                          ? "bg-amber-100 ring-2 ring-amber-600 shadow-[3px_3px_0px_#111111]"
-                          : "bg-white shadow-[2px_2px_0px_#111111] hover:bg-amber-50"
-                      }`}
-                    >
-                      <span className="text-[10px] text-slate-600 uppercase font-bold block">Unanswered</span>
-                      <span className="font-black text-xl text-slate-800">{quizResult.unansweredCount ?? 0}</span>
-                      <span className="text-[9px] text-slate-500 font-normal block mt-0.5">Click to view</span>
-                    </button>
-                  </div>
-
-                  {/* View Leaderboard Button */}
-                  <button
-                    type="button"
-                    onClick={() => setLeaderboardAssessmentId(activeAssessment.id)}
-                    className="w-full py-3 bg-[#FFB703] hover:bg-[#ffa700] text-[#111111] font-mono text-xs font-black uppercase border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center gap-2 cursor-pointer transition-all"
-                  >
-                    <Trophy className="w-4 h-4 text-[#111111]" />
-                    <span>View Official Test Leaderboard & Cohort Rankings →</span>
-                  </button>
-                </div>
-
-                {/* Candidate & Assessment Verification Dossier */}
-                <div className="p-4 bg-[#F9F9F9] border-[2px] border-[#111111] shadow-[3px_3px_0px_#111111] text-left font-mono text-xs space-y-2.5">
-                  <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
-                    <span className="text-slate-600 font-bold uppercase">Assessment:</span>
-                    <span className="text-[#111111] font-black uppercase text-right ml-2">{activeAssessment.title}</span>
-                  </div>
-                  <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
-                    <span className="text-slate-600 font-bold uppercase">Candidate Name:</span>
-                    <span className="text-[#111111] font-black">{user?.name}</span>
-                  </div>
-                  <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
-                    <span className="text-slate-600 font-bold uppercase">Registration / Roll No:</span>
-                    <span className="text-[#111111] font-black">{user?.rollNumber || "N/A"}</span>
-                  </div>
-                  <div className="flex items-center justify-between border-b border-[#111111]/20 pb-2">
-                    <span className="text-slate-600 font-bold uppercase">Submitted At:</span>
-                    <span className="text-[#111111] font-bold">
-                      {new Date(quizResult.submittedAt || Date.now()).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between pt-0.5">
-                    <span className="text-slate-600 font-bold uppercase">Attempt Policy:</span>
-                    <span className="text-[#111111] font-black">
-                      1 of 1 Attempts Completed (Submissions Locked)
-                    </span>
-                  </div>
-                </div>
-
-                {/* Return & Jump to Solutions Buttons */}
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => { setActiveAssessment(null); setQuizResult(null); }}
-                    className="neo-btn flex-1 w-full py-3 bg-[#111111] hover:bg-[#F07C27] text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[3px_3px_0px_#111111]"
-                  >
-                    ← Return to Assessments List
-                  </button>
-                  <a
-                    href="#solutions-review"
-                    className="w-full sm:w-auto px-5 py-3 bg-[#FFF0E5] hover:bg-[#ffe2cd] text-[#F07C27] border-[2px] border-[#111111] font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[3px_3px_0px_#111111]"
-                  >
-                    ↓ View Question Solutions
-                  </a>
-                </div>
-              </div>
-
-              {/* ══ DETAILED QUESTION & ANSWER REVIEW ══ */}
-              <div id="solutions-review" className="p-6 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] text-left space-y-6">
+                  {/* ══ DETAILED QUESTION & ANSWER REVIEW ══ */}
+                  {!isPendingEval && (
+                    <div id="solutions-review" className="p-6 sm:p-8 bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] text-left space-y-6">
                 {/* Header with Title and Filter Tabs */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b-[3px] border-[#111111] gap-4">
                   <div>
@@ -2676,7 +2766,10 @@ export default function StudentDashboardPage() {
                   </button>
                 </div>
               </div>
-            </>
+                  )}
+                </>
+              );
+            })()
           )}
         </div>
       )}

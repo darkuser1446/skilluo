@@ -214,41 +214,49 @@ export async function POST(
       );
     }
 
+    const isPendingReview =
+      status === "PENDING_REVIEW" ||
+      assessment.title.includes("SUPER60 SKILLUP (Pen-Paper Test)");
+
     return successResponse({
       submitted: true,
       assessmentId,
       assessmentTitle: assessment.title,
-      score: result.score,
+      score: isPendingReview ? null : result.score,
       totalMarks: assessment.totalMarks,
-      correctCount: result.correctCount ?? 0,
-      incorrectCount: result.incorrectCount ?? 0,
+      correctCount: isPendingReview ? null : result.correctCount ?? 0,
+      incorrectCount: isPendingReview ? null : result.incorrectCount ?? 0,
       unansweredCount: result.unansweredCount ?? 0,
       durationSec: durationSec ?? null,
       answeredCount: assessment.questions.length - unansweredCount,
       totalQuestions: assessment.questions.length,
       submittedAt: result.submittedAt,
       status: result.status,
+      isPendingReview,
       isLocked: isDisqualified,
       disqualified: isDisqualified,
       violationReason: violationReason || null,
-      message:
-        "Assessment submitted successfully. Your score has been calculated.",
-      questions: assessment.questions.map((q) => {
-        const studentAnswer = (answers as any)?.[q.id] || null;
-        const isCorrect =
-          q.correctAnswer &&
-          studentAnswer &&
-          String(studentAnswer).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase();
-        return {
-          id: q.id,
-          prompt: q.prompt,
-          options: q.options,
-          marks: q.marks,
-          studentAnswer,
-          isCorrect: Boolean(isCorrect),
-          correctAnswer: q.correctAnswer,
-        };
-      }),
+      message: isPendingReview
+        ? "Test submitted successfully. Your answers have been recorded for mentor evaluation."
+        : "Assessment submitted successfully. Your score has been calculated.",
+      questions: isPendingReview
+        ? []
+        : assessment.questions.map((q) => {
+            const studentAnswer = (answers as any)?.[q.id] || null;
+            const isCorrect =
+              q.correctAnswer &&
+              studentAnswer &&
+              String(studentAnswer).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase();
+            return {
+              id: q.id,
+              prompt: q.prompt,
+              options: q.options,
+              marks: q.marks,
+              studentAnswer,
+              isCorrect: Boolean(isCorrect),
+              correctAnswer: q.correctAnswer,
+            };
+          }),
     });
   } catch (err) {
     return handleApiError(err);

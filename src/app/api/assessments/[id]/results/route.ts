@@ -54,22 +54,27 @@ export async function GET(
 
     if (user.role === "STUDENT") {
       const myResult = assessment.results[0];
+      const isPendingReview = Boolean(
+        myResult && (myResult.status === "PENDING_REVIEW" || assessment.title.includes("SUPER60 SKILLUP (Pen-Paper Test)"))
+      );
+
       return successResponse({
         assessmentId,
         title: assessment.title,
         totalMarks: assessment.totalMarks,
         passingMarks: assessment.passingMarks,
         submitted: Boolean(myResult),
+        isPendingReview,
         results: myResult
           ? [
               {
                 id: myResult.id,
                 studentId: myResult.studentId,
                 status: myResult.status,
-                score: myResult.score,
+                score: isPendingReview ? null : myResult.score,
                 totalMarks: assessment.totalMarks,
-                correctCount: myResult.correctCount ?? 0,
-                incorrectCount: myResult.incorrectCount ?? 0,
+                correctCount: isPendingReview ? null : myResult.correctCount ?? 0,
+                incorrectCount: isPendingReview ? null : myResult.incorrectCount ?? 0,
                 unansweredCount: myResult.unansweredCount ?? 0,
                 answers: myResult.answers,
                 isLocked: myResult.isLocked,
@@ -80,7 +85,7 @@ export async function GET(
               },
             ]
           : [],
-        questions: myResult
+        questions: myResult && !isPendingReview
           ? sortQuestionsByNumber(assessment.questions).map((q) => {
               const answersObj =
                 typeof myResult.answers === "string"

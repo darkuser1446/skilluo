@@ -105,20 +105,24 @@ export async function GET(req: NextRequest) {
             const { correctAnswer: _hidden, ...rest } = q;
             return rest;
           }),
-          results: a.results.map((r) => ({
-            id: r.id,
-            studentId: r.studentId,
-            status: r.status,
-            score: r.score,
-            correctCount: r.correctCount,
-            incorrectCount: r.incorrectCount,
-            unansweredCount: r.unansweredCount,
-            isLocked: r.isLocked,
-            violationCount: r.violationCount,
-            violationReason: r.violationReason,
-            submittedAt: r.submittedAt,
-            durationSec: r.durationSec,
-          })),
+          results: a.results.map((r) => {
+            const isPenPaper = a.title.includes("SUPER60 SKILLUP (Pen-Paper Test)");
+            const hideScore = isPenPaper && r.status === "PENDING_REVIEW";
+            return {
+              id: r.id,
+              studentId: r.studentId,
+              status: r.status,
+              score: hideScore ? null : r.score,
+              correctCount: hideScore ? null : r.correctCount,
+              incorrectCount: hideScore ? null : r.incorrectCount,
+              unansweredCount: r.unansweredCount,
+              isLocked: r.isLocked,
+              violationCount: r.violationCount,
+              violationReason: r.violationReason,
+              submittedAt: r.submittedAt,
+              durationSec: r.durationSec,
+            };
+          }),
         };
       }
       return {

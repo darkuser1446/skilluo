@@ -23,6 +23,19 @@ export async function GET(
       return errorResponse("Assessment not found", "NOT_FOUND", 404);
     }
 
+    const isPenPaperTest = assessment.title.includes("SUPER60 SKILLUP (Pen-Paper Test)");
+    if (user.role === "STUDENT" && isPenPaperTest) {
+      return successResponse({
+        assessmentId,
+        title: assessment.title,
+        type: assessment.type,
+        totalMarks: assessment.totalMarks,
+        totalParticipants: 0,
+        leaderboard: [],
+        message: "Official rankings and leaderboard will be published after mentor review is complete.",
+      });
+    }
+
     // Fetch completed results
     const results = await prisma.assessmentResult.findMany({
       where: {
