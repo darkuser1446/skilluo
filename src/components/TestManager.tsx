@@ -32,6 +32,7 @@ import {
   Filter,
 } from "lucide-react";
 import LeaderboardModal from "@/components/LeaderboardModal";
+import FormattedPrompt from "@/components/FormattedPrompt";
 
 /* ───────────────────────── types ───────────────────────── */
 
@@ -2938,9 +2939,7 @@ export default function TestManager({
                     </div>
 
                     {/* Question Prompt */}
-                    <p className="font-mono text-xs font-bold text-[#111111] whitespace-pre-wrap leading-relaxed">
-                      {q.prompt}
-                    </p>
+                    <FormattedPrompt prompt={q.prompt} />
 
                     {/* Options List */}
                     {optionsList.length > 0 ? (

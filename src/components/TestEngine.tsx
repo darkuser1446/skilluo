@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import FormattedPrompt from "@/components/FormattedPrompt";
 import {
   Clock,
   Flag,
@@ -836,9 +837,9 @@ export default function TestEngine({
                         </span>
                       )}
                     </div>
-                    <p className="text-base font-sans font-bold text-[#111111] leading-relaxed">
-                      {currentQuestion.prompt}
-                    </p>
+                    <div className="pt-1">
+                      <FormattedPrompt prompt={currentQuestion.prompt} />
+                    </div>
                   </div>
                 </div>
 

@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import LeaderboardModal from "@/components/LeaderboardModal";
 import TestEngine from "@/components/TestEngine";
+import FormattedPrompt from "@/components/FormattedPrompt";
 import StudentProgressTrend from "@/components/StudentProgressTrend";
 import CohortQuotaMatrix from "@/components/CohortQuotaMatrix";
 import { SkeletonCard, SkeletonMetric, SkeletonProfile } from "@/components/Skeleton";
@@ -2564,9 +2565,7 @@ export default function StudentDashboardPage() {
                             </div>
 
                             {/* Question Prompt */}
-                            <div className="font-mono text-sm text-[#111111] whitespace-pre-wrap leading-relaxed font-semibold">
-                              {q.prompt}
-                            </div>
+                            <FormattedPrompt prompt={q.prompt} />
 
                             {/* Options List */}
                             {parsedOptions.length > 0 ? (
