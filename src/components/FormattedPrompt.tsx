@@ -130,6 +130,42 @@ export function parsePrompt(rawPrompt: string): ParsedPrompt {
     };
   }
 
+  // 4. Inline C++ code detection (e.g. single-line questions where code immediately follows prompt)
+  const inlineCodeMatch = text.match(
+    /\b(for\s*\(|while\s*\(|do\s*\{|switch\s*\(|#include\b|int\s+[a-zA-Z_]\s*=|char\s+[a-zA-Z_]\s*=|cout\s*<<)/
+  );
+  if (inlineCodeMatch && inlineCodeMatch.index !== undefined && inlineCodeMatch.index > 0) {
+    const textBefore = text.slice(0, inlineCodeMatch.index).trim();
+    let codePart = text.slice(inlineCodeMatch.index).trim();
+
+    // Check if code contains trailing text like (ASCII value...) or (a) Identify...
+    let textAfter = "";
+    const trailingMatch = codePart.match(
+      /(\n|\s{2,})(\([a-zA-Z0-9]+\)|Total|Note|ASCII|Where|Instructions|Write|Constraint)[\s\S]*$/i
+    );
+    if (trailingMatch && trailingMatch.index !== undefined) {
+      textAfter = codePart.slice(trailingMatch.index).trim();
+      codePart = codePart.slice(0, trailingMatch.index).trim();
+    }
+
+    // Format single-line code if it has multiple braces/semicolons
+    if (!codePart.includes("\n") && (codePart.includes(";") || codePart.includes("{"))) {
+      codePart = codePart
+        .replace(/\{\s*/g, "{\n    ")
+        .replace(/;\s*(?!\})/g, ";\n    ")
+        .replace(/\s*\}\s*/g, "\n}\n")
+        .replace(/\n\s*\n/g, "\n")
+        .trim();
+    }
+
+    return {
+      badge,
+      textBefore,
+      codeBlocks: [{ code: codePart, lang: "cpp" }],
+      textAfter,
+    };
+  }
+
   return {
     badge,
     textBefore: text,

@@ -44,6 +44,7 @@ import {
 import LeaderboardModal from "@/components/LeaderboardModal";
 import TestEngine from "@/components/TestEngine";
 import FormattedPrompt from "@/components/FormattedPrompt";
+import { sortQuestionsByNumber } from "@/utils/question-order";
 import StudentProgressTrend from "@/components/StudentProgressTrend";
 import CohortQuotaMatrix from "@/components/CohortQuotaMatrix";
 import { SkeletonCard, SkeletonMetric, SkeletonProfile } from "@/components/Skeleton";
@@ -2479,7 +2480,7 @@ export default function StudentDashboardPage() {
                 ) : (
                   <div className="space-y-6">
                     {(() => {
-                      const allQs = quizResult.questions || [];
+                      const allQs = sortQuestionsByNumber(quizResult.questions || []);
                       const filtered = allQs.filter((q: any) => {
                         if (reviewFilter === "wrong") return !q.isCorrect && q.studentAnswer;
                         if (reviewFilter === "correct") return q.isCorrect;

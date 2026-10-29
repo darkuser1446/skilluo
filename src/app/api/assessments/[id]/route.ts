@@ -4,6 +4,7 @@ import { requireRole, requireAuth } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
+import { sortQuestionsByNumber } from "@/utils/question-order";
 
 export async function GET(
   _req: NextRequest,
@@ -33,10 +34,11 @@ export async function GET(
 
     // SECURITY: only ADMIN and MENTOR may see correctAnswer and student results/scores
     const isPrivileged = user.role === "ADMIN" || user.role === "MENTOR";
+    const sortedQuestions = sortQuestionsByNumber(assessment.questions || []);
     const sanitized = !isPrivileged
       ? {
           ...assessment,
-          questions: assessment.questions.map((q) => {
+          questions: sortedQuestions.map((q) => {
             const { correctAnswer: _hidden, ...rest } = q;
             return rest;
           }),
@@ -51,7 +53,10 @@ export async function GET(
             durationSec: r.durationSec,
           })),
         }
-      : assessment;
+      : {
+          ...assessment,
+          questions: sortedQuestions,
+        };
 
     return successResponse({ assessment: sanitized });
   } catch (err) {

@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 import { notify } from "@/lib/notify";
+import { sortQuestionsByNumber } from "@/utils/question-order";
 
 export async function GET(
   _req: NextRequest,
@@ -80,7 +81,7 @@ export async function GET(
             ]
           : [],
         questions: myResult
-          ? assessment.questions.map((q) => {
+          ? sortQuestionsByNumber(assessment.questions).map((q) => {
               const answersObj =
                 typeof myResult.answers === "string"
                   ? JSON.parse(myResult.answers)
@@ -116,7 +117,7 @@ export async function GET(
       passingMarks: assessment.passingMarks,
       submittedCount: assessment._count.results,
       averageScore: average ? Number(average) : null,
-      questions: assessment.questions,
+      questions: sortQuestionsByNumber(assessment.questions),
       results: assessment.results,
     });
   } catch (err) {

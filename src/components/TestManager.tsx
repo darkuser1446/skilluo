@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import LeaderboardModal from "@/components/LeaderboardModal";
 import FormattedPrompt from "@/components/FormattedPrompt";
+import { sortQuestionsByNumber } from "@/utils/question-order";
 
 /* ───────────────────────── types ───────────────────────── */
 
@@ -655,11 +656,11 @@ export default function TestManager({
       if (res.ok) {
         const d = await res.json();
         setResults(d.data?.results || []);
-        setResultQuestions(d.data?.questions || a.questions || []);
+        setResultQuestions(sortQuestionsByNumber(d.data?.questions || a.questions || []));
       }
     } catch {
       setResults([]);
-      setResultQuestions(a.questions || []);
+      setResultQuestions(sortQuestionsByNumber(a.questions || []));
     }
   };
 
@@ -2338,23 +2339,25 @@ export default function TestManager({
                                     </span>
                                   )}
                                 </h5>
-                                <div className="space-y-2 max-h-64 overflow-y-auto">
-                                  {a.questions?.map((q, qi) => {
+                                <div className="space-y-3 max-h-96 overflow-y-auto">
+                                  {sortQuestionsByNumber(a.questions || []).map((q, qi) => {
                                     const ans = r.answers?.[q.id];
                                     return (
                                       <div
                                         key={q.id}
-                                        className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9]"
+                                        className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9] space-y-2"
                                       >
-                                        <p className="text-[11px] text-[#111111] font-mono font-bold">
-                                          <span className="text-[#F07C27]">
-                                            Q{qi + 1}.
-                                          </span>{" "}
-                                          {q.prompt}
-                                        </p>
-                                        <p className="text-[11px] text-emerald-800 mt-1 font-mono whitespace-pre-wrap bg-white p-2 border border-[#111111]/30">
-                                          Answer: {ans || "(not answered)"}
-                                        </p>
+                                        <div className="space-y-1">
+                                          <FormattedPrompt prompt={q.prompt} />
+                                        </div>
+                                        <div className="p-2.5 bg-white border border-[#111111]/30">
+                                          <span className="text-[10px] font-mono text-slate-500 font-bold uppercase block mb-1">
+                                            Student Answer:
+                                          </span>
+                                          <p className="text-xs text-emerald-950 font-mono whitespace-pre-wrap leading-relaxed">
+                                            {ans || "(not answered)"}
+                                          </p>
+                                        </div>
                                       </div>
                                     );
                                   })}

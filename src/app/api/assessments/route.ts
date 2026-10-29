@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from "@/utils/api-response";
 import { handleApiError } from "@/utils/errors";
 import { z } from "zod";
 import { notifyMany, workshopStudentIds } from "@/lib/notify";
+import { sortQuestionsByNumber } from "@/utils/question-order";
 
 export async function GET(req: NextRequest) {
   try {
@@ -95,10 +96,12 @@ export async function GET(req: NextRequest) {
 
     // SECURITY: only ADMIN and MENTOR may see correctAnswer and student results/scores
     const isPrivileged = user.role === "ADMIN" || user.role === "MENTOR";
-    const sanitized = !isPrivileged
-      ? assessments.map((a) => ({
+    const sanitized = assessments.map((a) => {
+      const sortedQuestions = sortQuestionsByNumber(a.questions || []);
+      if (!isPrivileged) {
+        return {
           ...a,
-          questions: a.questions.map((q) => {
+          questions: sortedQuestions.map((q) => {
             const { correctAnswer: _hidden, ...rest } = q;
             return rest;
           }),
@@ -116,8 +119,13 @@ export async function GET(req: NextRequest) {
             submittedAt: r.submittedAt,
             durationSec: r.durationSec,
           })),
-        }))
-      : assessments;
+        };
+      }
+      return {
+        ...a,
+        questions: sortedQuestions,
+      };
+    });
 
     return successResponse({ assessments: sanitized });
   } catch (err) {

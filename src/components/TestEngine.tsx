@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import FormattedPrompt from "@/components/FormattedPrompt";
+import { sortQuestionsByNumber } from "@/utils/question-order";
 import {
   Clock,
   Flag,
@@ -123,7 +124,10 @@ export default function TestEngine({
   onSubmit,
   onExit,
 }: TestEngineProps) {
-  const questions = assessment.questions || [];
+  const questions = useMemo(
+    () => sortQuestionsByNumber(assessment.questions || []),
+    [assessment.questions]
+  );
   const totalQuestions = questions.length;
   const defaultViolations = assessment.type === "ASSIGNMENT" ? 0 : 3;
   const isAntiCheatEnabled =
@@ -890,35 +894,67 @@ export default function TestEngine({
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <label className="text-[11px] font-mono text-slate-700 font-bold uppercase tracking-wider">
-                      {assessment.type === "PROGRAMMING"
-                        ? "Your C++ solution (graded manually by your mentor)"
-                        : "Your answer (graded manually by your mentor)"}
-                    </label>
-                    <textarea
-                      value={quizAnswers[currentQuestion.id] || ""}
-                      onChange={(e) =>
-                        setQuizAnswers((prev) => ({
-                          ...prev,
-                          [currentQuestion.id]: e.target.value,
-                        }))
-                      }
-                      rows={assessment.type === "PROGRAMMING" ? 14 : 5}
-                      placeholder={
-                        assessment.type === "PROGRAMMING"
-                          ? "#include <iostream>\nusing namespace std;\n\nint main() {\n    // your code here\n    return 0;\n}"
-                          : "Type your answer…"
-                      }
-                      className={`w-full px-4 py-3 bg-[#F9F9F9] border-[2px] border-[#111111] text-[#111111] text-sm focus:outline-none focus:bg-white focus:shadow-[4px_4px_0px_#111111] transition-all select-text ${
-                        assessment.type === "PROGRAMMING"
-                          ? "font-mono leading-relaxed resize-y"
-                          : "font-sans"
-                      }`}
-                      spellCheck={false}
-                    />
-                    <p className="text-[10px] font-mono text-slate-600 font-bold">
-                      💾 Saved automatically — copy & paste is disabled.
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-mono text-slate-700 font-bold uppercase tracking-wider">
+                        {currentQuestion.prompt.toLowerCase().includes("program")
+                          ? "Your C++ Solution (graded manually by mentor):"
+                          : currentQuestion.prompt.toLowerCase().includes("error")
+                          ? "Error Identification & Corrections (graded manually):"
+                          : currentQuestion.prompt.toLowerCase().includes("dry run") || currentQuestion.prompt.toLowerCase().includes("output")
+                          ? "Your Output & Trace / Dry Run (graded manually):"
+                          : "Your Descriptive Answer (graded manually by mentor):"}
+                      </label>
+                      <span className="text-[10px] font-mono text-slate-500 font-semibold">
+                        Press Tab to indent
+                      </span>
+                    </div>
+
+                    <div className="relative">
+                      <textarea
+                        value={quizAnswers[currentQuestion.id] || ""}
+                        onChange={(e) =>
+                          setQuizAnswers((prev) => ({
+                            ...prev,
+                            [currentQuestion.id]: e.target.value,
+                          }))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Tab") {
+                            e.preventDefault();
+                            const target = e.currentTarget;
+                            const start = target.selectionStart;
+                            const end = target.selectionEnd;
+                            const val = target.value;
+                            const newVal = val.substring(0, start) + "    " + val.substring(end);
+                            setQuizAnswers((prev) => ({
+                              ...prev,
+                              [currentQuestion.id]: newVal,
+                            }));
+                            setTimeout(() => {
+                              target.selectionStart = target.selectionEnd = start + 4;
+                            }, 0);
+                          }
+                        }}
+                        rows={12}
+                        placeholder={
+                          currentQuestion.prompt.toLowerCase().includes("error")
+                            ? "1. Line X: [What is wrong] -> [Correction]\n2. Line Y: [What is wrong] -> [Correction]\n3. Line Z: [What is wrong] -> [Correction]..."
+                            : currentQuestion.prompt.toLowerCase().includes("star pyramid") || currentQuestion.prompt.toLowerCase().includes("bugs")
+                            ? "(a) 5 Bugs and why they are wrong:\n1. ...\n2. ...\n\n(b) Corrected program:\n#include <iostream>\nusing namespace std;\n...\n\n(c) Dry run output for n = 3:\n..."
+                            : currentQuestion.prompt.toLowerCase().includes("trace") || currentQuestion.prompt.toLowerCase().includes("dry run")
+                            ? "(a) Exact output:\n...\n\n(b) Dry run trace table:\n..."
+                            : currentQuestion.prompt.toLowerCase().includes("program")
+                            ? "#include <iostream>\nusing namespace std;\n\nint main() {\n    // write your C++ code here\n    return 0;\n}"
+                            : "Type your answer or code here…"
+                        }
+                        className="w-full px-4 py-3 bg-[#F9F9F9] border-[2px] border-[#111111] text-[#111111] text-xs sm:text-sm font-mono leading-relaxed focus:outline-none focus:bg-white focus:shadow-[4px_4px_0px_#111111] transition-all select-text resize-y"
+                        spellCheck={false}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 font-bold">
+                      <span>💾 Saved automatically — copy & paste disabled</span>
+                      <span>Tab indentation enabled (4 spaces)</span>
+                    </div>
                   </div>
                 )}
 
