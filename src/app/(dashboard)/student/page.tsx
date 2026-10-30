@@ -361,8 +361,8 @@ export default function StudentDashboardPage() {
     const isLocked = Boolean(res?.isLocked || res?.status === "LOCKED");
     const isPendingReview = Boolean(
       res?.status === "PENDING_REVIEW" ||
-      as.title?.includes("SUPER60 SKILLUP (Pen-Paper Test)") ||
-      as.id === "cmvtedytl0001upw4pnqn794h"
+      as.id === "cmvtedytl0001upw4pnqn794h" ||
+      as.title?.toLowerCase().includes("pen")
     );
     setActiveAssessment(as);
     setReviewFilter("all");
@@ -2004,7 +2004,7 @@ export default function StudentDashboardPage() {
               const isUpcoming = now < starts;
               const isExpired = now > ends;
               const totalQs = as.questions?.length || 0;
-              const isPenPaper = as.title?.includes("SUPER60 SKILLUP (Pen-Paper Test)") || as.id === "cmvtedytl0001upw4pnqn794h";
+              const isPenPaper = as.id === "cmvtedytl0001upw4pnqn794h" || as.title?.toLowerCase().includes("pen");
               const isPendingEval = isPenPaper && Boolean(res && (res.status === "PENDING_REVIEW" || res.score === null || res.score === undefined));
 
               return (
@@ -2280,9 +2280,9 @@ export default function StudentDashboardPage() {
           ) : (
             (() => {
               const isPenPaper =
-                activeAssessment?.title?.includes("SUPER60 SKILLUP (Pen-Paper Test)") ||
                 activeAssessment?.id === "cmvtedytl0001upw4pnqn794h" ||
-                quizResult.assessmentTitle?.includes("SUPER60 SKILLUP (Pen-Paper Test)");
+                activeAssessment?.title?.toLowerCase().includes("pen") ||
+                quizResult.assessmentTitle?.toLowerCase().includes("pen");
               const isPendingEval = Boolean(
                 quizResult.isPendingReview ||
                 quizResult.status === "PENDING_REVIEW" ||

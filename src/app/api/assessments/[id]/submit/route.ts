@@ -216,7 +216,8 @@ export async function POST(
 
     const isPendingReview =
       status === "PENDING_REVIEW" ||
-      assessment.title.includes("SUPER60 SKILLUP (Pen-Paper Test)");
+      assessment.id === "cmvtedytl0001upw4pnqn794h" ||
+      assessment.title.toLowerCase().includes("pen");
 
     return successResponse({
       submitted: true,

@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
             return rest;
           }),
           results: a.results.map((r) => {
-            const isPenPaper = a.title.includes("SUPER60 SKILLUP (Pen-Paper Test)");
+            const isPenPaper = a.id === "cmvtedytl0001upw4pnqn794h" || a.title.toLowerCase().includes("pen");
             const hideScore = isPenPaper && r.status === "PENDING_REVIEW";
             return {
               id: r.id,

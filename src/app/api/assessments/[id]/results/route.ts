@@ -55,7 +55,11 @@ export async function GET(
     if (user.role === "STUDENT") {
       const myResult = assessment.results[0];
       const isPendingReview = Boolean(
-        myResult && (myResult.status === "PENDING_REVIEW" || assessment.title.includes("SUPER60 SKILLUP (Pen-Paper Test)"))
+        myResult && (
+          myResult.status === "PENDING_REVIEW" ||
+          assessment.id === "cmvtedytl0001upw4pnqn794h" ||
+          assessment.title.toLowerCase().includes("pen")
+        )
       );
 
       return successResponse({

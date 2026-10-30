@@ -23,7 +23,9 @@ export async function GET(
       return errorResponse("Assessment not found", "NOT_FOUND", 404);
     }
 
-    const isPenPaperTest = assessment.title.includes("SUPER60 SKILLUP (Pen-Paper Test)");
+    const isPenPaperTest =
+      assessment.id === "cmvtedytl0001upw4pnqn794h" ||
+      assessment.title.toLowerCase().includes("pen");
     if (user.role === "STUDENT" && isPenPaperTest) {
       return successResponse({
         assessmentId,
