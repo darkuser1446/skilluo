@@ -8,19 +8,22 @@ interface FormattedPromptProps {
   className?: string;
 }
 
-interface ParsedPrompt {
+export interface PromptSegment {
+  type: "text" | "code";
+  content?: string;
+  code?: string;
+  lang?: string;
+}
+
+export interface ParsedPrompt {
   badge: string | null;
-  textBefore: string;
-  codeBlocks: { code: string; lang: string }[];
-  textAfter: string;
+  segments: PromptSegment[];
 }
 
 function isCodeLine(line: string): boolean {
   const t = line.trim();
   if (!t) return false;
-  // Line numbers like "1   #include" or "8   for (int i..."
   if (/^\d+\s+[#a-zA-Z{}]/.test(t)) return true;
-  // Common C++ structural statements
   if (
     /^(#include|using\s+namespace|for\s*\(|while\s*\(|do\s*\{|switch\s*\(|case\s+|default:|cout\s*<<|cin\s*>>|if\s*\(|else|return\b)/.test(
       t
@@ -28,7 +31,6 @@ function isCodeLine(line: string): boolean {
   ) {
     return true;
   }
-  // Type declarations like "int a = 7", "char c = 'A';", "double subtotal = 10000;"
   if (
     /\b(int|char|float|double|bool|void|long\s+long|long)\s+[a-zA-Z_][a-zA-Z0-9_]*(\s*\[\s*\])?\s*(=|;|,|\()/.test(
       t
@@ -36,7 +38,6 @@ function isCodeLine(line: string): boolean {
   ) {
     return true;
   }
-  // Standalone braces or closing lines
   if (/^(\{|\}|\}\s*;)$/.test(t)) return true;
   return false;
 }
@@ -73,21 +74,67 @@ function formatSingleLineCode(code: string): string {
       result += ch;
     }
   }
-  return result
-    .replace(/\n\s*\n/g, "\n")
-    .trim();
+  return result.replace(/\n\s*\n/g, "\n").trim();
+}
+
+function autoIndentCpp(lines: { lineNum: number; code: string }[]) {
+  let indentLevel = 0;
+
+  return lines.map((item) => {
+    let text = item.code.trim();
+    if (!text) {
+      return { lineNum: item.lineNum, code: "" };
+    }
+
+    if (/^\}/.test(text)) {
+      indentLevel = Math.max(0, indentLevel - 1);
+    }
+
+    const indentedCode = "    ".repeat(indentLevel) + text;
+
+    if (/\{$/.test(text) || /^\{$/.test(text)) {
+      indentLevel++;
+    }
+
+    return {
+      lineNum: item.lineNum,
+      code: indentedCode,
+    };
+  });
+}
+
+function processCodeBlock(rawCode: string, lang?: string) {
+  const rawLines = rawCode.split("\n");
+  const isCpp = !lang || lang.toLowerCase().includes("c");
+
+  if (!isCpp) {
+    return rawLines.map((line, idx) => ({ lineNum: idx + 1, code: line }));
+  }
+
+  const hasLineNumbers = rawLines.some((l) => /^\s*\d+\s+[#a-zA-Z{}]/.test(l));
+
+  const initial = rawLines.map((line, idx) => {
+    if (hasLineNumbers) {
+      const match = line.match(/^\s*(\d+)\s*(.*)$/);
+      if (match) {
+        return { lineNum: parseInt(match[1], 10), code: match[2] };
+      }
+      return { lineNum: idx + 1, code: line };
+    }
+    return { lineNum: idx + 1, code: line };
+  });
+
+  return autoIndentCpp(initial);
 }
 
 /**
  * Parses a question prompt into structured parts:
  * 1. Badge / Section tag (e.g. "[Section A: Multiple Choice Questions - Q19]")
- * 2. Question text (e.g. "What is the output?")
- * 3. Structured code block(s) (e.g. C++ loops, functions, variables)
- * 4. Trailing instructions/notes (e.g. "(a) Identify the 5 bugs...", "(ASCII value of 'A' is 65)")
+ * 2. Sequential segments (interleaved text, code blocks, terminal outputs)
  */
 export function parsePrompt(rawPrompt: string): ParsedPrompt {
   if (!rawPrompt) {
-    return { badge: null, textBefore: "", codeBlocks: [], textAfter: "" };
+    return { badge: null, segments: [] };
   }
 
   let text = rawPrompt.trim();
@@ -100,29 +147,40 @@ export function parsePrompt(rawPrompt: string): ParsedPrompt {
     text = text.slice(badgeMatch[0].length).trim();
   }
 
-  // 2. Check for explicit Markdown code blocks (```cpp ... ``` or ``` ... ```)
-  const codeBlockRegex = /```([a-zA-Z0-9]*)\n?([\s\S]*?)```/g;
+  // 2. Check for explicit Markdown code blocks (```cpp ... ``` or ```text ... ``` or ``` ... ```)
+  const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g;
   const matches = [...text.matchAll(codeBlockRegex)];
 
   if (matches.length > 0) {
-    const firstMatch = matches[0];
-    const matchIndex = firstMatch.index ?? 0;
-    const textBefore = text.slice(0, matchIndex).trim();
-    const code = firstMatch[2].trimEnd();
-    const lang = firstMatch[1] || "cpp";
-    const textAfter = text.slice(matchIndex + firstMatch[0].length).trim();
+    const segments: PromptSegment[] = [];
+    let lastIndex = 0;
 
-    return {
-      badge,
-      textBefore,
-      codeBlocks: [{ code, lang }],
-      textAfter,
-    };
+    for (const match of matches) {
+      const matchIndex = match.index ?? 0;
+      if (matchIndex > lastIndex) {
+        const textBefore = text.slice(lastIndex, matchIndex).trim();
+        if (textBefore) {
+          segments.push({ type: "text", content: textBefore });
+        }
+      }
+      const lang = match[1] || "cpp";
+      const code = match[2].trimEnd();
+      segments.push({ type: "code", code, lang });
+      lastIndex = matchIndex + match[0].length;
+    }
+
+    if (lastIndex < text.length) {
+      const textAfter = text.slice(lastIndex).trim();
+      if (textAfter) {
+        segments.push({ type: "text", content: textAfter });
+      }
+    }
+
+    return { badge, segments };
   }
 
   // 3. Heuristic detection of raw un-fenced C++ code
   const lines = text.split("\n");
-
   let firstCodeIdx = -1;
   let lastCodeIdx = -1;
 
@@ -159,12 +217,16 @@ export function parsePrompt(rawPrompt: string): ParsedPrompt {
     const codeLines = lines.slice(firstCodeIdx, lastCodeIdx + 1);
     const afterLines = lines.slice(lastCodeIdx + 1);
 
-    return {
-      badge,
-      textBefore: beforeLines.join("\n").trim(),
-      codeBlocks: [{ code: codeLines.join("\n").trimEnd(), lang: "cpp" }],
-      textAfter: afterLines.join("\n").trim(),
-    };
+    const segments: PromptSegment[] = [];
+    const textBefore = beforeLines.join("\n").trim();
+    if (textBefore) segments.push({ type: "text", content: textBefore });
+
+    segments.push({ type: "code", code: codeLines.join("\n").trimEnd(), lang: "cpp" });
+
+    const textAfter = afterLines.join("\n").trim();
+    if (textAfter) segments.push({ type: "text", content: textAfter });
+
+    return { badge, segments };
   }
 
   // 4. Inline C++ code detection (e.g. single-line questions where code immediately follows prompt)
@@ -175,7 +237,6 @@ export function parsePrompt(rawPrompt: string): ParsedPrompt {
     const textBefore = text.slice(0, inlineCodeMatch.index).trim();
     let codePart = text.slice(inlineCodeMatch.index).trim();
 
-    // Check if code contains trailing text like (ASCII value...) or (a) Identify...
     let textAfter = "";
     const trailingMatch = codePart.match(
       /(\n|\s{2,})(\([a-zA-Z0-9]+\)|Total|Note|ASCII|Where|Instructions|Write|Constraint)[\s\S]*$/i
@@ -185,31 +246,28 @@ export function parsePrompt(rawPrompt: string): ParsedPrompt {
       codePart = codePart.slice(0, trailingMatch.index).trim();
     }
 
-    // Format single-line code if it has multiple braces/semicolons
     if (!codePart.includes("\n") && (codePart.includes(";") || codePart.includes("{"))) {
       codePart = formatSingleLineCode(codePart);
     }
 
-    return {
-      badge,
-      textBefore,
-      codeBlocks: [{ code: codePart, lang: "cpp" }],
-      textAfter,
-    };
+    const segments: PromptSegment[] = [];
+    if (textBefore) segments.push({ type: "text", content: textBefore });
+    segments.push({ type: "code", code: codePart, lang: "cpp" });
+    if (textAfter) segments.push({ type: "text", content: textAfter });
+
+    return { badge, segments };
   }
 
   return {
     badge,
-    textBefore: text,
-    codeBlocks: [],
-    textAfter: "",
+    segments: [{ type: "text", content: text }],
   };
 }
 
 export default function FormattedPrompt({ prompt, className = "" }: FormattedPromptProps) {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
-  const { badge, textBefore, codeBlocks, textAfter } = parsePrompt(prompt);
+  const { badge, segments } = parsePrompt(prompt);
 
   const handleCopy = (code: string, idx: number) => {
     try {
@@ -222,7 +280,7 @@ export default function FormattedPrompt({ prompt, className = "" }: FormattedPro
   };
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-3.5 ${className}`}>
       {/* 1. Optional Section Badge */}
       {badge && (
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#FFF0E5] text-[#F07C27] border-[2px] border-[#111111] font-mono text-[11px] font-black uppercase tracking-wider shadow-[2px_2px_0px_#111111]">
@@ -231,85 +289,94 @@ export default function FormattedPrompt({ prompt, className = "" }: FormattedPro
         </div>
       )}
 
-      {/* 2. Question Text (Before Code) */}
-      {textBefore && (
-        <div className="text-[15px] sm:text-base font-sans font-bold text-[#111111] leading-relaxed whitespace-pre-line">
-          {textBefore}
-        </div>
-      )}
-
-      {/* 3. Structured Code Block(s) */}
-      {codeBlocks.map((block, idx) => {
-        const codeLines = block.code.split("\n");
-        // Check if code already contains line numbers (like Q21/Q22: "1   #include...")
-        const hasBuiltInLineNumbers = codeLines.some((l) => /^\d+\s+[#a-zA-Z{}]/.test(l.trim()));
-
-        return (
-          <div
-            key={idx}
-            className="rounded-none border-[3px] border-[#111111] bg-[#0F172A] text-slate-100 shadow-[5px_5px_0px_#111111] overflow-hidden my-3 select-text"
-          >
-            {/* Terminal Window Header Bar */}
-            <div className="flex items-center justify-between px-3.5 py-2 bg-[#1E293B] border-b-[2px] border-[#111111]">
-              <div className="flex items-center gap-2">
-                {/* Mac-style terminal dots */}
-                <span className="w-3 h-3 rounded-full bg-[#EF4444] border border-[#7F1D1D] inline-block" />
-                <span className="w-3 h-3 rounded-full bg-[#F59E0B] border border-[#78350F] inline-block" />
-                <span className="w-3 h-3 rounded-full bg-[#10B981] border border-[#064E3B] inline-block" />
-                <div className="flex items-center gap-1.5 ml-2 px-2 py-0.5 bg-[#0F172A] border border-slate-700 font-mono text-[10px] font-black tracking-wider text-amber-400 uppercase">
-                  <Code2 className="w-3 h-3 text-[#F07C27]" />
-                  <span>{block.lang.toUpperCase() || "C++"}</span>
-                </div>
-              </div>
-
-              {/* Copy Code button */}
-              <button
-                type="button"
-                onClick={() => handleCopy(block.code, idx)}
-                className="flex items-center gap-1 px-2 py-1 text-[11px] font-mono font-bold bg-[#0F172A] hover:bg-[#334155] text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer"
-                title="Copy code snippet to clipboard"
-              >
-                {copiedIdx === idx ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
+      {/* 2. Structured Segments (Text & Code in natural sequential order) */}
+      {segments.map((segment, idx) => {
+        if (segment.type === "text" && segment.content) {
+          return (
+            <div
+              key={idx}
+              className="text-[15px] sm:text-base font-sans font-bold text-[#111111] leading-relaxed whitespace-pre-line select-text"
+            >
+              {segment.content}
             </div>
+          );
+        }
 
-            {/* Code Body with Syntax Monospace Styling */}
-            <div className="p-4 overflow-x-auto font-mono text-xs sm:text-sm leading-relaxed scrollbar-thin">
-              <pre className="whitespace-pre">
-                {codeLines.map((line, lineIdx) => (
-                  <div key={lineIdx} className="table-row hover:bg-slate-800/40">
-                    {!hasBuiltInLineNumbers && codeLines.length > 1 && (
-                      <span className="table-cell select-none pr-4 text-right text-slate-500 font-mono text-xs w-8">
-                        {lineIdx + 1}
-                      </span>
-                    )}
-                    <span className="table-cell text-slate-100 font-mono font-medium">
-                      {line || " "}
+        if (segment.type === "code" && segment.code) {
+          const isTextOutput = segment.lang === "text" || segment.lang === "output";
+          const processedLines = processCodeBlock(segment.code, segment.lang);
+          const showLineNumbers = !isTextOutput && processedLines.length > 1;
+
+          return (
+            <div
+              key={idx}
+              className="rounded-none border-[3px] border-[#111111] bg-[#0F172A] text-slate-100 shadow-[5px_5px_0px_#111111] overflow-hidden my-3.5 select-text"
+            >
+              {/* Terminal Window Header Bar */}
+              <div className="flex items-center justify-between px-3.5 py-2 bg-[#1E293B] border-b-[2px] border-[#111111]">
+                <div className="flex items-center gap-2">
+                  {/* Mac-style terminal dots */}
+                  <span className="w-3 h-3 rounded-full bg-[#EF4444] border border-[#7F1D1D] inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-[#F59E0B] border border-[#78350F] inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-[#10B981] border border-[#064E3B] inline-block" />
+                  <div className="flex items-center gap-1.5 ml-2 px-2 py-0.5 bg-[#0F172A] border border-slate-700 font-mono text-[10px] font-black tracking-wider text-amber-400 uppercase">
+                    <Code2 className="w-3 h-3 text-[#F07C27]" />
+                    <span>
+                      {isTextOutput
+                        ? "SAMPLE OUTPUT / FORMAT"
+                        : segment.lang?.toUpperCase() || "C++"}
                     </span>
                   </div>
-                ))}
-              </pre>
-            </div>
-          </div>
-        );
-      })}
+                </div>
 
-      {/* 4. Trailing Text / Sub-questions (e.g. "(a) Identify...", "(ASCII value...)") */}
-      {textAfter && (
-        <div className="text-sm font-sans font-semibold text-[#111111] leading-relaxed whitespace-pre-line pt-1">
-          {textAfter}
-        </div>
-      )}
+                {/* Copy Code button */}
+                <button
+                  type="button"
+                  onClick={() => handleCopy(segment.code || "", idx)}
+                  className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono font-bold bg-[#0F172A] hover:bg-[#334155] text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer shadow-[1px_1px_0px_rgba(0,0,0,0.5)]"
+                  title="Copy snippet to clipboard"
+                >
+                  {copiedIdx === idx ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-400">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Code Body with Syntax Monospace Styling */}
+              <div className="p-4 overflow-x-auto font-mono text-xs sm:text-[13px] leading-relaxed scrollbar-thin">
+                <pre className="whitespace-pre">
+                  {processedLines.map((lineItem, lineIdx) => (
+                    <div key={lineIdx} className="table-row hover:bg-slate-800/40">
+                      {showLineNumbers && (
+                        <span className="table-cell select-none pr-4 text-right text-slate-500 font-mono text-xs w-9 border-r border-slate-800/80">
+                          {lineItem.lineNum}
+                        </span>
+                      )}
+                      <span
+                        className={`table-cell font-mono font-medium ${
+                          showLineNumbers ? "pl-4" : ""
+                        } ${isTextOutput ? "text-emerald-400" : "text-slate-100"}`}
+                      >
+                        {lineItem.code || " "}
+                      </span>
+                    </div>
+                  ))}
+                </pre>
+              </div>
+            </div>
+          );
+        }
+
+        return null;
+      })}
     </div>
   );
 }
