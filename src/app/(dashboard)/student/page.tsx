@@ -552,6 +552,16 @@ export default function StudentDashboardPage() {
   const hasSubmittedTest = assessments.some((a) => a.results && a.results.length > 0);
   const isOnTrack = isSelected;
 
+  const hasAssignedLab = Boolean(
+    myLab || (user?.labStudents && user.labStudents.length > 0)
+  );
+
+  const hasCbtResult = assessments.some((a) =>
+    a.results?.some((r: any) => r.status === "SELECTED_ROUND2" || (r.feedback && /cbt/i.test(r.feedback)))
+  );
+
+  const isCbtSelected = hasAssignedLab && hasCbtResult;
+
   if (loading) {
     return (
       <div className="space-y-6 animate-in fade-in duration-200">
@@ -581,7 +591,7 @@ export default function StudentDashboardPage() {
         {/* Student Profile Card (Physical Clip Badge) */}
         <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 flex flex-col justify-between relative">
           <div className="absolute -top-3 right-6 bg-[#eeeeee] border-[2px] border-[#111111] px-2.5 py-0.5 text-[11px] font-mono font-bold uppercase shadow-[2px_2px_0px_#111111]">
-            IDENT: {isSelected ? "SUPER_60_SELECTED" : isOnTrack ? "QUALIFIED_CANDIDATE" : "ACTIVE_CANDIDATE"}
+            IDENT: {isCbtSelected ? "CBT_ROUND_SELECTED" : isSelected ? "SUPER_60_SELECTED" : isOnTrack ? "QUALIFIED_CANDIDATE" : "ACTIVE_CANDIDATE"}
           </div>
 
           <div>
@@ -613,8 +623,8 @@ export default function StudentDashboardPage() {
 
           <div className="border-t-[3px] border-[#111111] pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#f4f3f3] -mx-6 -mb-6 px-6 py-3 mt-4">
             <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#111111]">
-              <span className={`w-2 h-2 ${isSelected || isOnTrack ? "bg-emerald-500 animate-pulse" : "bg-amber-500"} border border-[#111111]`} />
-              <span className="uppercase">STATUS: {isSelected ? "OFFICIALLY SELECTED" : isOnTrack ? "ON TRACK (TIER 1)" : "IN REVIEW"}</span>
+              <span className={`w-2 h-2 ${isCbtSelected || isSelected || isOnTrack ? "bg-emerald-500 animate-pulse" : "bg-amber-500"} border border-[#111111]`} />
+              <span className="uppercase">STATUS: {isCbtSelected ? "SELECTED FOR CBT ROUND" : isSelected ? "OFFICIALLY SELECTED" : isOnTrack ? "ON TRACK (TIER 1)" : "IN REVIEW"}</span>
             </div>
             <div className="font-mono text-xs text-[#111111] font-bold">
               TARGET: TOP 60
@@ -625,23 +635,23 @@ export default function StudentDashboardPage() {
         {/* Oversized Neo-Brutalist Metric Blocks */}
         <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Performance / Selection Status */}
-          <div className={`${isSelected ? "bg-[#e6f4ea]" : "bg-[#F07C27]"} border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between`}>
+          <div className={`${isCbtSelected || isSelected ? "bg-[#e6f4ea]" : "bg-[#F07C27]"} border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-5 flex flex-col justify-between`}>
             <div className="flex items-center justify-between">
-              <span className={`font-mono text-xs font-black uppercase ${isSelected ? "text-emerald-950" : "text-[#111111]"}`}>
-                {isSelected ? "SELECTION STATUS" : "COHORT STATUS"}
+              <span className={`font-mono text-xs font-black uppercase ${isCbtSelected || isSelected ? "text-emerald-950" : "text-[#111111]"}`}>
+                {isCbtSelected ? "CBT ROUND SELECTION" : isSelected ? "SELECTION STATUS" : "COHORT STATUS"}
               </span>
-              <Trophy className={`w-5 h-5 ${isSelected ? "text-emerald-700" : "text-[#111111]"}`} />
+              <Trophy className={`w-5 h-5 ${isCbtSelected || isSelected ? "text-emerald-700" : "text-[#111111]"}`} />
             </div>
             <div className="my-2">
-              <div className={`font-display font-black ${isSelected ? "text-3xl sm:text-4xl text-emerald-900" : "text-2xl text-[#111111]"} leading-tight tracking-tight uppercase`}>
-                {isSelected ? "SELECTED 🎉" : isRejected ? "NOT SELECTED" : isWaitlist ? "WAITLIST" : hasSubmittedTest ? "SUBMITTED ✓" : "IN REVIEW"}
+              <div className={`font-display font-black ${isCbtSelected || isSelected ? "text-2xl sm:text-3xl text-emerald-900" : "text-2xl text-[#111111]"} leading-tight tracking-tight uppercase`}>
+                {isCbtSelected ? "CBT ROUND 🎉" : isSelected ? "SELECTED 🎉" : isRejected ? "NOT SELECTED" : isWaitlist ? "WAITLIST" : hasSubmittedTest ? "SUBMITTED ✓" : "IN REVIEW"}
               </div>
-              <div className={`font-mono text-[11px] font-bold ${isSelected ? "text-emerald-800" : "text-[#111111]/80"} mt-1 uppercase`}>
-                {isSelected ? "SUPER 60 COHORT" : "SKILLUP SCREENING"}
+              <div className={`font-mono text-[11px] font-bold ${isCbtSelected || isSelected ? "text-emerald-800" : "text-[#111111]/80"} mt-1 uppercase`}>
+                {isCbtSelected ? "QUALIFIED FOR NEXT ROUND" : isSelected ? "SUPER 60 COHORT" : "SKILLUP SCREENING"}
               </div>
             </div>
-            <div className={`${isSelected ? "bg-emerald-600 text-white" : "bg-[#111111] text-white"} px-2 py-1 border-[2px] border-[#111111] font-mono text-xs font-bold text-center uppercase tracking-wider`}>
-              {isSelected ? "CONGRATULATIONS!" : isRejected ? "REVIEW COMPLETE" : "EVALUATION ACTIVE"}
+            <div className={`${isCbtSelected || isSelected ? "bg-emerald-600 text-white" : "bg-[#111111] text-white"} px-2 py-1 border-[2px] border-[#111111] font-mono text-xs font-bold text-center uppercase tracking-wider`}>
+              {isCbtSelected ? "CBT QUALIFIED!" : isSelected ? "CONGRATULATIONS!" : isRejected ? "REVIEW COMPLETE" : "EVALUATION ACTIVE"}
             </div>
           </div>
 
@@ -797,8 +807,8 @@ export default function StudentDashboardPage() {
               </div>
               <div className="flex justify-between text-slate-600 font-bold">
                 <span>SELECTION:</span>
-                <span className={`font-black ${isSelected ? "text-emerald-700" : isRejected ? "text-slate-700" : "text-[#F07C27]"}`}>
-                  {isSelected ? "SELECTED ✓" : isRejected ? "NOT SELECTED" : isWaitlist ? "WAITLIST" : hasSubmittedTest ? "SUBMITTED" : "PENDING"}
+                <span className={`font-black ${isCbtSelected || isSelected ? "text-emerald-700" : isRejected ? "text-slate-700" : "text-[#F07C27]"}`}>
+                  {isCbtSelected ? "CBT ROUND ✓" : isSelected ? "SELECTED ✓" : isRejected ? "NOT SELECTED" : isWaitlist ? "WAITLIST" : hasSubmittedTest ? "SUBMITTED" : "PENDING"}
                 </span>
               </div>
               <div className="pt-2 border-t border-[#111111]/20 space-y-1.5">
@@ -842,24 +852,26 @@ export default function StudentDashboardPage() {
               <div className="flex items-start justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 bg-emerald-500 border-[3px] border-[#111111] shadow-[3px_3px_0px_#111111] flex items-center justify-center text-white text-3xl flex-shrink-0">
-                    🎉
+                    {isCbtSelected ? "🎯" : "🎉"}
                   </div>
                   <div>
                     <span className="px-2.5 py-0.5 bg-emerald-700 text-white font-mono text-[10px] font-black uppercase tracking-wider border border-[#111111] shadow-[1px_1px_0px_#111111]">
-                      OFFICIALLY SELECTED
+                      {isCbtSelected ? "SELECTED FOR CBT ROUND" : "OFFICIALLY SELECTED"}
                     </span>
                     <h2 className="font-display font-black text-[#111111] text-xl sm:text-2xl uppercase mt-1">
-                      Congratulations! You Have Been Selected
+                      {isCbtSelected ? "You are selected for next round — CBT round" : "Congratulations! You Have Been Selected"}
                     </h2>
                   </div>
                 </div>
                 <span className="text-[11px] font-mono font-black text-emerald-950 bg-white border-[2px] border-[#111111] px-3.5 py-1.5 shadow-[2px_2px_0px_#111111] uppercase">
-                  SUPER 60 COHORT
+                  {isCbtSelected ? "CBT ROUND (QUALIFIED)" : "SUPER 60 COHORT"}
                 </span>
               </div>
 
               <p className="text-sm font-mono text-slate-800 leading-relaxed font-bold">
-                Congratulations! You have been officially selected by the Mentor & Admin Committee for the Super 60 intensive training workshop and laboratory tracks!
+                {isCbtSelected
+                  ? "Congratulations! You have been selected from the last test for the next round — CBT round in your allocated laboratory track!"
+                  : "Congratulations! You have been officially selected by the Mentor & Admin Committee for the Super 60 intensive training workshop and laboratory tracks!"}
               </p>
 
               {myLab ? (
@@ -870,9 +882,14 @@ export default function StudentDashboardPage() {
                       <strong className="text-[#111111] text-base uppercase font-black">{myLab.name}</strong>
                     </div>
                     <span className="px-2.5 py-1 bg-emerald-100 text-emerald-900 border border-emerald-600 text-[10px] font-black uppercase">
-                      Track Confirmed ✓
+                      {isCbtSelected ? "CBT Lab Track ✓" : "Track Confirmed ✓"}
                     </span>
                   </div>
+                  {isCbtSelected && (
+                    <div className="p-2.5 bg-amber-50 border-2 border-[#111111] text-amber-950 text-xs font-bold font-mono">
+                      ⚡ CBT ROUND NOTICE: You have officially advanced to the CBT Round for {myLab.name}. Report to your allocated lab according to the schedule.
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-800 pt-1">
                     <div>
                       <span className="text-[10px] font-bold text-slate-500 uppercase block">Schedule:</span>
@@ -2027,7 +2044,9 @@ export default function StudentDashboardPage() {
                             ? "bg-rose-600 text-white"
                             : isPendingEval
                             ? "bg-amber-100 text-amber-900 border-amber-600"
-                            : res.status === "SELECTED" || res.status === "SELECTED_ROUND2"
+                            : res.status === "SELECTED_ROUND2"
+                            ? "bg-emerald-600 text-white animate-pulse"
+                            : res.status === "SELECTED"
                             ? "bg-emerald-500 text-white animate-pulse"
                             : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2"
                             ? "bg-blue-100 text-blue-900"
@@ -2037,7 +2056,9 @@ export default function StudentDashboardPage() {
                             ? "🔒 LOCKED OUT"
                             : isPendingEval
                             ? "⏳ UNDER EVALUATION"
-                            : res.status === "SELECTED" || res.status === "SELECTED_ROUND2"
+                            : res.status === "SELECTED_ROUND2"
+                            ? "🎯 SELECTED FOR CBT ROUND"
+                            : res.status === "SELECTED"
                             ? "🎉 OFFICIALLY SELECTED"
                             : res.status === "WAITLIST" || res.status === "WAITLIST_ROUND2"
                             ? "⏳ WAITLISTED"
@@ -2114,6 +2135,12 @@ export default function StudentDashboardPage() {
                               <span className="text-rose-700">✕ {res.incorrectCount ?? 0} Incorrect</span>
                             </div>
                           </div>
+                          {res.feedback && (
+                            <div className="mt-2 p-2 bg-white border border-[#111111] text-[11px] font-mono font-bold text-emerald-950 flex items-center gap-1.5">
+                              <span>🎯</span>
+                              <span>{res.feedback}</span>
+                            </div>
+                          )}
                         </div>
                       )
                     )}
