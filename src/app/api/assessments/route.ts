@@ -106,8 +106,12 @@ export async function GET(req: NextRequest) {
             return rest;
           }),
           results: a.results.map((r) => {
-            const isPenPaper = a.id === "cmvtedytl0001upw4pnqn794h" || a.title.toLowerCase().includes("pen");
-            const hideScore = isPenPaper && r.status === "PENDING_REVIEW";
+            const isSubjective =
+              a.id === "cmvtedytl0001upw4pnqn794h" ||
+              a.title.toLowerCase().includes("pen") ||
+              a.title.toLowerCase().includes("cbt") ||
+              a.title.toLowerCase().includes("project");
+            const hideScore = r.status === "PENDING_REVIEW" || (isSubjective && r.status !== "COMPLETED");
             return {
               id: r.id,
               studentId: r.studentId,

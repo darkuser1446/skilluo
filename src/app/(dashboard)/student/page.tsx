@@ -591,7 +591,7 @@ export default function StudentDashboardPage() {
         {/* Student Profile Card (Physical Clip Badge) */}
         <div className="lg:col-span-5 bg-white border-[3px] border-[#111111] shadow-[8px_8px_0px_#111111] p-6 flex flex-col justify-between relative">
           <div className="absolute -top-3 right-6 bg-[#eeeeee] border-[2px] border-[#111111] px-2.5 py-0.5 text-[11px] font-mono font-bold uppercase shadow-[2px_2px_0px_#111111]">
-            IDENT: {isCbtSelected ? "CBT_ROUND_SELECTED" : isSelected ? "SUPER_60_SELECTED" : isOnTrack ? "QUALIFIED_CANDIDATE" : "ACTIVE_CANDIDATE"}
+            IDENT: {isCbtSelected ? "CBT_ROUND_SELECTED" : isSelected ? "SUPER_60_SELECTED" : isRejected ? "NOT_SELECTED_FINAL_ROUND" : isOnTrack ? "QUALIFIED_CANDIDATE" : "ACTIVE_CANDIDATE"}
           </div>
 
           <div>
@@ -624,7 +624,7 @@ export default function StudentDashboardPage() {
           <div className="border-t-[3px] border-[#111111] pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#f4f3f3] -mx-6 -mb-6 px-6 py-3 mt-4">
             <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#111111]">
               <span className={`w-2 h-2 ${isCbtSelected || isSelected || isOnTrack ? "bg-emerald-500 animate-pulse" : "bg-amber-500"} border border-[#111111]`} />
-              <span className="uppercase">STATUS: {isCbtSelected ? "SELECTED FOR CBT ROUND" : isSelected ? "OFFICIALLY SELECTED" : isOnTrack ? "ON TRACK (TIER 1)" : "IN REVIEW"}</span>
+              <span className="uppercase">STATUS: {isCbtSelected ? "SELECTED FOR CBT ROUND" : isSelected ? "OFFICIALLY SELECTED" : isRejected ? "NOT SELECTED FOR FINAL ROUND" : isOnTrack ? "ON TRACK (TIER 1)" : "IN REVIEW"}</span>
             </div>
             <div className="font-mono text-xs text-[#111111] font-bold">
               TARGET: TOP 60
@@ -646,8 +646,8 @@ export default function StudentDashboardPage() {
               <div className={`font-display font-black ${isCbtSelected || isSelected ? "text-2xl sm:text-3xl text-emerald-900" : "text-2xl text-[#111111]"} leading-tight tracking-tight uppercase`}>
                 {isCbtSelected ? "CBT ROUND 🎉" : isSelected ? "SELECTED 🎉" : isRejected ? "NOT SELECTED" : isWaitlist ? "WAITLIST" : hasSubmittedTest ? "SUBMITTED ✓" : "IN REVIEW"}
               </div>
-              <div className={`font-mono text-[11px] font-bold ${isCbtSelected || isSelected ? "text-emerald-800" : "text-[#111111]/80"} mt-1 uppercase`}>
-                {isCbtSelected ? "QUALIFIED FOR NEXT ROUND" : isSelected ? "SUPER 60 COHORT" : "SKILLUP SCREENING"}
+              <div className={`font-mono text-[11px] font-bold ${isCbtSelected || isSelected ? "text-emerald-800" : isRejected ? "text-rose-800" : "text-[#111111]/80"} mt-1 uppercase`}>
+                {isCbtSelected ? "QUALIFIED FOR NEXT ROUND" : isSelected ? "SUPER 60 COHORT" : isRejected ? "NOT SELECTED FOR FINAL ROUND" : "SKILLUP SCREENING"}
               </div>
             </div>
             <div className={`${isCbtSelected || isSelected ? "bg-emerald-600 text-white" : "bg-[#111111] text-white"} px-2 py-1 border-[2px] border-[#111111] font-mono text-xs font-bold text-center uppercase tracking-wider`}>
@@ -924,16 +924,16 @@ export default function StudentDashboardPage() {
                   📋
                 </div>
                 <div>
-                  <span className="px-2 py-0.5 bg-slate-300 text-slate-800 font-mono text-[10px] font-black uppercase tracking-wider border border-[#111111]">
-                    APPLICATION STATUS
+                  <span className="px-2 py-0.5 bg-rose-100 text-rose-900 font-mono text-[10px] font-black uppercase tracking-wider border border-rose-400">
+                    FINAL ROUND STATUS
                   </span>
-                  <h2 className="font-display font-black text-[#111111] text-base uppercase mt-0.5">
-                    Application Status: Not Selected
+                  <h2 className="font-display font-black text-[#111111] text-xl uppercase mt-0.5">
+                    You were not selected for the final round
                   </h2>
                 </div>
               </div>
-              <p className="text-xs font-mono text-slate-700 leading-relaxed pt-1">
-                Thank you for participating in the SkillUp 3.0 screening assessment. Unfortunately, you have not been selected for this cohort edition as admissions are strictly limited by laboratory capacity. We truly appreciate your dedication and strongly encourage you to continue building on your software engineering skills.
+              <p className="text-sm font-mono text-slate-700 leading-relaxed pt-1 font-bold">
+                Thank you for your active participation and hard work in the previous test rounds. Unfortunately, you were not selected for the final round (CBT Projects round) as seats were strictly limited to the top qualifying candidates. We encourage you to continue coding and building on your software engineering skills!
               </p>
             </div>
           )}
@@ -2021,8 +2021,14 @@ export default function StudentDashboardPage() {
               const isUpcoming = now < starts;
               const isExpired = now > ends;
               const totalQs = as.questions?.length || 0;
-              const isPenPaper = as.id === "cmvtedytl0001upw4pnqn794h" || as.title?.toLowerCase().includes("pen");
-              const isPendingEval = isPenPaper && Boolean(res && (res.status === "PENDING_REVIEW" || res.score === null || res.score === undefined));
+              const isPenPaper =
+                as.id === "cmvtedytl0001upw4pnqn794h" ||
+                as.title?.toLowerCase().includes("pen") ||
+                as.title?.toLowerCase().includes("cbt") ||
+                as.title?.toLowerCase().includes("project");
+              const isPendingEval = Boolean(
+                res && (res.status === "PENDING_REVIEW" || (isPenPaper && (res.score === null || res.score === undefined)))
+              );
 
               return (
                 <div key={as.id} className={`p-5 bg-white border-[3px] border-[#111111] shadow-[6px_6px_0px_#111111] flex flex-col justify-between space-y-4 transition-all ${
@@ -2309,7 +2315,11 @@ export default function StudentDashboardPage() {
               const isPenPaper =
                 activeAssessment?.id === "cmvtedytl0001upw4pnqn794h" ||
                 activeAssessment?.title?.toLowerCase().includes("pen") ||
-                quizResult.assessmentTitle?.toLowerCase().includes("pen");
+                activeAssessment?.title?.toLowerCase().includes("cbt") ||
+                activeAssessment?.title?.toLowerCase().includes("project") ||
+                quizResult.assessmentTitle?.toLowerCase().includes("pen") ||
+                quizResult.assessmentTitle?.toLowerCase().includes("cbt") ||
+                quizResult.assessmentTitle?.toLowerCase().includes("project");
               const isPendingEval = Boolean(
                 quizResult.isPendingReview ||
                 quizResult.status === "PENDING_REVIEW" ||

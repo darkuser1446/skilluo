@@ -58,7 +58,9 @@ export async function GET(
         myResult && (
           myResult.status === "PENDING_REVIEW" ||
           assessment.id === "cmvtedytl0001upw4pnqn794h" ||
-          assessment.title.toLowerCase().includes("pen")
+          assessment.title.toLowerCase().includes("pen") ||
+          assessment.title.toLowerCase().includes("cbt") ||
+          assessment.title.toLowerCase().includes("project")
         )
       );
 
