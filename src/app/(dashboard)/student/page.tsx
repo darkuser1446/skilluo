@@ -409,10 +409,17 @@ export default function StudentDashboardPage() {
 
   const handleViewStudentResult = async (as: any, res: any) => {
     const isLocked = Boolean(res?.isLocked || res?.status === "LOCKED");
+    const isSubjective =
+      as.id === "cmvtedytl0001upw4pnqn794h" ||
+      as.title?.toLowerCase().includes("pen") ||
+      as.title?.toLowerCase().includes("cbt") ||
+      as.title?.toLowerCase().includes("project");
     const isPendingReview = Boolean(
       res?.status === "PENDING_REVIEW" ||
-      as.id === "cmvtedytl0001upw4pnqn794h" ||
-      as.title?.toLowerCase().includes("pen")
+      res?.isAnnounced === false ||
+      (isSubjective && res?.status !== "COMPLETED") ||
+      res?.score === null ||
+      res?.score === undefined
     );
     setActiveAssessment(as);
     setReviewFilter("all");
@@ -2081,7 +2088,11 @@ export default function StudentDashboardPage() {
                 as.title?.toLowerCase().includes("cbt") ||
                 as.title?.toLowerCase().includes("project");
               const isPendingEval = Boolean(
-                res && (res.status === "PENDING_REVIEW" || (isPenPaper && (res.score === null || res.score === undefined)))
+                res && (
+                  res.status === "PENDING_REVIEW" ||
+                  res.isAnnounced === false ||
+                  (isPenPaper && (res.score === null || res.score === undefined || res.status !== "COMPLETED"))
+                )
               );
 
               return (
@@ -2388,7 +2399,8 @@ export default function StudentDashboardPage() {
               const isPendingEval = Boolean(
                 quizResult.isPendingReview ||
                 quizResult.status === "PENDING_REVIEW" ||
-                (isPenPaper && (quizResult.score === null || quizResult.score === undefined))
+                quizResult.isAnnounced === false ||
+                (isPenPaper && (quizResult.score === null || quizResult.score === undefined || quizResult.status !== "COMPLETED"))
               );
 
               return (

@@ -109,17 +109,23 @@ export async function GET(req: NextRequest) {
             return rest;
           }),
           results: a.results.map((r) => {
+            const answersObj =
+              r.answers && typeof r.answers === "object"
+                ? (r.answers as Record<string, any>)
+                : {};
+            const isAnnounced = Boolean(answersObj._isAnnounced);
             const isSubjective =
               a.id === "cmvtedytl0001upw4pnqn794h" ||
               a.title.toLowerCase().includes("pen") ||
               a.title.toLowerCase().includes("cbt") ||
               a.title.toLowerCase().includes("project");
-            const hideScore = r.status === "PENDING_REVIEW" || (isSubjective && r.status !== "COMPLETED");
+            const hideScore = !isAnnounced || r.status === "PENDING_REVIEW" || (isSubjective && r.status !== "COMPLETED");
             return {
               id: r.id,
               studentId: r.studentId,
-              status: r.status,
+              status: isAnnounced ? r.status : "PENDING_REVIEW",
               score: hideScore ? null : r.score,
+              isAnnounced,
               correctCount: hideScore ? null : r.correctCount,
               incorrectCount: hideScore ? null : r.incorrectCount,
               unansweredCount: r.unansweredCount,

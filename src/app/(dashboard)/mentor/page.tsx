@@ -1329,7 +1329,33 @@ export default function MentorDashboardPage() {
 
       {/* ══ TAB: GRADING QUEUE ══ */}
       {activeTab === "review" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="space-y-6">
+          {/* CBT Project Evaluation Studio Banner */}
+          <div className="p-4 sm:p-5 bg-[#FFF0E5] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2 py-0.5 bg-[#F07C27] text-white font-mono text-[10px] font-black uppercase tracking-wider border border-[#111111]">
+                  CBT Round 3 Evaluation
+                </span>
+                <span className="font-display font-black text-sm uppercase text-[#111111]">
+                  SKILLUP 3.0 – C++ PROJECT BASED (CBT ROUND)
+                </span>
+              </div>
+              <p className="text-xs font-mono text-slate-700 max-w-2xl">
+                Inspect candidate C++ code submissions question-by-question (10 marks for Q1-Q2, 20 marks for Q3-Q5). Mentors assign marks &amp; remarks per question privately. Results remain unannounced until published.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab("tests")}
+              className="px-4 py-2.5 bg-[#111111] hover:bg-slate-800 text-white font-mono text-xs font-black uppercase tracking-wider border-[2px] border-[#111111] shadow-[3px_3px_0px_#F07C27] hover:translate-x-0.5 transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 self-start md:self-auto"
+            >
+              <Award className="w-4 h-4 text-[#F07C27]" />
+              Open CBT Evaluation Studio →
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-5 space-y-3">
             <h3 className="font-display font-black text-[#111111] text-base uppercase tracking-tight">
               Submissions to Grade ({allSubmissions.length})
@@ -1496,6 +1522,7 @@ export default function MentorDashboardPage() {
               </div>
             )}
           </div>
+        </div>
         </div>
       )}
 

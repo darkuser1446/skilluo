@@ -30,6 +30,7 @@ import {
   FileText,
   Search,
   Filter,
+  Code,
 } from "lucide-react";
 import LeaderboardModal from "@/components/LeaderboardModal";
 import FormattedPrompt from "@/components/FormattedPrompt";
@@ -82,6 +83,7 @@ interface Result {
   durationSec?: number | null;
   feedback?: string | null;
   submittedAt: string;
+  isAnnounced?: boolean;
 }
 
 interface Assessment {
@@ -143,7 +145,64 @@ export default function TestManager({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [results, setResults] = useState<Result[] | null>(null);
   const [resultsFor, setResultsFor] = useState<Assessment | null>(null);
-  const [grading, setGrading] = useState<{ studentId: string; score: string; feedback: string } | null>(null);
+interface GradingState {
+  studentId: string;
+  studentName?: string;
+  rollNumber?: string;
+  email?: string;
+  score: string;
+  feedback: string;
+  questionMarks: Record<string, number | string>;
+  questionFeedback: Record<string, string>;
+  isAnnounced?: boolean;
+  evaluatedBy?: string;
+  evaluatedAt?: string;
+}
+
+  const [grading, setGrading] = useState<GradingState | null>(null);
+
+  const calculateTotal = (marksObj: Record<string, number | string>) => {
+    return Object.values(marksObj).reduce<number>((sum, val) => {
+      const num = Number(val);
+      return !isNaN(num) && num > 0 ? sum + num : sum;
+    }, 0);
+  };
+
+  const startGrading = (r: Result, asmt?: Assessment | null) => {
+    if (grading?.studentId === r.studentId) {
+      setGrading(null);
+      return;
+    }
+    const targetAsmt = asmt || resultsFor;
+    const qMarks: Record<string, number | string> = {};
+    const qFeed: Record<string, string> = {};
+    const answersObj =
+      r.answers && typeof r.answers === "object"
+        ? (r.answers as Record<string, any>)
+        : {};
+    const savedMarks = answersObj._questionMarks || {};
+    const savedFeedback = answersObj._questionFeedback || {};
+    const qs = sortQuestionsByNumber(resultQuestions.length ? resultQuestions : (targetAsmt?.questions || []));
+
+    qs.forEach((q: any) => {
+      qMarks[q.id] = savedMarks[q.id] !== undefined ? savedMarks[q.id] : "";
+      qFeed[q.id] = savedFeedback[q.id] || "";
+    });
+
+    setGrading({
+      studentId: r.studentId,
+      studentName: r.student?.name,
+      rollNumber: r.student?.rollNumber,
+      email: r.student?.email,
+      score: String(r.score ?? 0),
+      feedback: r.feedback || "",
+      questionMarks: qMarks,
+      questionFeedback: qFeed,
+      isAnnounced: Boolean(answersObj._isAnnounced),
+      evaluatedBy: answersObj._evaluatedBy,
+      evaluatedAt: answersObj._evaluatedAt,
+    });
+  };
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [bank, setBank] = useState<BankQuestion[]>([]);
@@ -646,14 +705,14 @@ export default function TestManager({
       setResultsFor(null);
       setResultQuestions([]);
       setInspectingResult(null);
-      setSelectedResultLab(mentorLabId || "ALL");
+      setSelectedResultLab("ALL");
       return;
     }
     setResultsFor(a);
     setExpandedId(a.id);
     setGrading(null);
     setResults(null);
-    setSelectedResultLab(mentorLabId || "ALL");
+    setSelectedResultLab("ALL");
     setInspectingResult(null);
     setResultSearchQuery("");
     setResultFilterStatus("ALL");
@@ -670,25 +729,43 @@ export default function TestManager({
     }
   };
 
-  const submitGrade = async () => {
+  const submitGrade = async (publishToStudent: boolean = false) => {
     if (!grading || !resultsFor) return;
+    if (publishToStudent) {
+      if (!confirm(`Are you sure you want to PUBLISH results for ${grading.studentName || "this student"}? The student will immediately be able to view their final score on their dashboard.`)) {
+        return;
+      }
+    }
     setBusy(true);
     try {
+      const numericQuestionMarks: Record<string, number> = {};
+      Object.entries(grading.questionMarks || {}).forEach(([k, v]) => {
+        const n = Number(v);
+        if (!isNaN(n)) numericQuestionMarks[k] = n;
+      });
+
       const res = await fetch(`/api/assessments/${resultsFor.id}/results`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId: grading.studentId,
-          score: Number(grading.score),
+          score: Number(grading.score) || 0,
           feedback: grading.feedback || undefined,
-          status: "COMPLETED",
+          questionMarks: numericQuestionMarks,
+          questionFeedback: grading.questionFeedback || {},
+          publishToStudent,
+          status: publishToStudent ? "COMPLETED" : "PENDING_REVIEW",
         }),
       });
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error?.message || "Grading failed");
       }
-      flash("Score recorded — student notified");
+      flash(
+        publishToStudent
+          ? "🎉 Marks published to student successfully!"
+          : "💾 Evaluation saved privately. Results remain HIDDEN from student until published."
+      );
       setGrading(null);
       await openResults(resultsFor);
       await load();
@@ -1829,31 +1906,36 @@ export default function TestManager({
                               <Users className="w-4 h-4 text-[#F07C27]" />
                               <span>Lab-Wise Performance & Participation Breakdown</span>
                             </span>
-                            <div className="flex items-center gap-2">
-                              {!(isMentorView && mentorLabId) ? (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedResultLab("ALL")}
+                                className={`px-2.5 py-1 text-[11px] font-mono font-bold border-[2px] border-[#111111] transition-all cursor-pointer ${
+                                  selectedResultLab === "ALL"
+                                    ? "bg-[#111111] text-white shadow-[2px_2px_0px_#F07C27]"
+                                    : "bg-white hover:bg-[#F4F3F3] text-[#111111] shadow-[2px_2px_0px_#111111]"
+                                }`}
+                              >
+                                All Cohort Submissions ({results.length})
+                              </button>
+                              {isMentorView && mentorLabId && (
                                 <button
                                   type="button"
-                                  onClick={() => setSelectedResultLab("ALL")}
+                                  onClick={() => setSelectedResultLab(mentorLabId)}
                                   className={`px-2.5 py-1 text-[11px] font-mono font-bold border-[2px] border-[#111111] transition-all cursor-pointer ${
-                                    selectedResultLab === "ALL"
-                                      ? "bg-[#111111] text-white shadow-[2px_2px_0px_#F07C27]"
+                                    selectedResultLab === mentorLabId
+                                      ? "bg-[#F07C27] text-white shadow-[2px_2px_0px_#111111]"
                                       : "bg-white hover:bg-[#F4F3F3] text-[#111111] shadow-[2px_2px_0px_#111111]"
                                   }`}
                                 >
-                                  All Labs ({results.length} Submissions)
+                                  🏛️ My Lab ({labs.find((l) => l.id === mentorLabId)?.name || "Assigned"})
                                 </button>
-                              ) : (
-                                <span className="px-2.5 py-1 text-[11px] font-mono font-bold border-[2px] border-[#111111] bg-[#111111] text-white shadow-[2px_2px_0px_#F07C27]">
-                                  🏛️ {labs.find((l) => l.id === mentorLabId)?.name || "Assigned Lab"} (Lab Only)
-                                </span>
                               )}
                             </div>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 text-xs font-mono">
-                            {labs
-                              .filter((l) => !isMentorView || !mentorLabId || l.id === mentorLabId)
-                              .map((l) => {
+                            {labs.map((l) => {
                               const labStudents = (l as any).students || [];
                               const eligibleCount = (l as any)._count?.students ?? labStudents.length ?? 0;
                               const labResults = results.filter((r) => {
@@ -1875,7 +1957,7 @@ export default function TestManager({
                                 <button
                                   key={l.id}
                                   type="button"
-                                  onClick={() => (isMentorView && mentorLabId) ? setSelectedResultLab(mentorLabId) : setSelectedResultLab(isSelected ? "ALL" : l.id)}
+                                  onClick={() => setSelectedResultLab(isSelected ? "ALL" : l.id)}
                                   className={`p-3 border-[2px] text-left transition-all cursor-pointer ${
                                     isSelected
                                       ? "bg-[#FFF0E5] border-[#F07C27] shadow-[3px_3px_0px_#111111] ring-2 ring-[#F07C27]"
@@ -1932,16 +2014,14 @@ export default function TestManager({
                             {selectedResultLab !== "ALL" ? (
                               <span className="px-2 py-0.5 bg-[#FFF0E5] border border-[#F07C27] text-[#111111] font-bold flex items-center gap-1.5">
                                 🏛️ {labs.find((l) => l.id === selectedResultLab)?.name || "Selected Lab"}
-                                {!(isMentorView && mentorLabId) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setSelectedResultLab("ALL")}
-                                    className="text-rose-700 hover:text-rose-900 font-black cursor-pointer ml-1"
-                                    title="Clear lab filter"
-                                  >
-                                    ✕
-                                  </button>
-                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedResultLab("ALL")}
+                                  className="text-rose-700 hover:text-rose-900 font-black cursor-pointer ml-1"
+                                  title="Clear lab filter"
+                                >
+                                  ✕
+                                </button>
                               </span>
                             ) : (
                               <span className="px-2 py-0.5 bg-[#F4F3F3] border border-[#111111] text-slate-700 font-bold">
@@ -2033,7 +2113,7 @@ export default function TestManager({
                             <tbody className="divide-y divide-[#111111]/20">
                               {[...results]
                                 .filter((r) => {
-                                  const effectiveLab = (isMentorView && mentorLabId) ? mentorLabId : selectedResultLab;
+                                  const effectiveLab = selectedResultLab;
                                   if (effectiveLab !== "ALL") {
                                     const labObj = labs.find((l) => l.id === effectiveLab);
                                     const inLab =
@@ -2296,16 +2376,23 @@ export default function TestManager({
                                               )}
                                               <button
                                                 type="button"
-                                                className="px-2 py-1 border-[2px] border-[#111111] bg-white hover:bg-[#F07C27] hover:text-white text-[#111111] font-mono text-[10px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
-                                                onClick={() =>
-                                                  setGrading({
-                                                    studentId: r.studentId,
-                                                    score: String(r.score),
-                                                    feedback: r.feedback || "",
-                                                  })
-                                                }
+                                                className={`px-2 py-1 border-[2px] border-[#111111] font-mono text-[10px] font-bold shadow-[2px_2px_0px_#111111] hover:shadow-none transition-all cursor-pointer flex items-center gap-1 ${
+                                                  grading?.studentId === r.studentId
+                                                    ? "bg-[#111111] text-white"
+                                                    : (r.answers as any)?._questionMarks
+                                                    ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border-emerald-700"
+                                                    : "bg-white hover:bg-[#F07C27] hover:text-white text-[#111111]"
+                                                }`}
+                                                onClick={() => startGrading(r, a)}
                                               >
-                                                <Award className="w-3 h-3 inline" /> Grade
+                                                <Award className="w-3 h-3 inline text-[#F07C27]" />
+                                                {grading?.studentId === r.studentId
+                                                  ? "✕ Close Studio"
+                                                  : (r.answers as any)?._questionMarks
+                                                  ? "📝 Edit Marks"
+                                                  : r.status === "PENDING_REVIEW"
+                                                  ? "⚡ Grade Questions"
+                                                  : "Grade"}
                                               </button>
                                               <button
                                                 type="button"
@@ -2328,80 +2415,309 @@ export default function TestManager({
                           </table>
                         </div>
 
-                        {/* grading inspector for the row being graded */}
-                        {grading &&
-                          results
-                            ?.filter((r) => r.studentId === grading.studentId)
-                            .map((r) => (
-                              <div
-                                key={r.id}
-                                className="mt-4 p-4 border-[2px] border-[#111111] bg-white shadow-[4px_4px_0px_#111111] space-y-3"
-                              >
-                                <h5 className="text-xs font-mono font-bold text-[#111111] uppercase">
-                                  Answers — {r.student?.name}
-                                  {r.status === "PENDING_REVIEW" && (
-                                    <span className="ml-2 px-2 py-0.5 border border-[#111111] bg-amber-100 text-amber-900 text-[10px] font-mono font-bold">
-                                      NEEDS REVIEW
+                        {/* Dedicated Question-by-Question Grading Studio */}
+                        {grading && results && resultsFor && (() => {
+                          const currentResult = results.find((r) => r.studentId === grading.studentId);
+                          if (!currentResult) return null;
+                          const questionsToGrade = sortQuestionsByNumber(resultQuestions.length ? resultQuestions : (resultsFor.questions || []));
+                          const rawAnswers = (currentResult.answers && typeof currentResult.answers === "object") ? (currentResult.answers as Record<string, any>) : {};
+
+                          return (
+                            <div className="mt-4 p-5 sm:p-6 border-[3px] border-[#111111] bg-white shadow-[8px_8px_0px_#111111] space-y-5 animate-in fade-in duration-200">
+                              {/* Studio Header */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-[2px] border-[#111111] pb-4">
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    <span className="px-2 py-0.5 bg-[#111111] text-white font-mono text-[10px] font-black uppercase tracking-wider">
+                                      Question-by-Question Grading Studio
                                     </span>
-                                  )}
-                                </h5>
-                                <div className="space-y-3 max-h-96 overflow-y-auto">
-                                  {sortQuestionsByNumber(a.questions || []).map((q, qi) => {
-                                    const ans = r.answers?.[q.id];
-                                    return (
-                                      <div
-                                        key={q.id}
-                                        className="p-3 border-[2px] border-[#111111] bg-[#F9F9F9] space-y-2"
-                                      >
-                                        <div className="space-y-1">
-                                          <FormattedPrompt prompt={q.prompt} />
-                                        </div>
-                                        <div className="p-2.5 bg-white border border-[#111111]/30">
-                                          <span className="text-[10px] font-mono text-slate-500 font-bold uppercase block mb-1">
-                                            Student Answer:
-                                          </span>
-                                          <p className="text-xs text-emerald-950 font-mono whitespace-pre-wrap leading-relaxed">
-                                            {ans || "(not answered)"}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
+                                    {grading.isAnnounced ? (
+                                      <span className="px-2 py-0.5 bg-emerald-100 border border-emerald-700 text-emerald-950 font-mono text-[10px] font-bold">
+                                        📢 PUBLISHED TO STUDENT
+                                      </span>
+                                    ) : (
+                                      <span className="px-2 py-0.5 bg-amber-100 border border-amber-600 text-amber-950 font-mono text-[10px] font-bold">
+                                        🔒 PRIVATE EVALUATION (UNANNOUNCED)
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="font-display font-black text-xl text-[#111111] uppercase tracking-tight">
+                                      {currentResult.student?.name || "Student Evaluation"}
+                                    </h4>
+                                    {currentResult.student?.rollNumber && (
+                                      <span className="px-2 py-0.5 bg-[#FFF0E5] border border-[#111111] font-mono font-bold text-xs text-[#111111]">
+                                        REG: {currentResult.student.rollNumber}
+                                      </span>
+                                    )}
+                                    {currentResult.student?.email && (
+                                      <span className="text-xs font-mono text-slate-500">
+                                        ({currentResult.student.email})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] font-mono text-slate-600 mt-0.5">
+                                    Submitted: {new Date(currentResult.submittedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                    {currentResult.durationSec != null && ` • Time Taken: ${Math.floor(currentResult.durationSec / 60)}m ${currentResult.durationSec % 60}s`}
+                                  </div>
                                 </div>
-                                <div className="flex flex-wrap items-end gap-3 pt-2">
-                                  <div>
-                                    <label className={labelCls}>Score (0–{a.totalMarks})</label>
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      max={a.totalMarks}
-                                      className={`${inputCls} w-28`}
-                                      value={grading.score}
-                                      onChange={(e) =>
-                                        setGrading({ ...grading, score: e.target.value })
-                                      }
-                                    />
+
+                                {/* Live Total Score Pill */}
+                                <div className="flex items-center gap-3">
+                                  <div className="bg-[#FFF0E5] border-[2px] border-[#111111] p-3 shadow-[2px_2px_0px_#111111] text-right min-w-[140px]">
+                                    <span className="block text-[10px] font-mono font-bold text-slate-600 uppercase">
+                                      CALCULATED TOTAL
+                                    </span>
+                                    <div className="font-display font-black text-2xl text-[#F07C27]">
+                                      {grading.score} <span className="text-sm text-[#111111]">/ {resultsFor.totalMarks}</span>
+                                    </div>
                                   </div>
-                                  <div className="flex-1 min-w-[200px]">
-                                    <label className={labelCls}>Feedback</label>
-                                    <input
-                                      className={inputCls}
-                                      value={grading.feedback}
-                                      onChange={(e) =>
-                                        setGrading({ ...grading, feedback: e.target.value })
-                                      }
-                                      placeholder="Nice pointer arithmetic — watch the dangling refs."
-                                    />
-                                  </div>
-                                  <button className={btnPrimary} disabled={busy} onClick={submitGrade}>
-                                    {busy ? "Saving…" : "Save Grade"}
-                                  </button>
-                                  <button className={btnGhost} onClick={() => setGrading(null)}>
-                                    Cancel
+                                  <button
+                                    type="button"
+                                    onClick={() => setGrading(null)}
+                                    className="p-2 border-[2px] border-[#111111] bg-white hover:bg-[#F4F3F3] text-[#111111] shadow-[2px_2px_0px_#111111] cursor-pointer"
+                                    title="Close Grading Studio"
+                                  >
+                                    <X className="w-5 h-5" />
                                   </button>
                                 </div>
                               </div>
-                            ))}
+
+                              {/* Privacy Notice Banner */}
+                              <div className="p-3 bg-blue-50 border-[2px] border-blue-900 shadow-[2px_2px_0px_#111111] text-xs font-mono text-blue-950 flex items-start gap-2">
+                                <Shield className="w-4 h-4 text-blue-700 flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <strong>Strict Privacy Safeguard Active:</strong> Scores and feedback saved with <em>&quot;Save Evaluation (Private to Mentors)&quot;</em> remain strictly hidden from the student. Only mentors and administrators can see these grades. Results are NOT announced until you explicitly click <em>&quot;Publish to Student&quot;</em>.
+                                </div>
+                              </div>
+
+                              {/* Question Cards List */}
+                              <div className="space-y-4">
+                                {questionsToGrade.map((q, qi) => {
+                                  const ans = rawAnswers[q.id];
+                                  const currentMark = grading.questionMarks[q.id] ?? "";
+                                  const currentRemark = grading.questionFeedback[q.id] ?? "";
+
+                                  return (
+                                    <div
+                                      key={q.id}
+                                      className="p-4 border-[2px] border-[#111111] bg-[#F9F9F9] shadow-[3px_3px_0px_#111111] space-y-3"
+                                    >
+                                      {/* Question Header */}
+                                      <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#111111]/20 pb-2">
+                                        <div className="flex items-center gap-2">
+                                          <span className="px-2 py-0.5 bg-[#111111] text-white font-mono text-xs font-bold uppercase">
+                                            Question #{qi + 1}
+                                          </span>
+                                          <span className="px-2 py-0.5 bg-[#FFF0E5] border border-[#111111] font-mono text-xs font-bold text-[#111111]">
+                                            Max Marks: {q.marks}
+                                          </span>
+                                        </div>
+
+                                        {/* Preset quick buttons */}
+                                        <div className="flex items-center gap-1 text-[10px] font-mono">
+                                          <span className="text-slate-500 font-bold uppercase mr-1">Presets:</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const updatedMarks = { ...grading.questionMarks, [q.id]: 0 };
+                                              setGrading({
+                                                ...grading,
+                                                questionMarks: updatedMarks,
+                                                score: String(calculateTotal(updatedMarks)),
+                                              });
+                                            }}
+                                            className="px-1.5 py-0.5 border border-[#111111] bg-white hover:bg-slate-100 font-bold cursor-pointer"
+                                          >
+                                            0
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const half = Math.round(q.marks / 2);
+                                              const updatedMarks = { ...grading.questionMarks, [q.id]: half };
+                                              setGrading({
+                                                ...grading,
+                                                questionMarks: updatedMarks,
+                                                score: String(calculateTotal(updatedMarks)),
+                                              });
+                                            }}
+                                            className="px-1.5 py-0.5 border border-[#111111] bg-white hover:bg-slate-100 font-bold cursor-pointer"
+                                          >
+                                            Half ({Math.round(q.marks / 2)})
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const updatedMarks = { ...grading.questionMarks, [q.id]: q.marks };
+                                              setGrading({
+                                                ...grading,
+                                                questionMarks: updatedMarks,
+                                                score: String(calculateTotal(updatedMarks)),
+                                              });
+                                            }}
+                                            className="px-1.5 py-0.5 border border-[#111111] bg-[#FFF0E5] hover:bg-[#F07C27] hover:text-white font-bold cursor-pointer"
+                                          >
+                                            Full ({q.marks})
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      {/* Question Prompt */}
+                                      <div className="text-xs bg-white p-3 border border-[#111111]/30">
+                                        <span className="text-[10px] font-mono text-slate-500 font-bold uppercase block mb-1">
+                                          Problem Prompt:
+                                        </span>
+                                        <FormattedPrompt prompt={q.prompt} />
+                                      </div>
+
+                                      {/* Student Submitted Answer / Code */}
+                                      <div className="space-y-1">
+                                        <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-600 uppercase">
+                                          <span className="flex items-center gap-1.5">
+                                            <Code className="w-3.5 h-3.5 text-slate-700" />
+                                            Student Submitted Code / Answer:
+                                          </span>
+                                          {ans && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                navigator.clipboard.writeText(ans);
+                                                flash("Code copied to clipboard!");
+                                              }}
+                                              className="px-2 py-0.5 bg-white hover:bg-[#111111] hover:text-white text-[#111111] border border-[#111111] transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#111111]"
+                                            >
+                                              <Copy className="w-2.5 h-2.5" /> Copy Code
+                                            </button>
+                                          )}
+                                        </div>
+                                        <div className="bg-[#0d1117] text-[#c9d1d9] border-[2px] border-[#30363d] p-3 font-mono text-xs overflow-x-auto max-h-80 shadow-inner rounded">
+                                          <pre className="whitespace-pre-wrap leading-relaxed select-text font-mono">
+                                            {ans || (
+                                              <span className="text-slate-500 italic">
+                                                (Candidate did not submit any code or text for this question)
+                                              </span>
+                                            )}
+                                          </pre>
+                                        </div>
+                                      </div>
+
+                                      {/* Question Evaluation Inputs */}
+                                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1 border-t border-[#111111]/20">
+                                        <div className="sm:col-span-3">
+                                          <label className="block text-[11px] font-mono text-[#111111] font-bold uppercase mb-1">
+                                            Marks Given (0 – {q.marks}):
+                                          </label>
+                                          <input
+                                            type="number"
+                                            min={0}
+                                            max={q.marks}
+                                            className="w-full px-2.5 py-1.5 border-[2px] border-[#111111] font-mono text-sm font-bold bg-white focus:bg-[#FFF0E5] focus:outline-none"
+                                            value={currentMark}
+                                            onChange={(e) => {
+                                              const v = e.target.value;
+                                              const num = v === "" ? "" : Math.min(Math.max(0, Number(v)), q.marks);
+                                              const updatedMarks = {
+                                                ...grading.questionMarks,
+                                                [q.id]: num,
+                                              };
+                                              setGrading({
+                                                ...grading,
+                                                questionMarks: updatedMarks,
+                                                score: String(calculateTotal(updatedMarks)),
+                                              });
+                                            }}
+                                            placeholder={`0 - ${q.marks}`}
+                                          />
+                                        </div>
+                                        <div className="sm:col-span-9">
+                                          <label className="block text-[11px] font-mono text-[#111111] font-bold uppercase mb-1">
+                                            Question Remarks / Mentor Notes (Optional):
+                                          </label>
+                                          <input
+                                            type="text"
+                                            className="w-full px-2.5 py-1.5 border-[2px] border-[#111111] font-mono text-xs bg-white focus:bg-[#FFF0E5] focus:outline-none"
+                                            value={currentRemark}
+                                            onChange={(e) => {
+                                              const updatedFeed = {
+                                                ...grading.questionFeedback,
+                                                [q.id]: e.target.value,
+                                              };
+                                              setGrading({
+                                                ...grading,
+                                                questionFeedback: updatedFeed,
+                                              });
+                                            }}
+                                            placeholder="e.g. Correct algorithm, good edge-case handling, minor indentation issue..."
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Overall Assessment Feedback & Action Bar */}
+                              <div className="p-4 border-[2px] border-[#111111] bg-[#FFF0E5] space-y-3">
+                                <label className="block text-xs font-mono font-bold uppercase text-[#111111]">
+                                  Overall Feedback & Summary Remarks (Optional):
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  className="w-full p-2.5 border-[2px] border-[#111111] font-mono text-xs bg-white focus:outline-none"
+                                  value={grading.feedback}
+                                  onChange={(e) => setGrading({ ...grading, feedback: e.target.value })}
+                                  placeholder="Overall evaluation summary (e.g. Strong conceptual clarity in C++ OOP and pointers. Recommended for Track A.)"
+                                />
+
+                                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#111111]/20">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-xs font-bold text-[#111111]">
+                                      Total Score to Record:
+                                    </span>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={resultsFor.totalMarks}
+                                      className="w-20 px-2 py-1 border-[2px] border-[#111111] font-mono text-sm font-black bg-white"
+                                      value={grading.score}
+                                      onChange={(e) => setGrading({ ...grading, score: e.target.value })}
+                                    />
+                                    <span className="font-mono text-xs text-slate-600 font-bold">
+                                      / {resultsFor.totalMarks}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() => submitGrade(false)}
+                                      className="px-4 py-2 bg-[#111111] hover:bg-slate-800 text-white border-[2px] border-[#111111] font-mono text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#F07C27] hover:translate-x-0.5 transition-all cursor-pointer flex items-center gap-1.5"
+                                    >
+                                      {busy ? "Saving…" : "💾 Save Evaluation (Private to Mentors)"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() => submitGrade(true)}
+                                      className="px-4 py-2 bg-[#F07C27] hover:bg-amber-600 text-white border-[2px] border-[#111111] font-mono text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#111111] hover:translate-x-0.5 transition-all cursor-pointer flex items-center gap-1.5"
+                                    >
+                                      {busy ? "Publishing…" : "📢 Publish to Student"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setGrading(null)}
+                                      className="px-3 py-2 bg-white hover:bg-[#F4F3F3] text-[#111111] border-[2px] border-[#111111] font-mono text-xs font-bold shadow-[2px_2px_0px_#111111] cursor-pointer"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
@@ -3022,15 +3338,12 @@ export default function TestManager({
                 <button
                   type="button"
                   onClick={() => {
-                    setGrading({
-                      studentId: inspectingResult.studentId,
-                      score: String(inspectingResult.score),
-                      feedback: inspectingResult.feedback || "",
-                    });
+                    startGrading(inspectingResult, resultsFor);
+                    setInspectingResult(null);
                   }}
                   className="px-3 py-1.5 border-[2px] border-[#111111] bg-[#F07C27] hover:bg-[#111111] text-white font-mono text-xs font-bold uppercase shadow-[2px_2px_0px_#111111] cursor-pointer"
                 >
-                  <Award className="w-3.5 h-3.5 inline mr-1" /> Adjust Grade / Feedback
+                  <Award className="w-3.5 h-3.5 inline mr-1" /> Evaluate Questions / Adjust Grade
                 </button>
                 <button
                   type="button"

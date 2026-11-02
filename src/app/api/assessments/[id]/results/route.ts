@@ -54,13 +54,22 @@ export async function GET(
 
     if (user.role === "STUDENT") {
       const myResult = assessment.results[0];
+      const answersObj =
+        myResult && myResult.answers && typeof myResult.answers === "object"
+          ? (myResult.answers as Record<string, any>)
+          : {};
+      const isAnnounced = Boolean(answersObj._isAnnounced);
+      const isSubjective =
+        assessment.id === "cmvtedytl0001upw4pnqn794h" ||
+        assessment.title.toLowerCase().includes("pen") ||
+        assessment.title.toLowerCase().includes("cbt") ||
+        assessment.title.toLowerCase().includes("project");
+
       const isPendingReview = Boolean(
         myResult && (
+          !isAnnounced ||
           myResult.status === "PENDING_REVIEW" ||
-          assessment.id === "cmvtedytl0001upw4pnqn794h" ||
-          assessment.title.toLowerCase().includes("pen") ||
-          assessment.title.toLowerCase().includes("cbt") ||
-          assessment.title.toLowerCase().includes("project")
+          (isSubjective && !isAnnounced)
         )
       );
 
@@ -76,7 +85,7 @@ export async function GET(
               {
                 id: myResult.id,
                 studentId: myResult.studentId,
-                status: myResult.status,
+                status: isAnnounced ? myResult.status : "PENDING_REVIEW",
                 score: isPendingReview ? null : myResult.score,
                 totalMarks: assessment.totalMarks,
                 correctCount: isPendingReview ? null : myResult.correctCount ?? 0,
@@ -136,12 +145,15 @@ export async function GET(
   }
 }
 
-/* Mentor/Admin manually grades text/code answers (PENDING_REVIEW results) */
+/* Mentor/Admin manually grades text/code answers (question-by-question & overall) */
 const GradeSchema = z.object({
   studentId: z.string(),
   score: z.number().min(0),
   feedback: z.string().optional(),
-  status: z.enum(["COMPLETED", "PENDING_REVIEW"]).default("COMPLETED"),
+  status: z.enum(["COMPLETED", "PENDING_REVIEW"]).default("PENDING_REVIEW"),
+  questionMarks: z.record(z.string(), z.number()).optional(),
+  questionFeedback: z.record(z.string(), z.string()).optional(),
+  publishToStudent: z.boolean().optional().default(false),
 });
 
 export async function PUT(
@@ -149,7 +161,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireRole(["MENTOR", "ADMIN"]);
+    const user = await requireRole(["MENTOR", "ADMIN"]);
     const { id: assessmentId } = await params;
     const body = await req.json();
     const data = GradeSchema.parse(body);
@@ -172,18 +184,41 @@ export async function PUT(
     });
     if (!existing) return errorResponse("Result not found", "NOT_FOUND", 404);
 
+    const existingAnswers =
+      existing.answers && typeof existing.answers === "object"
+        ? (existing.answers as Record<string, any>)
+        : {};
+
+    const updatedAnswers = {
+      ...existingAnswers,
+      ...(data.questionMarks ? { _questionMarks: data.questionMarks } : {}),
+      ...(data.questionFeedback ? { _questionFeedback: data.questionFeedback } : {}),
+      _evaluatedBy: user.sub,
+      _evaluatedAt: new Date().toISOString(),
+      _isAnnounced: Boolean(data.publishToStudent),
+    };
+
+    const finalStatus = data.publishToStudent ? "COMPLETED" : "PENDING_REVIEW";
+
     const result = await prisma.assessmentResult.update({
       where: { id: existing.id },
-      data: { score: data.score, status: data.status, feedback: data.feedback },
+      data: {
+        score: data.score,
+        status: finalStatus,
+        feedback: data.feedback,
+        answers: updatedAnswers as object,
+      },
     });
 
-    await notify(
-      data.studentId,
-      "Test result updated",
-      `Your submission for "${assessment.title}" has been reviewed by your mentor.`,
-      "RESULT",
-      "/student"
-    );
+    if (data.publishToStudent) {
+      await notify(
+        data.studentId,
+        "Test result announced",
+        `Your official score for "${assessment.title}" has been published.`,
+        "RESULT",
+        "/student"
+      );
+    }
 
     return successResponse({ result });
   } catch (err) {
