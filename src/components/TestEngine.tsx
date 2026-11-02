@@ -116,6 +116,49 @@ const requestFullscreenMode = async () => {
   }
 };
 
+/**
+ * Calculates the exact official deadline for this test session.
+ * Anchored to startsAt + durationMinutes, bounded by endsAt.
+ */
+export const getAssessmentDeadline = (as: {
+  startsAt: string | Date;
+  endsAt: string | Date;
+  durationMinutes?: number | null;
+}): number => {
+  const start = new Date(as.startsAt).getTime();
+  const configuredEnd = new Date(as.endsAt).getTime();
+  const durationMs =
+    (as.durationMinutes && as.durationMinutes > 0 ? as.durationMinutes : 90) * 60 * 1000;
+  const durationEnd = start + durationMs;
+
+  if (!isNaN(configuredEnd) && configuredEnd > 0) {
+    return Math.min(configuredEnd, durationEnd);
+  }
+  return durationEnd;
+};
+
+/**
+ * Calculates remaining seconds from the current wall clock.
+ * Prevents timer resets on page refresh, browser restart, or late entry.
+ */
+export const calcRemainingTime = (as: {
+  startsAt: string | Date;
+  endsAt: string | Date;
+  durationMinutes?: number | null;
+}): number => {
+  const now = Date.now();
+  const start = new Date(as.startsAt).getTime();
+  const deadline = getAssessmentDeadline(as);
+
+  if (now < start) {
+    const durationMs =
+      (as.durationMinutes && as.durationMinutes > 0 ? as.durationMinutes : 90) * 60 * 1000;
+    return Math.floor(durationMs / 1000);
+  }
+
+  return Math.max(0, Math.floor((deadline - now) / 1000));
+};
+
 export default function TestEngine({
   assessment,
   quizAnswers,
@@ -140,24 +183,6 @@ export default function TestEngine({
       : 3
     : 999999;
 
-  // Timer state: prefer configured duration, else time remaining until endsAt (capped at 90 min)
-  const calcInitialTime = () => {
-    const end = new Date(assessment.endsAt).getTime();
-    const now = Date.now();
-    const untilEnd = Math.max(0, Math.floor((end - now) / 1000));
-    if (assessment.durationMinutes && assessment.durationMinutes > 0) {
-      return Math.min(untilEnd, assessment.durationMinutes * 60);
-    }
-    return Math.min(untilEnd, 90 * 60); // cap at 90 min
-  };
-
-  const [timeLeft, setTimeLeft] = useState(calcInitialTime);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [markedForReview, setMarkedForReview] = useState<Set<string>>(new Set());
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [savedAt, setSavedAt] = useState<string | null>(null);
-
   // ── STRICT PROCTORING STATE ──
   const [warningCount, setWarningCount] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(checkIsFullscreen);
@@ -172,6 +197,21 @@ export default function TestEngine({
     if (typeof window === "undefined") return true;
     return !sessionStorage.getItem(`skillup-test-preflight-${assessment.id}`);
   });
+
+  // ── SYNCHRONIZED TEST TIMER STATE ──
+  // Anchored to official test deadline: startsAt + durationMinutes, bounded by endsAt.
+  // Never resets on refresh, reload, or late entry.
+  const [isPreStart, setIsPreStart] = useState(() => Date.now() < new Date(assessment.startsAt).getTime());
+  const [secondsUntilStart, setSecondsUntilStart] = useState(() => {
+    const diff = Math.ceil((new Date(assessment.startsAt).getTime() - Date.now()) / 1000);
+    return Math.max(0, diff);
+  });
+  const [timeLeft, setTimeLeft] = useState(() => calcRemainingTime(assessment));
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [markedForReview, setMarkedForReview] = useState<Set<string>>(new Set());
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
 
   const lastViolationTimeRef = useRef(0);
   const proctorActiveRef = useRef(false);
@@ -394,22 +434,49 @@ export default function TestEngine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizAnswers]);
 
-  // Countdown timer — a single interval lives for the whole component lifetime
-  // instead of being torn down and rebuilt on every tick.
+  // ── SYNCHRONIZED COUNTDOWN TIMER ──
+  // Re-evaluates against the absolute deadline on every second.
+  // Tab freeze, background sleep, or reload will immediately sync to wall-clock.
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft((t) => (t > 0 ? t - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    const updateTimes = () => {
+      const now = Date.now();
+      const start = new Date(assessment.startsAt).getTime();
+      if (now < start) {
+        setIsPreStart(true);
+        setSecondsUntilStart(Math.max(0, Math.ceil((start - now) / 1000)));
+        setTimeLeft(calcRemainingTime(assessment));
+      } else {
+        setIsPreStart(false);
+        setSecondsUntilStart(0);
+        const remaining = calcRemainingTime(assessment);
+        setTimeLeft(remaining);
+      }
+    };
 
-  // Auto-submit exactly once when the clock reaches zero.
+    updateTimes();
+    const interval = setInterval(updateTimes, 1000);
+    return () => clearInterval(interval);
+  }, [assessment.id, assessment.startsAt, assessment.endsAt, assessment.durationMinutes]);
+
+  // Auto-submit immediately once the clock reaches zero (if the test session has started).
   useEffect(() => {
-    if (timeLeft <= 0 && !autoSubmittedRef.current) {
+    const start = new Date(assessment.startsAt).getTime();
+    const now = Date.now();
+    if (now >= start && timeLeft <= 0 && !autoSubmittedRef.current) {
       autoSubmittedRef.current = true;
-      formRef.current?.requestSubmit();
+      setShowConfirm(false);
+      triggerToast("Time expired! Automatically submitting your test answers...");
+      if (formRef.current) {
+        try {
+          formRef.current.requestSubmit();
+        } catch {
+          onSubmit();
+        }
+      } else {
+        onSubmit();
+      }
     }
-  }, [timeLeft]);
+  }, [timeLeft, assessment.startsAt, onSubmit, triggerToast]);
 
   // Auto-save heartbeat
   useEffect(() => {
@@ -422,11 +489,14 @@ export default function TestEngine({
   }, []);
 
   const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60)
-      .toString()
-      .padStart(2, "0");
-    const s = (secs % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
+    const clamped = Math.max(0, Math.floor(secs));
+    const h = Math.floor(clamped / 3600);
+    const m = Math.floor((clamped % 3600) / 60);
+    const s = clamped % 60;
+    if (h > 0) {
+      return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    }
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
   const getStatus = useCallback(
@@ -465,8 +535,75 @@ export default function TestEngine({
     "answered-marked": "bg-purple-600 text-white border-[2px] border-[#111111]",
   };
 
+  // ── PRE-START WAITING ROOM ──
+  // Displayed if a student opens the test page before the scheduled start time.
+  if (isPreStart) {
+    return (
+      <div className="max-w-xl mx-auto p-8 bg-white border-[4px] border-[#111111] shadow-[8px_8px_0px_#111111] space-y-6 text-center my-8">
+        <div className="w-16 h-16 mx-auto bg-[#FFB703] border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center">
+          <Clock className="w-8 h-8 text-[#111111]" />
+        </div>
+        <div className="space-y-1">
+          <span className="text-[10px] font-mono font-black uppercase tracking-wider text-[#F07C27]">
+            [ UPCOMING TEST SESSION ]
+          </span>
+          <h2 className="text-xl font-mono font-black uppercase text-[#111111]">
+            {assessment.title}
+          </h2>
+        </div>
+        <div className="p-5 bg-[#F4F3F3] border-[2px] border-[#111111] font-mono space-y-2">
+          <span className="text-xs uppercase text-slate-500 font-bold block">
+            Test Begins In
+          </span>
+          <span className="text-4xl font-black text-[#F07C27] block tracking-wider">
+            {formatTime(secondsUntilStart)}
+          </span>
+          <span className="text-[11px] text-slate-600 block">
+            Scheduled Start: {new Date(assessment.startsAt).toLocaleTimeString()}
+          </span>
+        </div>
+        <div className="p-3.5 bg-amber-50 border-[2px] border-[#111111] text-xs font-mono text-amber-950 font-bold flex items-center gap-2 text-left">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-700" />
+          <span>
+            Please remain on this screen. As soon as the test opens, questions and the test timer will unlock automatically.
+          </span>
+        </div>
+        {onExit && (
+          <button
+            type="button"
+            onClick={onExit}
+            className="px-5 py-2.5 border-[2px] border-[#111111] bg-white hover:bg-[#F4F3F3] text-[#111111] font-mono text-xs font-bold uppercase shadow-[2px_2px_0px_#111111] transition-all cursor-pointer"
+          >
+            ← Return to Dashboard
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 relative">
+      {/* ── AUTO-SUBMITTING OVERLAY ON EXPIRATION ── */}
+      {timeLeft <= 0 && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border-[4px] border-[#111111] shadow-[10px_10px_0px_#111111] p-6 max-w-md w-full text-center space-y-4">
+            <div className="w-14 h-14 mx-auto bg-rose-600 border-[3px] border-[#111111] shadow-[4px_4px_0px_#111111] flex items-center justify-center text-white">
+              <Clock className="w-8 h-8 stroke-[2.5]" />
+            </div>
+            <h3 className="text-lg font-mono font-black uppercase text-[#111111]">
+              Time Expired!
+            </h3>
+            <p className="text-xs font-mono text-slate-600">
+              The test timer has ended. Your answers are being submitted automatically. Please do not close or refresh this window.
+            </p>
+            <div className="flex items-center justify-center gap-2 text-xs font-mono font-bold text-[#F07C27]">
+              <div className="w-4 h-4 border-2 border-[#F07C27] border-t-transparent rounded-full animate-spin" />
+              Submitting test answers...
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── TOAST NOTIFICATION ── */}
       {proctorToast && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-rose-600 text-white font-mono text-xs font-black shadow-[4px_4px_0px_#111111] flex items-center gap-2 border-[2px] border-[#111111] animate-bounce">

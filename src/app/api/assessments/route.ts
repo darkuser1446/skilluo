@@ -135,7 +135,10 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return successResponse({ assessments: sanitized });
+    return successResponse({
+      assessments: sanitized,
+      serverTime: new Date().toISOString(),
+    });
   } catch (err) {
     return handleApiError(err);
   }

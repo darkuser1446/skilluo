@@ -466,11 +466,13 @@ export default function TestManager({
       const now = new Date();
       let startsAt: string;
       let endsAt: string;
+      const durationMin = a.durationMinutes && a.durationMinutes > 0 ? a.durationMinutes : 90;
+
       if (makeLive) {
-        // Starts 5 minutes ago so it's active immediately
-        startsAt = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
-        // Ends 24 hours from now
-        endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+        // Starts at this exact second when admin starts the test
+        startsAt = now.toISOString();
+        // Ends exactly durationMinutes after start
+        endsAt = new Date(now.getTime() + durationMin * 60 * 1000).toISOString();
       } else {
         // Postpone to 7 days later so it becomes offline / draft
         startsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -483,7 +485,11 @@ export default function TestManager({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || "Failed to update test schedule");
-      flash(makeLive ? `Test "${a.title}" is now LIVE!` : `Test "${a.title}" has been taken offline.`);
+      flash(
+        makeLive
+          ? `Test "${a.title}" is now LIVE! Official timer running for ${durationMin} minutes.`
+          : `Test "${a.title}" has been taken offline.`
+      );
       await load();
     } catch (err: any) {
       flash(err.message || "Failed to update test schedule", false);
@@ -1696,10 +1702,10 @@ export default function TestManager({
                           ? "bg-emerald-400 hover:bg-emerald-500 text-[#111111] font-black"
                           : "bg-amber-100 hover:bg-amber-200 text-amber-950"
                       }`}
-                      title={!isLive ? "Make test live immediately (+24h)" : "Pause test and take offline"}
+                      title={!isLive ? `Start test now (Official timer for ${a.durationMinutes || 90} min)` : "Pause test and take offline"}
                     >
                       <Calendar className="w-3.5 h-3.5 text-[#111111]" />
-                      {!isLive ? "⚡ Make Live Now" : "⏸️ Take Offline"}
+                      {!isLive ? `⚡ Start Test Now (${a.durationMinutes || 90}m)` : "⏸️ Take Offline"}
                     </button>
                     <button
                       onClick={() => handleOpenEdit(a)}

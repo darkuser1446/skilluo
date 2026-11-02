@@ -58,7 +58,10 @@ export async function GET(
           questions: sortedQuestions,
         };
 
-    return successResponse({ assessment: sanitized });
+    return successResponse({
+      assessment: sanitized,
+      serverTime: new Date().toISOString(),
+    });
   } catch (err) {
     return handleApiError(err);
   }

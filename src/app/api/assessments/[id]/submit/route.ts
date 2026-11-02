@@ -92,10 +92,16 @@ export async function POST(
     const now = Date.now();
     const startsAt = new Date(assessment.startsAt).getTime();
     const endsAt = new Date(assessment.endsAt).getTime();
+    const durationMs =
+      assessment.durationMinutes && assessment.durationMinutes > 0
+        ? assessment.durationMinutes * 60 * 1000
+        : 90 * 60 * 1000;
+    const deadline = Math.min(endsAt, startsAt + durationMs);
+
     if (now < startsAt) {
       return errorResponse("This test has not started yet", "TEST_NOT_STARTED", 403);
     }
-    if (now > endsAt + 60_000) {
+    if (now > deadline + 60_000) {
       // 60s grace for network latency on auto-submit
       return errorResponse("The time window for this test has closed", "TEST_EXPIRED", 403);
     }

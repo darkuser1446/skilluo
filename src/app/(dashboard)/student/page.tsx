@@ -215,6 +215,54 @@ export default function StudentDashboardPage() {
     }
   }, [activeAssessment?.id, quizResult?.assessmentId]);
 
+  // ── RESUME ACTIVE TEST ON RELOAD / RESTART ──
+  useEffect(() => {
+    if (!assessments || assessments.length === 0 || activeAssessment) return;
+    try {
+      const activeId = sessionStorage.getItem("skillup-active-assessment-id");
+      if (!activeId) return;
+
+      const found = assessments.find((a: any) => a.id === activeId);
+      if (found) {
+        const hasSubmitted = found.results && found.results.length > 0;
+        const now = Date.now();
+        const start = new Date(found.startsAt).getTime();
+        const end = new Date(found.endsAt).getTime();
+        const durationMs =
+          (found.durationMinutes && found.durationMinutes > 0 ? found.durationMinutes : 90) * 60 * 1000;
+        const deadline = Math.min(end, start + durationMs);
+
+        if (!hasSubmitted && now <= deadline + 60_000) {
+          setActiveAssessment(found);
+          setActiveTab("assessments");
+          const storedStartedAt =
+            Number(sessionStorage.getItem(`skillup-started-at-${found.id}`)) || Date.now();
+          setQuizStartedAt(storedStartedAt);
+        } else {
+          sessionStorage.removeItem("skillup-active-assessment-id");
+        }
+      }
+    } catch {}
+  }, [assessments, activeAssessment]);
+
+  // ── LIVE ASSESSMENT POLLING ──
+  // Polls assessment schedule every 15s so students see the test turn live immediately when admin starts it
+  useEffect(() => {
+    if (activeAssessment || activeTab !== "assessments" || !workshopId) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/assessments?workshopId=${workshopId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.data?.assessments) {
+            setAssessments(data.data.assessments);
+          }
+        }
+      } catch {}
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [activeAssessment, activeTab, workshopId]);
+
   const handleAssignmentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAssignment || !submissionCode.trim()) return;
@@ -414,8 +462,9 @@ export default function StudentDashboardPage() {
     setQuizError(null);
 
     try {
-      const durationSec =
-        quizStartedAt > 0 ? Math.max(0, Math.round((Date.now() - quizStartedAt) / 1000)) : undefined;
+      const storedStartedAt =
+        Number(sessionStorage.getItem(`skillup-started-at-${activeAssessment.id}`)) || quizStartedAt || Date.now();
+      const durationSec = Math.max(0, Math.round((Date.now() - storedStartedAt) / 1000));
       const res = await fetch(`/api/assessments/${activeAssessment.id}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -427,7 +476,10 @@ export default function StudentDashboardPage() {
         setReviewFilter("all");
         setQuizResult(data.data);
         try {
+          sessionStorage.removeItem("skillup-active-assessment-id");
+          sessionStorage.removeItem(`skillup-started-at-${activeAssessment.id}`);
           sessionStorage.removeItem(`skillup-test-draft-${activeAssessment.id}`);
+          sessionStorage.removeItem(`skillup-test-preflight-${activeAssessment.id}`);
         } catch { /* ignore */ }
         if (workshopId) {
           const assessRes = await fetch(`/api/assessments?workshopId=${workshopId}`);
@@ -2173,6 +2225,10 @@ export default function StudentDashboardPage() {
                           if (res) {
                             handleViewStudentResult(as, res);
                           } else {
+                            try {
+                              sessionStorage.setItem("skillup-active-assessment-id", as.id);
+                              sessionStorage.setItem(`skillup-started-at-${as.id}`, String(Date.now()));
+                            } catch {}
                             setActiveAssessment(as);
                             setQuizResult(null);
                             setQuizAnswers({});
@@ -2213,7 +2269,14 @@ export default function StudentDashboardPage() {
             setQuizAnswers={setQuizAnswers}
             submittingQuiz={submittingQuiz}
             onSubmit={handleSubmitQuiz}
-            onExit={() => { setActiveAssessment(null); setQuizResult(null); setQuizError(null); }}
+            onExit={() => {
+              try {
+                sessionStorage.removeItem("skillup-active-assessment-id");
+              } catch {}
+              setActiveAssessment(null);
+              setQuizResult(null);
+              setQuizError(null);
+            }}
           />
         </div>
       )}
