@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     }
 
     let isSelectedStudent = false;
-    let studentLabId: string | null = null;
+    let studentLabIds: string[] = [];
     if (user.role === "STUDENT") {
       try {
         if (prisma.workshopEnrollment?.findFirst) {
@@ -38,16 +38,16 @@ export async function GET(req: NextRequest) {
           });
           isSelectedStudent = enr?.status === "SELECTED";
         }
-        if (prisma.labStudent?.findFirst) {
-          const enrollment = await prisma.labStudent.findFirst({
-            where: { studentId: user.sub },
+        if (prisma.labStudent?.findMany) {
+          const enrollments = await prisma.labStudent.findMany({
+            where: { studentId: user.sub, lab: { workshopId: targetWorkshopId } },
             select: { labId: true },
           });
-          studentLabId = enrollment?.labId || null;
-          if (studentLabId) isSelectedStudent = true;
+          studentLabIds = enrollments.map((e) => e.labId);
+          if (studentLabIds.length > 0) isSelectedStudent = true;
         }
       } catch {
-        studentLabId = null;
+        studentLabIds = [];
       }
     }
 
@@ -87,8 +87,11 @@ export async function GET(req: NextRequest) {
             return !isSelectedStudent;
           }
           if (a.targetAudience === "LABS" || (a.targetLabIds && a.targetLabIds.length > 0) || a.labId) {
-            if (!studentLabId) return false;
-            return a.labId === studentLabId || (a.targetLabIds && a.targetLabIds.includes(studentLabId));
+            if (studentLabIds.length === 0) return false;
+            return (
+              (a.labId && studentLabIds.includes(a.labId)) ||
+              (a.targetLabIds && a.targetLabIds.some((id) => studentLabIds.includes(id)))
+            );
           }
           return true;
         })

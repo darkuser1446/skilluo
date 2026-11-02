@@ -36,17 +36,17 @@ export async function POST(
     }
 
     // ── Target Lab Validation ──
-    if (prisma.labStudent?.findFirst && ((assessment.targetLabIds && assessment.targetLabIds.length > 0) || assessment.labId)) {
+    if (prisma.labStudent?.findMany && ((assessment.targetLabIds && assessment.targetLabIds.length > 0) || assessment.labId)) {
       try {
-        const studentEnrollment = await prisma.labStudent.findFirst({
+        const studentEnrollments = await prisma.labStudent.findMany({
           where: { studentId: user.sub },
           select: { labId: true },
         });
-        const sLabId = studentEnrollment?.labId;
-        if (sLabId) {
+        const sLabIds = studentEnrollments.map((e) => e.labId);
+        if (sLabIds.length > 0) {
           const isTargeted =
-            (assessment.labId && assessment.labId === sLabId) ||
-            (assessment.targetLabIds && assessment.targetLabIds.includes(sLabId));
+            (assessment.labId && sLabIds.includes(assessment.labId)) ||
+            (assessment.targetLabIds && assessment.targetLabIds.some((id) => sLabIds.includes(id)));
           if (!isTargeted) {
             return errorResponse("This test is not assigned to your lab", "FORBIDDEN", 403);
           }

@@ -124,7 +124,9 @@ export default function StudentDashboardPage() {
   const [cohortCandidates, setCohortCandidates] = useState<any[]>([]);
 
   const workshopId = user?.enrollments?.[0]?.workshopId;
-  const myLab = user?.labStudents?.[0]?.lab;
+  const myLab =
+    user?.labStudents?.find((ls: any) => ls.lab?.name !== "Final Test Group")?.lab ||
+    user?.labStudents?.[0]?.lab;
 
   useEffect(() => {
     async function init() {
